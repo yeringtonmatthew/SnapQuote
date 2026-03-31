@@ -59,9 +59,66 @@ export function AcceptQuoteButton({ quoteId, depositAmount, currentStatus, strip
 
   if (accepted) {
     return (
-      <div className="w-full rounded-2xl bg-green-600 py-4 text-center">
-        <p className="text-[17px] font-bold text-white">Quote Accepted</p>
-        <p className="text-[13px] text-green-100 mt-0.5">Your contractor will be in touch to schedule.</p>
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/95 backdrop-blur-sm animate-page-enter">
+        <div className="text-center px-8 space-y-5 max-w-sm mx-auto">
+          {/* Animated checkmark */}
+          <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-green-100 shadow-lg shadow-green-100/50">
+            <svg className="h-12 w-12 text-green-600" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+            </svg>
+          </div>
+
+          <div>
+            <h2 className="text-[26px] font-bold text-gray-900">You&apos;re All Set!</h2>
+            <p className="text-[15px] text-gray-500 mt-1.5 leading-relaxed">
+              Your project has been confirmed. We&apos;re excited to get started on your home.
+            </p>
+          </div>
+
+          {/* Timeline steps */}
+          <div className="rounded-2xl bg-gray-50 border border-gray-100 p-5 text-left space-y-4">
+            <p className="text-[11px] font-semibold uppercase tracking-widest text-gray-400">Here&apos;s What Happens Now</p>
+            <div className="flex items-start gap-3">
+              <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-green-500 mt-0.5">
+                <svg className="h-3.5 w-3.5 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                </svg>
+              </div>
+              <div>
+                <p className="text-[14px] font-semibold text-gray-900">Confirmation sent</p>
+                <p className="text-[12px] text-gray-500">A receipt and project details are on the way to your email.</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3">
+              <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-green-500 mt-0.5">
+                <svg className="h-3.5 w-3.5 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                </svg>
+              </div>
+              <div>
+                <p className="text-[14px] font-semibold text-gray-900">Your contractor has been notified</p>
+                <p className="text-[12px] text-gray-500">They&apos;re already preparing for your project.</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3">
+              <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 border-gray-300 bg-white mt-0.5">
+                <span className="text-[10px] font-bold text-gray-400">3</span>
+              </div>
+              <div>
+                <p className="text-[14px] font-semibold text-gray-900">Scheduling call coming soon</p>
+                <p className="text-[12px] text-gray-500">Expect a call within 24 hours to lock in your project date.</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Reassurance */}
+          <div className="flex items-center justify-center gap-2 text-[12px] text-gray-400">
+            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+            </svg>
+            Your payment is secure and your deposit is protected.
+          </div>
+        </div>
       </div>
     );
   }
@@ -74,7 +131,7 @@ export function AcceptQuoteButton({ quoteId, depositAmount, currentStatus, strip
         className="w-full rounded-2xl py-3.5 text-[15px] font-semibold text-white shadow-sm press-scale transition-colors focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
         style={{ backgroundColor: brandColor }}
       >
-        {stripeEnabled ? `Pay ${fmt(depositAmount)} Deposit` : `Accept Quote & Pay ${fmt(depositAmount)} Deposit`}
+        {stripeEnabled ? `Approve & Secure Your Project — ${fmt(depositAmount)}` : `Approve & Secure Your Project — ${fmt(depositAmount)}`}
       </button>
 
       {showModal && (
@@ -149,7 +206,7 @@ export function AcceptQuoteButton({ quoteId, depositAmount, currentStatus, strip
                     <Spinner size="sm" />
                     Accepting...
                   </span>
-                ) : stripeEnabled ? `Sign & Pay ${fmt(depositAmount)}` : `Sign & Accept — ${fmt(depositAmount)} Deposit`}
+                ) : `Sign & Approve — ${fmt(depositAmount)} Deposit`}
               </button>
 
               <button

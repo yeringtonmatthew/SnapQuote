@@ -61,10 +61,10 @@ const SORT_OPTIONS: { value: SortOption; label: string }[] = [
   { value: 'name-za', label: 'Customer Z–A' },
 ];
 
-export default function QuoteList({ quotes }: { quotes: Quote[] }) {
+export default function QuoteList({ quotes, defaultFilter = 'All' }: { quotes: Quote[]; defaultFilter?: string }) {
   const router = useRouter();
   const [search, setSearch] = useState('');
-  const [activeFilter, setActiveFilter] = useState<string>('All');
+  const [activeFilter, setActiveFilter] = useState<string>(defaultFilter);
   const [sortBy, setSortBy] = useState<SortOption>('newest');
   const [selectMode, setSelectMode] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());

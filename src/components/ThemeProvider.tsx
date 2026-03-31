@@ -32,30 +32,15 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setThemeState] = useState<Theme>('system');
   const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>('light');
 
-  // Initialize from localStorage
+  // Always force light mode — dark mode disabled for readability
   useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY) as Theme | null;
-    const initial: Theme = stored && ['light', 'dark', 'system'].includes(stored) ? stored : 'system';
-    setThemeState(initial);
-
-    const resolved = initial === 'system' ? getSystemPreference() : initial;
-    setResolvedTheme(resolved);
-    applyTheme(resolved);
+    setThemeState('light');
+    setResolvedTheme('light');
+    applyTheme('light');
+    localStorage.setItem(STORAGE_KEY, 'light');
   }, []);
 
-  // Listen for system preference changes when theme is 'system'
-  useEffect(() => {
-    if (theme !== 'system') return;
-
-    const mq = window.matchMedia('(prefers-color-scheme: dark)');
-    const handler = (e: MediaQueryListEvent) => {
-      const resolved = e.matches ? 'dark' : 'light';
-      setResolvedTheme(resolved);
-      applyTheme(resolved);
-    };
-    mq.addEventListener('change', handler);
-    return () => mq.removeEventListener('change', handler);
-  }, [theme]);
+  // System preference listener disabled — always light mode
 
   const setTheme = useCallback((newTheme: Theme) => {
     setThemeState(newTheme);

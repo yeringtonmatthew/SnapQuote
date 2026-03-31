@@ -12,7 +12,7 @@ interface PhotoUploadProps {
 // Grip dots drag handle icon
 function DragHandle() {
   return (
-    <svg className="h-4 w-4" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+    <svg className="h-5 w-5" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
       <circle cx="5" cy="3" r="1.5" />
       <circle cx="11" cy="3" r="1.5" />
       <circle cx="5" cy="8" r="1.5" />
@@ -267,7 +267,7 @@ export default function PhotoUpload({
             <img src={src} alt={`Job photo ${i + 1}`} className="h-full w-full object-cover pointer-events-none" />
 
             {/* Drag handle */}
-            <div className="absolute left-1 top-1 flex h-6 w-6 items-center justify-center rounded-full bg-black/50 text-white/80">
+            <div className="absolute left-1.5 top-1.5 flex h-8 w-8 items-center justify-center rounded-full bg-black/50 text-white/90 shadow-sm">
               <DragHandle />
             </div>
 
@@ -310,7 +310,6 @@ export default function PhotoUpload({
         ref={fileInputRef}
         type="file"
         accept="image/*"
-        capture="environment"
         multiple
         onChange={handleChange}
         className="hidden"
@@ -326,7 +325,7 @@ export default function PhotoUpload({
         </p>
       ) : (
         <p className="mt-2 text-xs text-gray-500">
-          {files.length}/{maxPhotos} photos{files.length > 1 ? ' — hold and drag to reorder' : ' — tap to use camera or choose from gallery'}
+          {files.length}/{maxPhotos} photos{files.length >= 1 ? ' — hold any photo to drag and reorder' : ' — tap to use camera or choose from gallery'}
         </p>
       )}
     </div>

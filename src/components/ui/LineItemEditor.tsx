@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import type { LineItem } from '@/types/database';
 
 interface LineItemEditorProps {
@@ -7,7 +8,11 @@ interface LineItemEditorProps {
   onChange: (items: LineItem[]) => void;
 }
 
+const UNIT_SUGGESTIONS = ['ea', 'sq ft', 'hr', 'sq', 'ln ft', 'gal'];
+
 export default function LineItemEditor({ lineItems, onChange }: LineItemEditorProps) {
+  const [focusedUnitIndex, setFocusedUnitIndex] = useState<number | null>(null);
+
   function updateItem(index: number, field: keyof LineItem, value: string | number) {
     const updated = lineItems.map((item, i) => {
       if (i !== index) return item;
@@ -40,6 +45,7 @@ export default function LineItemEditor({ lineItems, onChange }: LineItemEditorPr
     <div className="space-y-3">
       {lineItems.map((item, i) => (
         <div key={i} className="card !p-4">
+          {/* Row 1: Description + Delete */}
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0 flex-1">
               <input
@@ -63,6 +69,7 @@ export default function LineItemEditor({ lineItems, onChange }: LineItemEditorPr
             </button>
           </div>
 
+          {/* Row 2: Qty, Unit, Price, Total */}
           <div className="mt-3 grid grid-cols-4 gap-2">
             <div>
               <label htmlFor={`li-qty-${i}`} className="text-[10px] font-medium uppercase tracking-wide text-gray-500">Qty</label>
@@ -76,15 +83,38 @@ export default function LineItemEditor({ lineItems, onChange }: LineItemEditorPr
                 className="mt-0.5 w-full rounded-lg border border-gray-200 px-2 py-1.5 text-sm text-gray-900 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500/20"
               />
             </div>
-            <div>
+            <div className="relative">
               <label htmlFor={`li-unit-${i}`} className="text-[10px] font-medium uppercase tracking-wide text-gray-500">Unit</label>
               <input
                 id={`li-unit-${i}`}
                 type="text"
                 value={item.unit}
                 onChange={(e) => updateItem(i, 'unit', e.target.value)}
+                onFocus={() => setFocusedUnitIndex(i)}
+                onBlur={() => {
+                  // Delay to allow pill button click to register
+                  setTimeout(() => setFocusedUnitIndex(prev => prev === i ? null : prev), 150);
+                }}
                 className="mt-0.5 w-full rounded-lg border border-gray-200 px-2 py-1.5 text-sm text-gray-900 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500/20"
               />
+              {focusedUnitIndex === i && (
+                <div className="absolute left-0 top-full z-10 mt-1 flex flex-wrap gap-1 rounded-lg border border-gray-200 bg-white p-1.5 shadow-lg">
+                  {UNIT_SUGGESTIONS.map((unit) => (
+                    <button
+                      key={unit}
+                      type="button"
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        updateItem(i, 'unit', unit);
+                        setFocusedUnitIndex(null);
+                      }}
+                      className="rounded-md bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-gray-600 hover:bg-brand-100 hover:text-brand-700 transition-colors"
+                    >
+                      {unit}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
             <div>
               <label htmlFor={`li-price-${i}`} className="text-[10px] font-medium uppercase tracking-wide text-gray-500">Price</label>

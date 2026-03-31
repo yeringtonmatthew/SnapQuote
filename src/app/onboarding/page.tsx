@@ -6,7 +6,7 @@ import { createClient } from '@/lib/supabase/client';
 import FormField from '@/components/ui/FormField';
 import type { TradeType } from '@/types/database';
 
-const TOTAL_STEPS = 4;
+const TOTAL_STEPS = 2;
 
 interface FieldErrors {
   fullName?: string;
@@ -75,7 +75,6 @@ export default function OnboardingPage() {
   const [businessName, setBusinessName] = useState('');
   const [tradeType, setTradeType] = useState<TradeType | null>(null);
   const [hourlyRate, setHourlyRate] = useState('125');
-  const [depositPercent, setDepositPercent] = useState('33');
 
   const goNext = useCallback(() => {
     const errors: FieldErrors = {};
@@ -109,6 +108,12 @@ export default function OnboardingPage() {
   }, []);
 
   async function handleComplete() {
+    // Validate step 2 fields before completing
+    if (!tradeType) {
+      setFieldErrors({ trade: 'Please select your trade' });
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
@@ -128,7 +133,7 @@ export default function OnboardingPage() {
         business_name: businessName.trim() || null,
         trade_type: tradeType,
         hourly_rate: parseFloat(hourlyRate) || null,
-        default_deposit_percent: parseInt(depositPercent) || 33,
+        default_deposit_percent: 33,
         onboarded: true,
       })
       .eq('id', user.id);
@@ -170,15 +175,14 @@ export default function OnboardingPage() {
       <div className="flex flex-1 flex-col justify-center px-6 pb-12">
         <div className="mx-auto w-full max-w-sm" key={step}>
           <div className="step-enter">
-            {/* -- Step 1: Welcome -- */}
+            {/* -- Step 1: Name & Business -- */}
             {step === 1 && (
               <div>
-                <div className="mb-2 text-4xl">👋</div>
                 <h1 className="text-[28px] font-bold tracking-tight text-gray-900">
-                  Welcome to SnapQuote
+                  What's your name?
                 </h1>
                 <p className="mt-2 text-[15px] leading-relaxed text-gray-500">
-                  Let's get your account set up. This only takes a minute.
+                  Let's get you set up in under a minute.
                 </p>
 
                 <div className="mt-10 space-y-5">
@@ -216,17 +220,17 @@ export default function OnboardingPage() {
               </div>
             )}
 
-            {/* -- Step 2: Trade -- */}
+            {/* -- Step 2: Trade & Hourly Rate -- */}
             {step === 2 && (
               <div>
                 <h1 className="text-[28px] font-bold tracking-tight text-gray-900">
                   What's your trade?
                 </h1>
                 <p className="mt-2 text-[15px] leading-relaxed text-gray-500">
-                  We'll tailor SnapQuote to your type of work.
+                  Almost done! This helps our AI generate accurate quotes for your trade.
                 </p>
 
-                <div className="mt-10 space-y-4">
+                <div className="mt-10 space-y-6">
                   {fieldErrors.trade && (
                     <p role="alert" className="text-sm text-red-500 animate-shake">
                       {fieldErrors.trade}
@@ -254,21 +258,8 @@ export default function OnboardingPage() {
                       </button>
                     ))}
                   </div>
-                </div>
-              </div>
-            )}
 
-            {/* -- Step 3: Pricing -- */}
-            {step === 3 && (
-              <div>
-                <h1 className="text-[28px] font-bold tracking-tight text-gray-900">
-                  Set your pricing
-                </h1>
-                <p className="mt-2 text-[15px] leading-relaxed text-gray-500">
-                  Default rates for your quotes. You can adjust per job.
-                </p>
-
-                <div className="mt-10 space-y-6">
+                  {/* Hourly Rate */}
                   <div>
                     <label htmlFor="hourlyRate" className="label">
                       Hourly Labor Rate
@@ -281,7 +272,6 @@ export default function OnboardingPage() {
                         id="hourlyRate"
                         type="number"
                         min="0"
-                        autoFocus
                         value={hourlyRate}
                         onChange={(e) => setHourlyRate(e.target.value)}
                         className="input-field pl-8"
@@ -290,91 +280,54 @@ export default function OnboardingPage() {
                         /hr
                       </span>
                     </div>
-                  </div>
-
-                  <div>
-                    <label htmlFor="depositPercent" className="label">
-                      Default Deposit
-                    </label>
-                    <div className="relative">
-                      <input
-                        id="depositPercent"
-                        type="number"
-                        min="0"
-                        max="100"
-                        value={depositPercent}
-                        onChange={(e) => setDepositPercent(e.target.value)}
-                        className="input-field pr-8"
-                      />
-                      <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-4 text-gray-400">
-                        %
-                      </span>
-                    </div>
                     <p className="mt-1.5 text-xs text-gray-500">
-                      33% is the sweet spot -- secures the job without scaring off customers.
+                      You can always adjust this per quote.
                     </p>
                   </div>
+
+                  {error && (
+                    <div role="alert" className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600">
+                      {error}
+                    </div>
+                  )}
                 </div>
-              </div>
-            )}
-
-            {/* -- Step 4: Success -- */}
-            {step === 4 && (
-              <div className="text-center">
-                <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-green-50">
-                  <svg className="h-10 w-10 text-green-500" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-                <h1 className="text-[28px] font-bold tracking-tight text-gray-900">
-                  You're all set!
-                </h1>
-                <p className="mt-2 text-[15px] leading-relaxed text-gray-500">
-                  Your account is ready. Snap a photo of any job and we'll generate a professional quote in seconds.
-                </p>
-
-                {error && (
-                  <div role="alert" className="mt-6 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600">
-                    {error}
-                  </div>
-                )}
-
-                <button
-                  onClick={handleComplete}
-                  disabled={loading}
-                  className="mt-10 w-full rounded-2xl bg-brand-600 py-4 text-[16px] font-semibold text-white shadow-sm transition-all active:scale-[0.98] disabled:opacity-60 focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
-                >
-                  {loading ? 'Setting up...' : 'Create Your First Quote'}
-                </button>
               </div>
             )}
           </div>
         </div>
       </div>
 
-      {/* Bottom navigation — hidden on success step */}
-      {step < TOTAL_STEPS && (
-        <div className="sticky bottom-0 bg-white/90 backdrop-blur-xl border-t border-gray-100 px-6 pb-10 pt-4">
-          <div className="mx-auto flex w-full max-w-sm gap-3">
-            {step > 1 ? (
-              <button
-                onClick={goBack}
-                className="flex-1 rounded-2xl border border-gray-200 bg-white py-3.5 text-[15px] font-semibold text-gray-700 transition-all active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
-              >
-                Back
-              </button>
-            ) : (
-              <div className="flex-1" />
-            )}
+      {/* Bottom navigation */}
+      <div className="sticky bottom-0 bg-white/90 backdrop-blur-xl border-t border-gray-100 px-6 pb-10 pt-4">
+        <div className="mx-auto flex w-full max-w-sm gap-3">
+          {step > 1 ? (
+            <button
+              onClick={goBack}
+              className="flex-1 rounded-2xl border border-gray-200 bg-white py-3.5 text-[15px] font-semibold text-gray-700 transition-all active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
+            >
+              Back
+            </button>
+          ) : (
+            <div className="flex-1" />
+          )}
+          {step < TOTAL_STEPS ? (
             <button
               onClick={goNext}
               className="flex-[2] rounded-2xl bg-brand-600 py-3.5 text-[15px] font-semibold text-white shadow-sm transition-all active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
             >
               Next
             </button>
-          </div>
+          ) : (
+            <button
+              onClick={handleComplete}
+              disabled={loading}
+              className="flex-[2] rounded-2xl bg-brand-600 py-3.5 text-[15px] font-semibold text-white shadow-sm transition-all active:scale-[0.98] disabled:opacity-60 focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
+            >
+              {loading ? 'Setting up...' : 'Get Started'}
+            </button>
+          )}
         </div>
-      )}
+      </div>
     </main>
   );
 }

@@ -19,6 +19,36 @@ import { Spinner } from '@/components/ui/Spinner';
 
 type Step = 'start' | 'details' | 'generating' | 'review';
 
+function AIProgressSteps() {
+  const [currentStep, setCurrentStep] = useState(0);
+  const steps = [
+    { label: 'Analyzing photos...', detail: 'Identifying materials, damage, and conditions' },
+    { label: 'Inspecting for issues...', detail: 'Checking for damage, wear, and safety concerns' },
+    { label: 'Building line items...', detail: 'Calculating materials, labor, and pricing' },
+    { label: 'Generating inspection report...', detail: 'Creating findings with severity ratings' },
+    { label: 'Finalizing your quote...', detail: 'Reviewing scope and preparing estimate' },
+  ];
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentStep(prev => (prev < steps.length - 1 ? prev + 1 : prev));
+    }, 2500);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div className="space-y-2">
+      <p className="text-[17px] font-semibold text-gray-900">{steps[currentStep].label}</p>
+      <p className="text-[14px] text-gray-500">{steps[currentStep].detail}</p>
+      <div className="mt-4 flex justify-center gap-1.5">
+        {steps.map((_, i) => (
+          <div key={i} className={`h-1.5 w-8 rounded-full transition-colors duration-500 ${i <= currentStep ? 'bg-brand-600' : 'bg-gray-200'}`} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 interface FieldErrors {
   customerName?: string;
   customerContact?: string;
@@ -569,28 +599,20 @@ export default function NewQuotePage() {
 
         {/* ========== STEP 2: Generating ========== */}
         {step === 'generating' && (
-          <div className="flex flex-col items-center justify-center py-20" aria-live="polite">
-            <div className="relative">
-              <div className="h-16 w-16 rounded-full border-4 border-brand-100" />
-              <div className="absolute inset-0 h-16 w-16 animate-spin rounded-full border-4 border-transparent border-t-brand-600" />
+          <div className="step-enter flex flex-col items-center justify-center py-16 px-4 text-center" aria-live="polite">
+            <div className="relative mb-8">
+              {/* Animated ring */}
+              <div className="h-20 w-20 rounded-full border-4 border-gray-200">
+                <div className="h-full w-full rounded-full border-4 border-brand-600 border-t-transparent animate-spin" />
+              </div>
             </div>
-            <h2 className="mt-6 text-lg font-bold text-gray-900">Analyzing Photos...</h2>
-            <p className="mt-2 text-center text-sm text-gray-500">
-              Our AI is reviewing your photos and generating<br />
-              an itemized quote with current market rates
-            </p>
-            <div className="mt-8 flex items-center gap-2 text-xs text-gray-500">
-              <svg className="h-4 w-4 animate-pulse" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
-              </svg>
-              Usually takes 10-20 seconds
-            </div>
+            <AIProgressSteps />
           </div>
         )}
 
         {/* ========== STEP 3: Review & Edit ========== */}
         {step === 'review' && (
-          <div className="space-y-6">
+          <div className="space-y-6 pb-24">
             {aiDescription && (
               <div className="card !bg-brand-50 !border-brand-200">
                 <div className="flex items-start gap-2">
@@ -669,7 +691,7 @@ export default function NewQuotePage() {
                             : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
                         }`}
                       >
-                        {type === 'none' ? 'None' : type === 'amount' ? '$ Amt' : '% Pct'}
+                        {type === 'none' ? 'No Discount' : type === 'amount' ? '$ Amount' : '% Percent'}
                       </button>
                     ))}
                   </div>
@@ -800,6 +822,27 @@ export default function NewQuotePage() {
           </div>
         )}
       </main>
+
+      {/* Sticky footer with running total */}
+      {step === 'review' && (
+        <div className="fixed bottom-0 left-0 right-0 z-30 border-t border-gray-200 bg-white/95 backdrop-blur-xl px-4 py-3 safe-area-bottom">
+          <div className="mx-auto flex max-w-sm items-center justify-between">
+            <div>
+              <p className="text-[12px] text-gray-500">Quote Total</p>
+              <p className="text-[20px] font-bold text-gray-900">
+                ${total.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+              </p>
+            </div>
+            <button
+              onClick={() => handleSaveQuote('sent')}
+              disabled={saving || lineItems.length === 0}
+              className="rounded-xl bg-brand-600 px-6 py-3 text-[15px] font-semibold text-white active:bg-brand-700 disabled:opacity-50"
+            >
+              {saving ? 'Sending...' : 'Send Quote'}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
     </PageTransition>
   );

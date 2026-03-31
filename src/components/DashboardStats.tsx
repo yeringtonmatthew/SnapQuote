@@ -8,6 +8,21 @@ interface DashboardStatsProps {
   approvalRate: number;
   pendingValue: number;
   pendingCount: number;
+  revenueTrend?: number | null;
+  sentTrend?: number | null;
+}
+
+function TrendBadge({ trend }: { trend: number | null | undefined }) {
+  if (trend === null || trend === undefined) return null;
+  return (
+    <span
+      className={`ml-1.5 inline-flex items-center rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${
+        trend >= 0 ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'
+      }`}
+    >
+      {trend >= 0 ? '\u2191' : '\u2193'} {Math.abs(trend)}%
+    </span>
+  );
 }
 
 export default function DashboardStats({
@@ -16,6 +31,8 @@ export default function DashboardStats({
   approvalRate,
   pendingValue,
   pendingCount,
+  revenueTrend,
+  sentTrend,
 }: DashboardStatsProps) {
   return (
     <>
@@ -25,6 +42,7 @@ export default function DashboardStats({
           <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">This Month</p>
           <p className="mt-1 text-2xl font-bold text-gray-900 dark:text-gray-100 tabular-nums">
             <AnimatedNumber value={monthlyRevenue} prefix="$" />
+            <TrendBadge trend={revenueTrend} />
           </p>
           <p className="text-[12px] text-gray-500 mt-0.5">deposits collected</p>
         </div>
@@ -32,6 +50,7 @@ export default function DashboardStats({
           <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Quotes Sent</p>
           <p className="mt-1 text-2xl font-bold text-gray-900 dark:text-gray-100 tabular-nums">
             <AnimatedNumber value={quotesSentCount} />
+            <TrendBadge trend={sentTrend} />
           </p>
           <p className="text-[12px] text-gray-500 mt-0.5">this month</p>
         </div>

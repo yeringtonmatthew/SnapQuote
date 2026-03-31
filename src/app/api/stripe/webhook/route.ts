@@ -39,6 +39,7 @@ export async function POST(request: NextRequest) {
           paid_at: new Date().toISOString(),
           payment_method: 'stripe',
           stripe_checkout_session_id: session.id,
+          pipeline_stage: 'deposit_collected',
         })
         .eq('id', quoteId)
         .neq('status', 'deposit_paid');

@@ -76,13 +76,13 @@ export default function InstallPrompt() {
         <div className="flex shrink-0 items-center gap-2">
           <button
             onClick={handleDismiss}
-            className="text-[13px] font-medium text-gray-500 focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 rounded"
+            className="rounded-xl border border-gray-200 px-4 py-2.5 text-[14px] font-medium text-gray-600 hover:bg-gray-50 transition-colors focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
           >
             Not now
           </button>
           <button
             onClick={handleInstall}
-            className="rounded-full bg-brand-600 px-4 py-1.5 text-[13px] font-semibold text-white press-scale focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
+            className="rounded-xl bg-brand-600 px-5 py-2.5 text-[14px] font-semibold text-white shadow-sm press-scale transition-colors focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
           >
             Install
           </button>

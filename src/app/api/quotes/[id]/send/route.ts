@@ -24,16 +24,21 @@ export async function POST(
     return NextResponse.json({ error: 'Quote not found' }, { status: 404 });
   }
 
-  // Update status to sent
+  // Update status to sent + auto-advance pipeline
   const now = new Date();
   const expiresAt = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+  const updateData: Record<string, any> = {
+    status: 'sent',
+    sent_at: now.toISOString(),
+    expires_at: expiresAt.toISOString(),
+  };
+  const currentStage = quote.pipeline_stage || 'quote_created';
+  if (['lead', 'quote_created'].includes(currentStage)) {
+    updateData.pipeline_stage = 'quote_sent';
+  }
   const { error: updateError } = await supabase
     .from('quotes')
-    .update({
-      status: 'sent',
-      sent_at: now.toISOString(),
-      expires_at: expiresAt.toISOString(),
-    })
+    .update(updateData)
     .eq('id', params.id);
 
   if (updateError) {

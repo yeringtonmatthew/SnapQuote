@@ -2,6 +2,36 @@ export type TradeType = 'plumber' | 'hvac' | 'electrician' | 'general' | 'other'
 export type PlanType = 'starter' | 'pro' | 'team';
 export type QuoteStatus = 'draft' | 'sent' | 'approved' | 'deposit_paid' | 'cancelled';
 
+export type PipelineStage =
+  | 'lead'
+  | 'quote_created'
+  | 'quote_sent'
+  | 'deposit_collected'
+  | 'job_scheduled'
+  | 'in_progress'
+  | 'completed';
+
+export interface JobPhoto {
+  url: string;
+  category: 'before' | 'during' | 'after';
+  caption: string | null;
+  created_at: string;
+}
+
+export interface JobNote {
+  id: string;
+  text: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface JobTask {
+  id: string;
+  text: string;
+  done: boolean;
+  created_at: string;
+}
+
 export interface LineItem {
   description: string;
   quantity: number;
@@ -65,6 +95,12 @@ export interface Quote {
   scheduled_time: string | null;
   estimated_duration: string | null;
   archived: boolean;
+  pipeline_stage: PipelineStage;
+  job_photos: JobPhoto[];
+  job_notes: JobNote[];
+  job_tasks: JobTask[];
+  completed_at: string | null;
+  started_at: string | null;
   created_at: string;
 }
 

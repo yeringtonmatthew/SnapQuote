@@ -60,10 +60,17 @@ export async function POST(request: Request) {
 
     content.push({ type: 'text', text: userText });
 
-    const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-6',
-      max_tokens: 6000,
-      system: `You are an expert trade contractor estimator and property inspector helping a contractor create professional, legally-sound quotes that close deals.
+    // Retry logic for transient API errors (529 overloaded, 500, etc.)
+    const MAX_RETRIES = 2;
+    let response: Anthropic.Message | null = null;
+    let lastError: unknown = null;
+
+    for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+      try {
+        response = await anthropic.messages.create({
+          model: 'claude-sonnet-4-6',
+          max_tokens: 6000,
+          system: `You are an expert trade contractor estimator and property inspector helping a contractor create professional, legally-sound quotes that close deals.
 
 You have TWO jobs:
 1. Generate an accurate, itemized quote
@@ -104,8 +111,24 @@ Return ONLY valid JSON — no markdown, no code fences, no explanation:
   "estimated_duration": "X-Y days",
   "notes": "Payment terms: [deposit]% deposit required to schedule; balance due upon completion. Warranty: [specific warranty]. Includes: [what's included]. Excludes: [what's not included, e.g. permits unless otherwise arranged]."
 }`,
-      messages: [{ role: 'user', content }],
-    });
+          messages: [{ role: 'user', content }],
+        });
+        break; // Success — exit retry loop
+      } catch (err) {
+        lastError = err;
+        const isRetryable = err instanceof Anthropic.APIError && (err.status === 529 || err.status === 500 || err.status === 503);
+        if (isRetryable && attempt < MAX_RETRIES) {
+          // Wait 2s before retry, then 4s
+          await new Promise(r => setTimeout(r, (attempt + 1) * 2000));
+          continue;
+        }
+        throw err; // Non-retryable or out of retries
+      }
+    }
+
+    if (!response) {
+      throw lastError || new Error('Failed to get AI response');
+    }
 
     const textBlock = response.content.find((b): b is Anthropic.TextBlock => b.type === 'text');
     if (!textBlock) {
@@ -134,8 +157,21 @@ Return ONLY valid JSON — no markdown, no code fences, no explanation:
       return NextResponse.json({ error: 'AI returned invalid JSON. Please try again.' }, { status: 500 });
     }
     if (error instanceof Anthropic.APIError) {
+      // User-friendly messages for common API errors
+      let userMessage: string;
+      if (error.status === 529 || error.status === 503) {
+        userMessage = 'Our AI service is temporarily at capacity. Please wait a moment and try again.';
+      } else if (error.status === 500) {
+        userMessage = 'The AI service encountered a temporary error. Please try again.';
+      } else if (error.status === 413) {
+        userMessage = 'Photos are too large. Try removing a few photos and generating again.';
+      } else if (error.status === 429) {
+        userMessage = 'Too many requests. Please wait a moment before trying again.';
+      } else {
+        userMessage = 'AI service is temporarily unavailable. Please try again in a moment.';
+      }
       return NextResponse.json(
-        { error: `AI service error (${error.status}): ${error.message}` },
+        { error: userMessage },
         { status: error.status || 500 }
       );
     }

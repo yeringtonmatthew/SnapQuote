@@ -20,6 +20,7 @@ import { QuoteTimeline } from '@/components/QuoteTimeline';
 import { relativeTime } from '@/lib/relative-time';
 import { ShareButton } from '@/components/ShareButton';
 import { PrintButton } from '@/components/PrintButton';
+import { QuoteActionsDropdown, DropdownItem } from '@/components/QuoteActionsDropdown';
 
 const statusColors: Record<string, string> = {
   draft: 'bg-gray-100 text-gray-700',
@@ -96,9 +97,8 @@ export default async function QuoteDetailPage({
               </span>
             </div>
           </div>
-          {/* Actions */}
+          {/* Actions — Keep primary visible, overflow into dropdown */}
           <div className="flex items-center gap-2">
-            <QuoteEditor quote={quote} />
             <CollectPaymentButton
               quoteId={quote.id}
               depositAmount={deposit}
@@ -106,63 +106,74 @@ export default async function QuoteDetailPage({
               currentStatus={quote.status}
               paymentMethod={quote.payment_method}
             />
-            {(quote.status === 'draft' || quote.status === 'sent') && (
-              <PreviewQuoteButton
-                quoteId={quote.id}
-                currentStatus={quote.status}
-                hasPhone={!!quote.customer_phone}
-                hasEmail={!!quote.customer_email}
-              />
-            )}
-            <SendQuoteButton
-              quoteId={quote.id}
-              currentStatus={quote.status}
-              hasPhone={!!quote.customer_phone}
-              hasEmail={!!quote.customer_email}
-            />
-            <SendReminderButton
-              quoteId={quote.id}
-              status={quote.status}
-              hasEmail={!!quote.customer_email}
-              reminderSentAt={quote.reminder_sent_at}
-            />
-            <DuplicateQuoteButton quote={quote} />
-            <SaveAsTemplateButton
-              lineItems={quote.line_items}
-              notes={quote.notes}
-              scopeOfWork={quote.scope_of_work}
-            />
-            <a
-              href={`/api/quotes/${quote.id}/pdf`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1.5 rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50"
-            >
-              <svg className="h-4 w-4 text-brand-600" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
-              </svg>
-              PDF
-            </a>
-            <PrintButton variant="full" />
             <ShareButton
               url={`${process.env.NEXT_PUBLIC_BASE_URL || ''}/q/${quote.id}`}
               title={`Quote for ${quote.customer_name}`}
               text="Review your quote"
             />
-            <AddToCalendarButton quoteId={quote.id} scheduledDate={quote.scheduled_date} />
-            {quote.status === 'deposit_paid' && (
-              <a
-                href={`/api/quotes/${quote.id}/invoice`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-1.5 rounded-xl border border-green-200 bg-green-50 px-3 py-2 text-sm font-medium text-green-700 shadow-sm hover:bg-green-100"
-              >
-                <svg className="h-4 w-4 text-green-600" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+            <QuoteActionsDropdown>
+              <div className="px-3 py-2">
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">Actions</p>
+              </div>
+              <div>
+                <QuoteEditor quote={quote} />
+              </div>
+              {(quote.status === 'draft' || quote.status === 'sent') && (
+                <div>
+                  <PreviewQuoteButton
+                    quoteId={quote.id}
+                    currentStatus={quote.status}
+                    hasPhone={!!quote.customer_phone}
+                    hasEmail={!!quote.customer_email}
+                  />
+                </div>
+              )}
+              <div>
+                <SendQuoteButton
+                  quoteId={quote.id}
+                  currentStatus={quote.status}
+                  hasPhone={!!quote.customer_phone}
+                  hasEmail={!!quote.customer_email}
+                />
+              </div>
+              <div>
+                <SendReminderButton
+                  quoteId={quote.id}
+                  status={quote.status}
+                  hasEmail={!!quote.customer_email}
+                  reminderSentAt={quote.reminder_sent_at}
+                />
+              </div>
+              <div className="border-t border-gray-100 mt-1 pt-1">
+                <div className="px-3 py-2">
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">More</p>
+                </div>
+              </div>
+              <div><DuplicateQuoteButton quote={quote} /></div>
+              <div>
+                <SaveAsTemplateButton
+                  lineItems={quote.line_items}
+                  notes={quote.notes}
+                  scopeOfWork={quote.scope_of_work}
+                />
+              </div>
+              <DropdownItem href={`/api/quotes/${quote.id}/pdf`}>
+                <svg className="h-4 w-4 text-brand-600" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
                 </svg>
-                Invoice
-              </a>
-            )}
+                Download PDF
+              </DropdownItem>
+              <div><PrintButton variant="full" /></div>
+              <div><AddToCalendarButton quoteId={quote.id} scheduledDate={quote.scheduled_date} /></div>
+              {quote.status === 'deposit_paid' && (
+                <DropdownItem href={`/api/quotes/${quote.id}/invoice`}>
+                  <svg className="h-4 w-4 text-green-600" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                  </svg>
+                  Download Invoice
+                </DropdownItem>
+              )}
+            </QuoteActionsDropdown>
           </div>
         </div>
       </header>
