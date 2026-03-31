@@ -1,0 +1,117 @@
+export type TradeType = 'plumber' | 'hvac' | 'electrician' | 'general' | 'other';
+export type PlanType = 'starter' | 'pro' | 'team';
+export type QuoteStatus = 'draft' | 'sent' | 'approved' | 'deposit_paid' | 'cancelled';
+
+export interface LineItem {
+  description: string;
+  quantity: number;
+  unit: string;
+  unit_price: number;
+  total: number;
+}
+
+export interface User {
+  id: string;
+  email: string;
+  full_name: string | null;
+  business_name: string | null;
+  trade_type: TradeType | null;
+  logo_url: string | null;
+  hourly_rate: number | null;
+  default_deposit_percent: number;
+  default_tax_rate: number | null;
+  stripe_account_id: string | null;
+  profile_slug: string | null;
+  profile_bio: string | null;
+  profile_public: boolean;
+  plan: PlanType;
+  webhook_url: string | null;
+  brand_color: string | null;
+  onboarded: boolean;
+  created_at: string;
+}
+
+export interface Quote {
+  id: string;
+  contractor_id: string;
+  customer_name: string;
+  customer_phone: string | null;
+  customer_email: string | null;
+  job_address: string | null;
+  status: QuoteStatus;
+  photos: string[];
+  ai_description: string | null;
+  scope_of_work: string | null;
+  line_items: LineItem[];
+  inspection_findings: InspectionFinding[] | null;
+  subtotal: number;
+  tax_rate: number | null;
+  discount_amount: number | null;
+  discount_percent: number | null;
+  total: number;
+  deposit_amount: number;
+  deposit_percent: number;
+  notes: string | null;
+  internal_notes: string | null;
+  pdf_url: string | null;
+  stripe_payment_intent_id: string | null;
+  sent_at: string | null;
+  approved_at: string | null;
+  paid_at: string | null;
+  expires_at: string | null;
+  quote_number: number | null;
+  reminder_sent_at: string | null;
+  scheduled_date: string | null;
+  scheduled_time: string | null;
+  estimated_duration: string | null;
+  archived: boolean;
+  created_at: string;
+}
+
+export interface QuoteTemplate {
+  id: string;
+  contractor_id: string;
+  name: string;
+  line_items: LineItem[];
+  notes: string | null;
+  scope_of_work: string | null;
+  created_at: string;
+}
+
+export type NotificationType = 'quote_viewed' | 'quote_approved' | 'quote_paid';
+
+export interface Notification {
+  id: string;
+  user_id: string;
+  quote_id: string;
+  type: NotificationType;
+  message: string;
+  read: boolean;
+  created_at: string;
+}
+
+export interface Review {
+  id: string;
+  contractor_id: string;
+  quote_id: string | null;
+  customer_name: string;
+  rating: number; // 1-5
+  comment: string | null;
+  created_at: string;
+}
+
+export interface InspectionFinding {
+  photo_index: number;
+  finding: string;
+  severity: 'critical' | 'moderate' | 'minor';
+  urgency_message: string;
+}
+
+export interface AIQuoteResponse {
+  job_summary: string;
+  scope_of_work: string;
+  line_items: LineItem[];
+  estimated_duration: string;
+  notes: string;
+  inspection_findings: InspectionFinding[];
+}

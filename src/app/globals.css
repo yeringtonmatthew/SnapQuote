@@ -1,0 +1,436 @@
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  scroll-behavior: smooth;
+}
+
+@layer base {
+  body {
+    @apply antialiased dark:bg-gray-950 dark:text-gray-100 bg-background text-foreground;
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text',
+      'Helvetica Neue', Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  .theme {
+    --font-heading: var(--font-sans);
+    --font-sans: var(--font-sans);
+  }
+  :root {
+    --background: oklch(1 0 0);
+    --foreground: oklch(0.145 0 0);
+    --card: oklch(1 0 0);
+    --card-foreground: oklch(0.145 0 0);
+    --popover: oklch(1 0 0);
+    --popover-foreground: oklch(0.145 0 0);
+    --primary: oklch(0.205 0 0);
+    --primary-foreground: oklch(0.985 0 0);
+    --secondary: oklch(0.97 0 0);
+    --secondary-foreground: oklch(0.205 0 0);
+    --muted: oklch(0.97 0 0);
+    --muted-foreground: oklch(0.556 0 0);
+    --accent: oklch(0.97 0 0);
+    --accent-foreground: oklch(0.205 0 0);
+    --destructive: oklch(0.577 0.245 27.325);
+    --border: oklch(0.922 0 0);
+    --input: oklch(0.922 0 0);
+    --ring: oklch(0.708 0 0);
+    --chart-1: oklch(0.87 0 0);
+    --chart-2: oklch(0.556 0 0);
+    --chart-3: oklch(0.439 0 0);
+    --chart-4: oklch(0.371 0 0);
+    --chart-5: oklch(0.269 0 0);
+    --radius: 0.625rem;
+    --sidebar: oklch(0.985 0 0);
+    --sidebar-foreground: oklch(0.145 0 0);
+    --sidebar-primary: oklch(0.205 0 0);
+    --sidebar-primary-foreground: oklch(0.985 0 0);
+    --sidebar-accent: oklch(0.97 0 0);
+    --sidebar-accent-foreground: oklch(0.205 0 0);
+    --sidebar-border: oklch(0.922 0 0);
+    --sidebar-ring: oklch(0.708 0 0);
+  }
+  .dark {
+    --background: oklch(0.145 0 0);
+    --foreground: oklch(0.985 0 0);
+    --card: oklch(0.205 0 0);
+    --card-foreground: oklch(0.985 0 0);
+    --popover: oklch(0.205 0 0);
+    --popover-foreground: oklch(0.985 0 0);
+    --primary: oklch(0.922 0 0);
+    --primary-foreground: oklch(0.205 0 0);
+    --secondary: oklch(0.269 0 0);
+    --secondary-foreground: oklch(0.985 0 0);
+    --muted: oklch(0.269 0 0);
+    --muted-foreground: oklch(0.708 0 0);
+    --accent: oklch(0.269 0 0);
+    --accent-foreground: oklch(0.985 0 0);
+    --destructive: oklch(0.704 0.191 22.216);
+    --border: oklch(1 0 0 / 10%);
+    --input: oklch(1 0 0 / 15%);
+    --ring: oklch(0.556 0 0);
+    --chart-1: oklch(0.87 0 0);
+    --chart-2: oklch(0.556 0 0);
+    --chart-3: oklch(0.439 0 0);
+    --chart-4: oklch(0.371 0 0);
+    --chart-5: oklch(0.269 0 0);
+    --sidebar: oklch(0.205 0 0);
+    --sidebar-foreground: oklch(0.985 0 0);
+    --sidebar-primary: oklch(0.488 0.243 264.376);
+    --sidebar-primary-foreground: oklch(0.985 0 0);
+    --sidebar-accent: oklch(0.269 0 0);
+    --sidebar-accent-foreground: oklch(0.985 0 0);
+    --sidebar-border: oklch(1 0 0 / 10%);
+    --sidebar-ring: oklch(0.556 0 0);
+  }
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    @apply font-sans;
+  }
+}
+
+@layer utilities {
+  .scrollbar-none {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Onboarding step transitions */
+@keyframes step-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.step-enter {
+  animation: step-fade-in 0.35s ease-out both;
+}
+
+/* Toast animations */
+@keyframes toast-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes toast-fade-out {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(8px) scale(0.96);
+  }
+}
+
+.animate-toast-in {
+  animation: toast-slide-up 0.25s ease-out both;
+}
+
+.animate-toast-out {
+  animation: toast-fade-out 0.2s ease-in both;
+}
+
+/* ── Page transitions ──────────────────────────── */
+@keyframes page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-page-enter {
+  animation: page-enter 0.25s ease-out both;
+}
+
+/* ── Modal transitions ─────────────────────────── */
+@keyframes modal-backdrop-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes modal-content-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.animate-modal-backdrop {
+  animation: modal-backdrop-in 0.2s ease-out both;
+}
+
+.animate-modal-content {
+  animation: modal-content-in 0.2s ease-out both;
+}
+
+/* ── Staggered list item fade-in ───────────────── */
+@keyframes list-item-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-list-item {
+  animation: list-item-in 0.25s ease-out both;
+}
+
+/* Success checkmark animation */
+@keyframes success-scale-in {
+  0% { transform: scale(0); opacity: 0; }
+  60% { transform: scale(1.15); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes success-draw-check {
+  0% { stroke-dashoffset: 48; }
+  100% { stroke-dashoffset: 0; }
+}
+
+@keyframes success-fade-out {
+  0%, 70% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+.success-animation-container {
+  animation: success-fade-out 2s ease-in-out forwards;
+}
+
+.success-circle {
+  width: 56px;
+  height: 56px;
+  animation: success-scale-in 0.4s ease-out both;
+}
+
+.success-checkmark {
+  width: 100%;
+  height: 100%;
+}
+
+.success-circle-bg {
+  stroke-dasharray: 151;
+  stroke-dashoffset: 151;
+  animation: success-draw-check 0.5s 0.2s ease-out forwards;
+}
+
+.success-check-path {
+  stroke-dasharray: 48;
+  stroke-dashoffset: 48;
+  animation: success-draw-check 0.35s 0.5s ease-out forwards;
+}
+
+/* Confetti burst animation */
+
+/* ── Shake animation for form errors ─────────── */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+
+.animate-shake { animation: shake 0.3s ease-in-out; }
+
+/* ── Micro-interaction utilities ─────────────── */
+
+/* Button press effect */
+.press-scale {
+  transition: transform 0.1s ease;
+}
+.press-scale:active {
+  transform: scale(0.97);
+}
+
+/* Smooth hover lift */
+.hover-lift {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.hover-lift:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+/* Toggle switch animation */
+.toggle-switch {
+  transition: background-color 0.2s ease;
+}
+.toggle-switch .toggle-dot {
+  transition: transform 0.2s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+/* Card hover glow */
+.card-interactive {
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.card-interactive:hover {
+  border-color: rgba(79, 70, 229, 0.3);
+  box-shadow: 0 0 0 1px rgba(79, 70, 229, 0.1);
+}
+
+/* Pulse for attention */
+@keyframes gentle-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+.animate-gentle-pulse {
+  animation: gentle-pulse 2s ease-in-out infinite;
+}
+
+/* Number badge bounce */
+@keyframes badge-pop {
+  0% { transform: scale(0); }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+.animate-badge-pop {
+  animation: badge-pop 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+/* ── Reduced motion ───────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .press-scale, .hover-lift, .card-interactive,
+  .toggle-switch, .toggle-switch .toggle-dot {
+    transition: none !important;
+  }
+  .animate-gentle-pulse, .animate-badge-pop {
+    animation: none !important;
+  }
+}
+
+@keyframes confetti-burst {
+  0% {
+    transform: translate(-50%, -50%) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(calc(-50% + var(--tx)), calc(-50% + var(--ty) + 600px)) rotate(var(--r));
+    opacity: 0;
+  }
+}
+
+/* ── Print stylesheet ─────────────────────────── */
+@media print {
+  /* Hide non-printable elements */
+  nav, .no-print, button, .bottom-nav, header nav,
+  [data-no-print] { display: none !important; }
+
+  /* Reset backgrounds for printing */
+  body { background: white !important; color: black !important; }
+
+  /* Ensure good page breaks */
+  .page-break-before { page-break-before: always; }
+  .page-break-avoid { page-break-inside: avoid; }
+
+  /* Ensure links show their URL */
+  a[href]::after { content: " (" attr(href) ")"; font-size: 0.8em; color: #666; }
+  a[href^="/"]::after, a[href^="#"]::after { content: none; }
+
+  /* Remove shadows and round corners that look bad printed */
+  * { box-shadow: none !important; }
+
+  /* Full width */
+  .mx-auto { max-width: 100% !important; }
+
+  /* Photos should not split across pages */
+  img { page-break-inside: avoid; }
+
+  /* Cards and content blocks should stay together */
+  .card, .rounded-2xl {
+    page-break-inside: avoid;
+  }
+
+  /* Preserve branded colors in print */
+  * {
+    color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply w-full rounded-xl bg-brand-600 px-4 py-3.5 text-center text-base font-semibold text-white shadow-sm transition-all hover:bg-brand-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed dark:focus-visible:ring-offset-gray-900 active:scale-[0.97];
+  }
+
+  .btn-secondary {
+    @apply w-full rounded-xl border border-gray-300 bg-white px-4 py-3.5 text-center text-base font-semibold text-gray-700 shadow-sm transition-all hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700 dark:focus-visible:ring-offset-gray-900 active:scale-[0.97];
+  }
+
+  .btn-danger {
+    @apply w-full rounded-xl bg-danger px-4 py-3.5 text-center text-base font-semibold text-white shadow-sm transition-all hover:bg-red-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-900 active:scale-[0.97];
+  }
+
+  .input-field {
+    @apply block w-full rounded-xl border border-gray-300 bg-white px-4 py-3.5 text-base text-gray-900 placeholder-gray-400 shadow-sm transition-all focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:shadow-[0_0_0_3px_rgba(79,70,229,0.08)] focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500;
+  }
+
+  .label {
+    @apply block text-sm font-medium text-gray-700 mb-1.5 dark:text-gray-300;
+  }
+
+  .card {
+    @apply rounded-2xl bg-white p-6 shadow-sm border border-gray-100 dark:bg-gray-900 dark:border-gray-800;
+  }
+
+  .status-badge {
+    @apply inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium transition-all;
+  }
+}
+
+/* Force light mode on customer-facing pages regardless of theme setting */
+.force-light,
+.force-light * {
+  --tw-bg-opacity: 1;
+  color-scheme: light;
+}
+.force-light .dark\:bg-gray-950 { background-color: rgb(249 250 251) !important; }
+.force-light .dark\:bg-gray-900 { background-color: rgb(255 255 255) !important; }
+.force-light .dark\:bg-gray-800 { background-color: rgb(249 250 251) !important; }
+.force-light .dark\:text-gray-100 { color: rgb(17 24 39) !important; }
+.force-light .dark\:text-gray-200 { color: rgb(55 65 81) !important; }
+.force-light .dark\:text-gray-300 { color: rgb(75 85 99) !important; }
+.force-light .dark\:text-gray-400 { color: rgb(107 114 128) !important; }
+.force-light .dark\:border-gray-700 { border-color: rgb(229 231 235) !important; }
+.force-light .dark\:border-gray-800 { border-color: rgb(243 244 246) !important; }
+.force-light .dark\:placeholder-gray-500::placeholder { color: rgb(156 163 175) !important; }
