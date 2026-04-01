@@ -17,7 +17,7 @@ interface Props {
   stripeStatus?: string | null;
 }
 
-const TABS = ['Profile', 'Pricing', 'Branding', 'Payments', 'Advanced'] as const;
+const TABS = ['Profile', 'Pricing', 'Branding', 'Payments', 'Automation', 'Advanced'] as const;
 type Tab = typeof TABS[number];
 
 export function SettingsForm({ profile, userId, email, stripeConnected, stripeStatus }: Props) {
@@ -41,6 +41,14 @@ export function SettingsForm({ profile, userId, email, stripeConnected, stripeSt
   const [webhookUrl, setWebhookUrl] = useState(profile?.webhook_url || '');
   const [testingWebhook, setTestingWebhook] = useState(false);
   const [webhookTestResult, setWebhookTestResult] = useState<{ ok: boolean; message: string } | null>(null);
+  const [autoFollowUp, setAutoFollowUp] = useState(profile?.auto_follow_up || false);
+  const [followUpTemplates, setFollowUpTemplates] = useState<string[]>(
+    profile?.follow_up_templates || [
+      "Hey {{name}}, just checking if you saw your quote. Let me know if you have any questions!",
+      "Hi {{name}}, we have an opening this week if you'd like to move forward. Would love to get you on the schedule!",
+      "Hey {{name}}, just wanted to follow up — happy to adjust anything if needed or get you scheduled.",
+    ]
+  );
   const [fieldErrors, setFieldErrors] = useState<{ businessName?: string; webhookUrl?: string }>({});
 
   function isValidUrl(str: string): boolean {
@@ -98,6 +106,8 @@ export function SettingsForm({ profile, userId, email, stripeConnected, stripeSt
         profile_public: profilePublic,
         webhook_url: webhookUrl.trim() || null,
         brand_color: brandColor.trim() || null,
+        auto_follow_up: autoFollowUp,
+        follow_up_templates: followUpTemplates,
       })
       .eq('id', userId);
     setSaving(false);
@@ -443,6 +453,94 @@ export function SettingsForm({ profile, userId, email, stripeConnected, stripeSt
             </div>
           )}
           <StripeConnectButton isConnected={stripeConnected} />
+        </div>
+      )}
+
+      {/* Automation Tab */}
+      {activeTab === 'Automation' && (
+        <div className="space-y-4">
+          {/* Toggle Card */}
+          <div className="card space-y-4">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">Auto Follow-Ups</p>
+              <p className="mt-1 text-xs text-gray-500">
+                Automatically send reminders to customers who haven&apos;t responded to their quote. Increase your close rate without lifting a finger.
+              </p>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-[14px] font-medium text-gray-900 dark:text-gray-100">Enable auto follow-ups</p>
+                <p className="text-[12px] text-gray-400">Sends up to 3 reminders via SMS or email</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setAutoFollowUp(!autoFollowUp)}
+                className={`relative inline-flex h-7 w-12 shrink-0 rounded-full transition-colors ${
+                  autoFollowUp ? 'bg-brand-600' : 'bg-gray-200 dark:bg-gray-700'
+                }`}
+              >
+                <span
+                  className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-sm mt-1 transition-transform ${
+                    autoFollowUp ? 'translate-x-6 ml-0.5' : 'translate-x-1'
+                  }`}
+                />
+              </button>
+            </div>
+          </div>
+
+          {/* Templates */}
+          <div className={`space-y-3 transition-opacity ${autoFollowUp ? 'opacity-100' : 'opacity-40 pointer-events-none'}`}>
+            {[
+              { label: 'Day 1 message', timing: 'Sent 24 hours after quote', index: 0 },
+              { label: 'Day 3 message', timing: 'Sent 3 days after quote', index: 1 },
+              { label: 'Day 5 message', timing: 'Sent 5 days after quote', index: 2 },
+            ].map((item) => (
+              <div key={item.index} className="card space-y-3">
+                <div className="flex items-center gap-3">
+                  <span className="flex h-7 w-7 items-center justify-center rounded-full bg-brand-100 dark:bg-brand-900/30 text-[12px] font-bold text-brand-700 dark:text-brand-300">
+                    {item.index + 1}
+                  </span>
+                  <div className="flex-1">
+                    <p className="text-[13px] font-semibold text-gray-900 dark:text-gray-100">{item.label}</p>
+                    <p className="text-[11px] text-gray-400">{item.timing}</p>
+                  </div>
+                </div>
+                <textarea
+                  value={followUpTemplates[item.index] || ''}
+                  onChange={(e) => {
+                    const updated = [...followUpTemplates];
+                    updated[item.index] = e.target.value;
+                    setFollowUpTemplates(updated);
+                  }}
+                  rows={3}
+                  className="input-field resize-none text-[13px]"
+                  placeholder={
+                    item.index === 0
+                      ? "Hey {{name}}, just checking if you saw your quote. Let me know if you have any questions!"
+                      : item.index === 1
+                      ? "Hi {{name}}, we have an opening this week if you'd like to move forward. Would love to get you on the schedule!"
+                      : "Hey {{name}}, just wanted to follow up — happy to adjust anything if needed or get you scheduled."
+                  }
+                />
+                {/* Preview */}
+                {followUpTemplates[item.index] && (
+                  <div className="rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700/50 px-3 py-2">
+                    <p className="text-[11px] font-medium text-gray-400 mb-1">Preview</p>
+                    <p className="text-[12px] text-gray-600 dark:text-gray-300 leading-relaxed">
+                      {followUpTemplates[item.index]
+                        .replace(/\{\{name\}\}/g, 'John')
+                        .replace(/\{\{business\}\}/g, businessName || 'Your Business')}
+                    </p>
+                  </div>
+                )}
+              </div>
+            ))}
+
+            <p className="text-[11px] text-gray-400 px-1">
+              Use <code className="rounded bg-gray-100 dark:bg-gray-800 px-1 py-0.5 text-[10px] font-mono">{'{{name}}'}</code> for customer name, <code className="rounded bg-gray-100 dark:bg-gray-800 px-1 py-0.5 text-[10px] font-mono">{'{{business}}'}</code> for your business name. A link to the quote is included automatically.
+            </p>
+          </div>
         </div>
       )}
 

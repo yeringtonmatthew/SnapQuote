@@ -1,9 +1,10 @@
 'use client';
 
 import Link from 'next/link';
+import QuickAddMenu from './QuickAddMenu';
 
 interface BottomNavProps {
-  active: 'home' | 'pipeline' | 'new' | 'schedule' | 'profile';
+  active: 'home' | 'pipeline' | 'new' | 'schedule' | 'clients' | 'profile';
 }
 
 export default function BottomNav({ active }: BottomNavProps) {
@@ -11,7 +12,7 @@ export default function BottomNav({ active }: BottomNavProps) {
     <nav
       aria-label="Main navigation"
       data-no-print
-      className="fixed bottom-0 left-0 right-0 bg-white/90 dark:bg-gray-900/90 backdrop-blur-xl border-t border-gray-200/60 dark:border-gray-800/60 px-4 pb-6 pt-2"
+      className="fixed bottom-0 left-0 right-0 z-30 bg-white/90 dark:bg-gray-900/90 backdrop-blur-xl border-t border-gray-200/60 dark:border-gray-800/60 px-4 pb-6 pt-2 lg:hidden"
     >
       <div className="mx-auto flex max-w-lg items-center justify-around">
         {/* Home */}
@@ -41,7 +42,6 @@ export default function BottomNav({ active }: BottomNavProps) {
           className="flex flex-col items-center gap-1 rounded-xl press-scale focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
         >
           <div className={`flex h-8 w-8 items-center justify-center rounded-xl ${active === 'pipeline' ? 'bg-brand-600' : ''}`}>
-            {/* Kanban / 3 vertical rectangles icon */}
             <svg
               className={active === 'pipeline' ? 'h-4 w-4 text-white' : 'h-5 w-5 text-gray-400'}
               fill="none"
@@ -58,19 +58,8 @@ export default function BottomNav({ active }: BottomNavProps) {
           <span className={`text-[10px] font-semibold ${active === 'pipeline' ? 'text-brand-600' : 'text-gray-500'}`}>Pipeline</span>
         </Link>
 
-        {/* +Quote (center FAB) */}
-        <Link
-          href="/quotes/new"
-          aria-label="Create new quote"
-          className="flex flex-col items-center gap-1 -mt-5 rounded-full press-scale focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
-        >
-          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-brand-600 shadow-lg shadow-brand-500/30">
-            <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-            </svg>
-          </div>
-          <span className="text-[10px] font-semibold text-gray-500">Quote</span>
-        </Link>
+        {/* Quick Add FAB (center) */}
+        <QuickAddMenu />
 
         {/* Schedule */}
         <Link
@@ -93,25 +82,25 @@ export default function BottomNav({ active }: BottomNavProps) {
           <span className={`text-[10px] font-semibold ${active === 'schedule' ? 'text-brand-600' : 'text-gray-500'}`}>Schedule</span>
         </Link>
 
-        {/* Profile */}
+        {/* Clients */}
         <Link
-          href="/settings"
-          aria-current={active === 'profile' ? 'page' : undefined}
+          href="/clients"
+          aria-current={active === 'clients' ? 'page' : undefined}
           className="flex flex-col items-center gap-1 rounded-xl press-scale focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
         >
-          <div className={`flex h-8 w-8 items-center justify-center rounded-xl ${active === 'profile' ? 'bg-brand-600' : ''}`}>
+          <div className={`flex h-8 w-8 items-center justify-center rounded-xl ${active === 'clients' ? 'bg-brand-600' : ''}`}>
             <svg
-              className={active === 'profile' ? 'h-4 w-4 text-white' : 'h-5 w-5 text-gray-400'}
+              className={active === 'clients' ? 'h-4 w-4 text-white' : 'h-5 w-5 text-gray-400'}
               fill="none"
               viewBox="0 0 24 24"
               strokeWidth={2}
               stroke="currentColor"
               aria-hidden="true"
             >
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
             </svg>
           </div>
-          <span className={`text-[10px] font-semibold ${active === 'profile' ? 'text-brand-600' : 'text-gray-500'}`}>Profile</span>
+          <span className={`text-[10px] font-semibold ${active === 'clients' ? 'text-brand-600' : 'text-gray-500'}`}>Clients</span>
         </Link>
       </div>
     </nav>

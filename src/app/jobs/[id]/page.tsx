@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { formatQuoteNumber } from '@/lib/format-quote-number';
 import PageTransition from '@/components/PageTransition';
+import DesktopSidebar from '@/components/DesktopSidebar';
 import { JobDetailContent } from './JobDetailContent';
 
 export default async function JobDetailPage({
@@ -46,11 +47,14 @@ export default async function JobDetailPage({
 
   return (
     <PageTransition>
-      <JobDetailContent
-        quote={quoteWithDefaults}
-        profile={profile}
-        brandColor={profile?.brand_color || '#4f46e5'}
-      />
+      <DesktopSidebar active="pipeline" />
+      <div className="lg:pl-[220px]">
+        <JobDetailContent
+          quote={quoteWithDefaults}
+          profile={profile}
+          brandColor={profile?.brand_color || '#4f46e5'}
+        />
+      </div>
     </PageTransition>
   );
 }

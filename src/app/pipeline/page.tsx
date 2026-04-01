@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import PipelineBoard, { type PipelineColumn } from '@/components/PipelineBoard';
 import type { PipelineCardProps } from '@/components/PipelineCard';
 import BottomNav from '@/components/BottomNav';
+import DesktopSidebar from '@/components/DesktopSidebar';
 import PageTransition from '@/components/PageTransition';
 
 const COLUMN_DEFS: { stage: string; label: string; color: string }[] = [
@@ -47,7 +48,7 @@ export default async function PipelinePage() {
   const { data: quotes } = await supabase
     .from('quotes')
     .select(
-      'id, customer_name, job_address, total, status, pipeline_stage, quote_number, photos, scheduled_date, job_tasks, created_at, paid_at',
+      'id, customer_name, customer_phone, job_address, total, status, pipeline_stage, quote_number, photos, scheduled_date, job_tasks, created_at, paid_at, sent_at, reminder_sent_at',
     )
     .eq('contractor_id', user.id)
     .neq('status', 'cancelled')
@@ -78,16 +79,28 @@ export default async function PipelinePage() {
   }));
 
   const isEmpty = allQuotes.length === 0;
+  const totalValue = allQuotes.reduce((s, q) => s + Number(q.total), 0);
+  const activeCount = allQuotes.length;
 
   return (
     <PageTransition>
-      <div className="min-h-dvh bg-[#f2f2f7] dark:bg-gray-950 pb-24">
+      <DesktopSidebar active="pipeline" />
+      <div className="min-h-dvh bg-[#f2f2f7] dark:bg-gray-950 pb-24 lg:pb-8 lg:pl-[220px]">
         {/* Header */}
-        <header className="sticky top-0 z-10 bg-[#f2f2f7]/90 dark:bg-gray-950/90 backdrop-blur-xl border-b border-black/5 dark:border-white/5 px-5 pt-14 pb-4">
-          <div className="mx-auto max-w-5xl flex items-center justify-between">
-            <h1 className="text-[28px] font-bold tracking-tight text-gray-900 dark:text-gray-100">
-              Pipeline
-            </h1>
+        <header className="sticky top-0 z-10 bg-[#f2f2f7]/90 dark:bg-gray-950/90 backdrop-blur-xl border-b border-black/5 dark:border-white/5 px-5 pt-14 lg:pt-6 pb-4">
+          <div className="mx-auto flex items-center justify-between">
+            <div>
+              <h1 className="text-[28px] font-bold tracking-tight text-gray-900 dark:text-gray-100">
+                Pipeline
+              </h1>
+              {!isEmpty && (
+                <p className="text-[13px] text-gray-500 dark:text-gray-400 tabular-nums mt-0.5">
+                  {activeCount} active
+                  <span className="mx-1.5 text-gray-300 dark:text-gray-600">&middot;</span>
+                  ${totalValue.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                </p>
+              )}
+            </div>
             <div className="flex items-center gap-2">
               <Link
                 href="/quotes/new"
@@ -111,30 +124,34 @@ export default async function PipelinePage() {
 
         {/* Content */}
         {isEmpty ? (
-          <div className="flex flex-col items-center justify-center px-6 pt-32 text-center">
-            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800 mb-4">
-              <svg
-                className="h-8 w-8 text-gray-400"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={1.5}
-                stroke="currentColor"
-                aria-hidden="true"
-              >
-                <rect x="3" y="4" width="4" height="16" rx="1" stroke="currentColor" />
-                <rect x="10" y="4" width="4" height="12" rx="1" stroke="currentColor" />
-                <rect x="17" y="4" width="4" height="8" rx="1" stroke="currentColor" />
-              </svg>
+          <div className="flex flex-col items-center justify-center px-6 pt-28 text-center">
+            {/* Illustration */}
+            <div className="relative mx-auto mb-6">
+              <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-50 to-brand-100 dark:from-brand-950/40 dark:to-brand-900/30">
+                <svg
+                  className="h-10 w-10 text-brand-500/80"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth={1.2}
+                  stroke="currentColor"
+                  aria-hidden="true"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" />
+                </svg>
+              </div>
+              {/* Subtle decorative dots */}
+              <div className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-brand-200/60 dark:bg-brand-800/40" />
+              <div className="absolute -bottom-1.5 -left-1.5 h-2 w-2 rounded-full bg-brand-300/40 dark:bg-brand-700/30" />
             </div>
-            <h2 className="text-[20px] font-bold text-gray-900 dark:text-gray-100 mb-1">
+            <h2 className="text-[22px] font-bold text-gray-900 dark:text-gray-100 mb-2 tracking-tight">
               Your pipeline is empty
             </h2>
-            <p className="text-[14px] text-gray-500 max-w-xs mb-6">
-              Create your first quote to start tracking jobs through your pipeline.
+            <p className="text-[15px] leading-relaxed text-gray-500 dark:text-gray-400 max-w-[280px] mb-8">
+              Create your first quote to start tracking jobs from lead to completion.
             </p>
             <Link
               href="/quotes/new"
-              className="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-6 py-3.5 text-[15px] font-semibold text-white hover:bg-brand-700 transition-colors focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
+              className="inline-flex items-center gap-2 rounded-2xl bg-brand-600 px-6 py-3.5 text-[15px] font-semibold text-white shadow-sm hover:bg-brand-700 transition-colors focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 press-scale"
             >
               <svg
                 className="h-5 w-5"

@@ -256,6 +256,31 @@ html {
   animation: modal-content-in 0.2s ease-out both;
 }
 
+/* ── Bottom sheet slide-up ───────────────────── */
+@keyframes sheet-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes sheet-backdrop-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.animate-sheet-backdrop {
+  animation: sheet-backdrop-in 0.2s ease-out both;
+}
+
+.animate-sheet-up {
+  animation: sheet-slide-up 0.3s cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+
 /* ── Staggered list item fade-in ───────────────── */
 @keyframes list-item-in {
   from {

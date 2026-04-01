@@ -11,6 +11,31 @@ import DashboardPullToRefresh from '@/components/DashboardPullToRefresh';
 import DashboardStats from '@/components/DashboardStats';
 import PageTransition from '@/components/PageTransition';
 import BottomNav from '@/components/BottomNav';
+import DesktopSidebar from '@/components/DesktopSidebar';
+
+// ── Event type color mapping ──────────────────────────
+const EVENT_TYPE_COLORS: Record<string, { dot: string; border: string }> = {
+  job_scheduled: { dot: 'bg-blue-500', border: 'border-l-blue-500' },
+  site_visit: { dot: 'bg-violet-500', border: 'border-l-violet-500' },
+  estimate: { dot: 'bg-amber-500', border: 'border-l-amber-500' },
+  follow_up: { dot: 'bg-orange-500', border: 'border-l-orange-500' },
+  meeting: { dot: 'bg-emerald-500', border: 'border-l-emerald-500' },
+  reminder: { dot: 'bg-rose-500', border: 'border-l-rose-500' },
+  default: { dot: 'bg-gray-400', border: 'border-l-gray-400' },
+};
+
+function getEventColor(type: string) {
+  return EVENT_TYPE_COLORS[type] || EVENT_TYPE_COLORS.default;
+}
+
+function formatTime(time: string | null): string {
+  if (!time) return 'All day';
+  const [h, m] = time.split(':');
+  const hour = parseInt(h, 10);
+  const ampm = hour >= 12 ? 'PM' : 'AM';
+  const h12 = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+  return `${h12}:${m} ${ampm}`;
+}
 
 export default async function DashboardPage() {
   const supabase = createClient();
@@ -27,20 +52,144 @@ export default async function DashboardPage() {
 
   const { data: quotes } = await supabase
     .from('quotes')
-    .select('id, customer_name, customer_phone, status, subtotal, deposit_amount, photos, scope_of_work, ai_description, quote_number, created_at, sent_at, approved_at, paid_at, archived, internal_notes')
+    .select('id, customer_name, customer_phone, customer_email, job_address, status, subtotal, total, deposit_amount, photos, scope_of_work, ai_description, quote_number, created_at, sent_at, approved_at, paid_at, archived, internal_notes, pipeline_stage, scheduled_date, scheduled_time, reminder_sent_at, job_tasks')
     .eq('contractor_id', user.id)
     .order('created_at', { ascending: false })
     .limit(100);
 
+  // ── Today's date string ──────────────────────────
   const now = new Date();
+  const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+
+  // ── Fetch today's calendar events (gracefully handle if table doesn't exist) ──
+  let todayEvents: Record<string, unknown>[] = [];
+  try {
+    // Try 'calendar_events' first (used by schedule page)
+    const { data, error } = await supabase
+      .from('calendar_events')
+      .select(`
+        *,
+        quotes:quote_id (
+          customer_name,
+          job_address,
+          customer_phone,
+          quote_number
+        )
+      `)
+      .eq('contractor_id', user.id)
+      .eq('event_date', todayStr)
+      .order('start_time', { ascending: true });
+
+    if (!error && data) {
+      todayEvents = data.map((e: Record<string, unknown>) => {
+        const quote = e.quotes as Record<string, unknown> | null;
+        return {
+          ...e,
+          quotes: undefined,
+          customer_name: quote?.customer_name ?? e.title,
+          job_address: quote?.job_address ?? null,
+          customer_phone: quote?.customer_phone ?? null,
+          quote_number: quote?.quote_number ?? null,
+        };
+      });
+    } else if (error) {
+      // Fallback: try 'events' table
+      const { data: evData } = await supabase
+        .from('events')
+        .select(`
+          *,
+          quotes:quote_id (
+            customer_name,
+            job_address,
+            customer_phone,
+            quote_number
+          )
+        `)
+        .eq('contractor_id', user.id)
+        .eq('event_date', todayStr)
+        .order('start_time', { ascending: true });
+
+      if (evData) {
+        todayEvents = evData.map((e: Record<string, unknown>) => {
+          const quote = e.quotes as Record<string, unknown> | null;
+          return {
+            ...e,
+            quotes: undefined,
+            customer_name: quote?.customer_name ?? e.title,
+            job_address: quote?.job_address ?? null,
+            customer_phone: quote?.customer_phone ?? null,
+            quote_number: quote?.quote_number ?? null,
+          };
+        });
+      }
+    }
+  } catch {
+    // Events table may not exist yet — that's fine
+  }
+
+  // ── Also include quotes with scheduled_date = today (backcompat) ──
+  const allQuotes = quotes || [];
+  const activeQuotes = allQuotes.filter(q => !q.archived);
+
+  const quotesScheduledToday = activeQuotes.filter(q => q.scheduled_date === todayStr);
+  // Merge into today's events (avoid duplicates by quote_id)
+  const eventQuoteIds = new Set(todayEvents.map(e => e.quote_id).filter(Boolean));
+  const extraScheduleEvents = quotesScheduledToday
+    .filter(q => !eventQuoteIds.has(q.id))
+    .map(q => ({
+      id: `quote-${q.id}`,
+      title: q.customer_name,
+      event_type: q.pipeline_stage === 'in_progress' ? 'job_scheduled' : 'job_scheduled',
+      event_date: q.scheduled_date,
+      start_time: q.scheduled_time || null,
+      end_time: null,
+      all_day: !q.scheduled_time,
+      quote_id: q.id,
+      customer_name: q.customer_name,
+      job_address: q.job_address || null,
+      quote_number: q.quote_number,
+    }));
+  const allTodayEvents = [...todayEvents, ...extraScheduleEvents];
+
+  // ── Needs Attention calculations ──────────────────
+  const threeDaysAgo = new Date(now);
+  threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+  const threeDaysAgoStr = threeDaysAgo.toISOString();
+
+  const sevenDaysAgo = new Date(now);
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+  const sevenDaysAgoStr = sevenDaysAgo.toISOString();
+
+  const awaitingResponse = activeQuotes.filter(
+    q => q.status === 'sent' && q.sent_at && q.sent_at < threeDaysAgoStr
+  );
+
+  const depositsToCollect = activeQuotes.filter(
+    q => q.status === 'approved' && !q.paid_at
+  );
+
+  const jobsToSchedule = activeQuotes.filter(
+    q => q.pipeline_stage === 'deposit_collected' && !q.scheduled_date
+  );
+
+  const followUpNeeded = activeQuotes.filter(
+    q => q.status === 'sent' && q.sent_at && q.sent_at < sevenDaysAgoStr
+      && (!q.reminder_sent_at || q.reminder_sent_at < sevenDaysAgoStr)
+  );
+
+  const hasAttentionItems = awaitingResponse.length > 0 || depositsToCollect.length > 0 || jobsToSchedule.length > 0 || followUpNeeded.length > 0;
+
+  // ── Active Jobs ──────────────────────────────────
+  const activeJobs = activeQuotes
+    .filter(q => q.pipeline_stage === 'in_progress' || q.pipeline_stage === 'job_scheduled')
+    .slice(0, 3);
+
+  // ── Existing stats ──────────────────────────────
   const hour = now.getHours();
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
   const firstName = profile?.full_name?.split(' ')[0] || profile?.business_name || 'there';
 
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-  const allQuotes = quotes || [];
-  // Exclude archived quotes from dashboard stats
-  const activeQuotes = allQuotes.filter(q => !q.archived);
   const paidThisMonth = activeQuotes.filter(
     q => q.status === 'deposit_paid' && q.paid_at && q.paid_at >= startOfMonth
   );
@@ -60,7 +209,7 @@ export default async function DashboardPage() {
 
   // ── Trend calculations: this month vs last month ──
   const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString();
-  const endOfLastMonth = startOfMonth; // start of this month = end of last month
+  const endOfLastMonth = startOfMonth;
 
   const paidLastMonth = activeQuotes.filter(
     q => q.status === 'deposit_paid' && q.paid_at && q.paid_at >= startOfLastMonth && q.paid_at < endOfLastMonth
@@ -72,7 +221,6 @@ export default async function DashboardPage() {
   );
   const lastMonthSentCount = sentLastMonth.length;
 
-  // Calculate trend percentages (null if no data to compare)
   const revenueTrend = lastMonthRevenue > 0
     ? Math.round(((monthlyRevenue - lastMonthRevenue) / lastMonthRevenue) * 100)
     : null;
@@ -80,7 +228,7 @@ export default async function DashboardPage() {
     ? Math.round(((quotesSentCount - lastMonthSentCount) / lastMonthSentCount) * 100)
     : null;
 
-  // Revenue chart data: last 6 months of deposit_paid quotes grouped by paid_at month
+  // Revenue chart data
   const hasPaidQuotes = allQuotes.some(q => q.status === 'deposit_paid' && q.paid_at);
   const revenueData: { month: string; revenue: number }[] = [];
   if (hasPaidQuotes) {
@@ -96,18 +244,125 @@ export default async function DashboardPage() {
     }
   }
 
-  // Determine if there are any active (non-archived) "sent" or "approved" quotes for default filter
   const hasActionableQuotes = activeQuotes.some(q => q.status === 'sent' || q.status === 'approved');
   const defaultFilter = hasActionableQuotes ? 'Sent' : 'All';
 
+  // ── Today's Focus: smart priority items ──────────────────────────
+  type FocusItem = {
+    priority: 'urgent' | 'important' | 'action';
+    icon: string;
+    title: string;
+    subtitle: string;
+    href: string;
+    color: 'amber' | 'blue' | 'gray';
+  };
+
+  const focusItems: FocusItem[] = [];
+
+  const threeDaysFromNow = new Date(now);
+  threeDaysFromNow.setDate(threeDaysFromNow.getDate() + 3);
+  const threeDaysFromNowStr = threeDaysFromNow.toISOString();
+
+  // Priority 1 — Time-sensitive: Jobs scheduled today that haven't started
+  const todayNotStarted = activeQuotes.filter(
+    q => q.scheduled_date === todayStr && q.pipeline_stage !== 'in_progress' && q.pipeline_stage !== 'completed'
+  );
+  for (const q of todayNotStarted) {
+    focusItems.push({
+      priority: 'urgent',
+      icon: 'calendar',
+      title: `Start job — ${q.customer_name}`,
+      subtitle: q.scheduled_time ? `Scheduled at ${formatTime(q.scheduled_time)}` : 'Scheduled today',
+      href: `/jobs/${q.id}`,
+      color: 'amber',
+    });
+  }
+
+  // Priority 2 — Revenue impact: Approved quotes with no deposit
+  for (const q of depositsToCollect) {
+    const formattedAmt = `$${Number(q.total).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+    const approvedDate = q.approved_at
+      ? new Date(q.approved_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+      : 'recently';
+    focusItems.push({
+      priority: 'important',
+      icon: 'dollar',
+      title: `Collect deposit — ${formattedAmt}`,
+      subtitle: `${q.customer_name} approved ${approvedDate}`,
+      href: `/jobs/${q.id}`,
+      color: 'blue',
+    });
+  }
+
+  // Priority 2 — Revenue impact: Quotes sent >3 days ago with no response
+  for (const q of awaitingResponse) {
+    const sentDate = q.sent_at ? new Date(q.sent_at) : new Date(q.created_at);
+    const daysSince = Math.floor((now.getTime() - sentDate.getTime()) / (1000 * 60 * 60 * 24));
+    focusItems.push({
+      priority: 'important',
+      icon: 'reply',
+      title: `Follow up with ${q.customer_name}`,
+      subtitle: `Sent ${daysSince} day${daysSince !== 1 ? 's' : ''} ago, no response`,
+      href: `/jobs/${q.id}`,
+      color: 'blue',
+    });
+  }
+
+  // Priority 3 — Overdue: Deposits collected but job not scheduled
+  for (const q of jobsToSchedule) {
+    focusItems.push({
+      priority: 'action',
+      icon: 'schedule',
+      title: `Schedule job — ${q.customer_name}`,
+      subtitle: 'Deposit collected, needs a date',
+      href: `/jobs/${q.id}`,
+      color: 'gray',
+    });
+  }
+
+  // Priority 3 — Jobs in progress with incomplete tasks
+  const inProgressIncomplete = activeQuotes.filter(q => {
+    if (q.pipeline_stage !== 'in_progress') return false;
+    const tasks = (q.job_tasks as { id: string; text: string; done: boolean; created_at: string }[]) || [];
+    return tasks.length > 0 && tasks.some(t => !t.done);
+  });
+  for (const q of inProgressIncomplete) {
+    const tasks = (q.job_tasks as { id: string; text: string; done: boolean; created_at: string }[]) || [];
+    const done = tasks.filter(t => t.done).length;
+    focusItems.push({
+      priority: 'action',
+      icon: 'tasks',
+      title: `Finish tasks — ${q.customer_name}`,
+      subtitle: `${done}/${tasks.length} tasks complete`,
+      href: `/jobs/${q.id}`,
+      color: 'gray',
+    });
+  }
+
+  // Slice to max 5
+  const topFocusItems = focusItems.slice(0, 5);
+
+  // ── Stage badge helpers ──────────────────────────
+  const stageBadge = (stage: string) => {
+    const map: Record<string, { label: string; classes: string }> = {
+      job_scheduled: { label: 'Scheduled', classes: 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' },
+      in_progress: { label: 'In Progress', classes: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300' },
+      deposit_collected: { label: 'Deposit Paid', classes: 'bg-violet-50 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300' },
+      completed: { label: 'Completed', classes: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400' },
+    };
+    const info = map[stage] || { label: stage, classes: 'bg-gray-100 text-gray-600' };
+    return info;
+  };
+
   return (
     <PageTransition>
+    <DesktopSidebar active="home" />
     <DashboardPullToRefresh>
-    <div className="min-h-dvh bg-[#f2f2f7] dark:bg-gray-950 pb-28">
+    <div className="min-h-dvh bg-[#f2f2f7] dark:bg-gray-950 pb-28 lg:pb-8 lg:pl-[220px]">
 
       {/* ── Header ─────────────────────────────── */}
-      <header className="sticky top-0 z-10 bg-[#f2f2f7]/90 dark:bg-gray-950/90 backdrop-blur-xl border-b border-black/5 dark:border-white/5 px-5 pt-14 pb-4">
-        <div className="mx-auto max-w-lg flex items-center justify-between">
+      <header className="sticky top-0 z-10 bg-[#f2f2f7]/90 dark:bg-gray-950/90 backdrop-blur-xl border-b border-black/5 dark:border-white/5 px-5 pt-14 lg:pt-6 pb-4">
+        <div className="mx-auto max-w-5xl flex items-center justify-between">
           <div>
             <p className="text-[12px] text-gray-500 dark:text-gray-400 font-medium">{greeting}</p>
             <h1 className="text-[22px] font-bold tracking-tight text-gray-900 dark:text-gray-100">{firstName}</h1>
@@ -138,7 +393,292 @@ export default async function DashboardPage() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-lg px-4 pt-5 space-y-5">
+      <main className="mx-auto max-w-5xl px-4 pt-5 space-y-5 lg:px-6">
+
+        {/* ══════════════════════════════════════════
+            0. TODAY'S FOCUS
+            ══════════════════════════════════════════ */}
+        {topFocusItems.length > 0 && (
+          <section>
+            <div className="flex items-center gap-2 mb-3 px-1">
+              <svg className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+              </svg>
+              <h2 className="text-[11px] font-semibold uppercase tracking-widest text-gray-400">
+                Today&apos;s Focus
+              </h2>
+            </div>
+            <div className="space-y-2">
+              {topFocusItems.map((item, idx) => {
+                const borderColor =
+                  item.color === 'amber' ? 'border-l-amber-500' :
+                  item.color === 'blue' ? 'border-l-blue-500' :
+                  'border-l-gray-400';
+                const badgeBg =
+                  item.color === 'amber' ? 'bg-amber-500 text-white' :
+                  item.color === 'blue' ? 'bg-blue-500 text-white' :
+                  'bg-gray-400 text-white';
+
+                return (
+                  <Link
+                    key={`focus-${idx}`}
+                    href={item.href}
+                    className={`flex items-center gap-3 rounded-2xl bg-white shadow-sm ring-1 ring-black/[0.04] border-l-[3px] ${borderColor} px-4 py-3 active:bg-gray-50 transition-colors`}
+                  >
+                    {/* Number badge */}
+                    <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold ${badgeBg}`}>
+                      {idx + 1}
+                    </span>
+
+                    {/* Text content */}
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[14px] font-semibold text-gray-900 truncate leading-tight">
+                        {item.title}
+                      </p>
+                      <p className="text-[12px] text-gray-500 truncate mt-0.5">
+                        {item.subtitle}
+                      </p>
+                    </div>
+
+                    {/* Chevron */}
+                    <svg className="h-4 w-4 text-gray-300 flex-shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" aria-hidden="true">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                    </svg>
+                  </Link>
+                );
+              })}
+            </div>
+          </section>
+        )}
+
+        {/* ══════════════════════════════════════════
+            1. TODAY'S SCHEDULE
+            ══════════════════════════════════════════ */}
+        <section>
+          <div className="flex items-center justify-between mb-3 px-1">
+            <div className="flex items-center gap-2">
+              <h2 className="text-[11px] font-semibold uppercase tracking-widest text-gray-400">
+                Today&apos;s Schedule
+              </h2>
+              {allTodayEvents.length > 0 && (
+                <span className="inline-flex items-center justify-center h-5 min-w-[20px] rounded-full bg-brand-600 px-1.5 text-[10px] font-bold text-white">
+                  {allTodayEvents.length}
+                </span>
+              )}
+            </div>
+            <Link href="/schedule" className="text-[12px] font-medium text-brand-600 dark:text-brand-400">
+              View Full Schedule &rarr;
+            </Link>
+          </div>
+
+          {allTodayEvents.length > 0 ? (
+            <div className="space-y-2">
+              {allTodayEvents.map((event: Record<string, unknown>) => {
+                const eventType = (event.event_type as string) || 'default';
+                const colors = getEventColor(eventType);
+                const quoteId = event.quote_id as string | null;
+                const cardClass = `block rounded-2xl bg-white dark:bg-gray-900 shadow-sm ring-1 ring-black/[0.04] dark:ring-white/[0.06] border-l-[3px] ${colors.border} px-4 py-3 transition-colors ${quoteId ? 'active:bg-gray-50 dark:active:bg-gray-800' : ''}`;
+                const cardContent = (
+                    <div className="flex items-start gap-3">
+                      <div className="flex flex-col items-center pt-0.5">
+                        <span className={`h-2 w-2 rounded-full ${colors.dot}`} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[13px] font-semibold text-gray-900 dark:text-gray-100 truncate">
+                            {(event.customer_name as string) || (event.title as string)}
+                          </span>
+                          <span className="text-[11px] text-gray-400 dark:text-gray-500 whitespace-nowrap">
+                            {formatTime(event.start_time as string | null)}
+                          </span>
+                        </div>
+                        {typeof event.job_address === 'string' && event.job_address && (
+                          <p className="text-[12px] text-gray-500 dark:text-gray-400 truncate mt-0.5">
+                            {event.job_address}
+                          </p>
+                        )}
+                      </div>
+                      {quoteId && (
+                        <svg className="h-4 w-4 text-gray-300 dark:text-gray-600 flex-shrink-0 mt-1" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" aria-hidden="true">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                        </svg>
+                      )}
+                    </div>
+                );
+
+                return quoteId ? (
+                  <Link key={event.id as string} href={`/jobs/${quoteId}`} className={cardClass}>
+                    {cardContent}
+                  </Link>
+                ) : (
+                  <div key={event.id as string} className={cardClass}>
+                    {cardContent}
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="rounded-2xl bg-white dark:bg-gray-900 shadow-sm ring-1 ring-black/[0.04] dark:ring-white/[0.06] px-5 py-6 text-center">
+              <svg className="mx-auto h-8 w-8 text-gray-300 dark:text-gray-600 mb-2" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
+              </svg>
+              <p className="text-[13px] text-gray-400 dark:text-gray-500">Nothing scheduled today</p>
+              <Link href="/schedule" className="inline-block mt-2 text-[12px] font-medium text-brand-600 dark:text-brand-400">
+                Open Schedule &rarr;
+              </Link>
+            </div>
+          )}
+        </section>
+
+        {/* ══════════════════════════════════════════
+            2. NEEDS ATTENTION
+            ══════════════════════════════════════════ */}
+        {hasAttentionItems && (
+          <section>
+            <h2 className="mb-3 px-1 text-[11px] font-semibold uppercase tracking-widest text-gray-400">
+              Needs Attention
+            </h2>
+            <div className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4 scrollbar-none">
+              {awaitingResponse.length > 0 && (
+                <Link
+                  href="/pipeline?stage=quote_sent"
+                  className="flex-shrink-0 flex items-center gap-2.5 rounded-2xl bg-white dark:bg-gray-900 shadow-sm ring-1 ring-black/[0.04] dark:ring-white/[0.06] px-4 py-3 active:bg-gray-50 dark:active:bg-gray-800 transition-colors"
+                >
+                  <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-amber-50 dark:bg-amber-900/20">
+                    <svg className="h-4 w-4 text-amber-600 dark:text-amber-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" aria-hidden="true">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-[15px] font-bold text-gray-900 dark:text-gray-100">{awaitingResponse.length}</p>
+                    <p className="text-[11px] text-gray-500 dark:text-gray-400 whitespace-nowrap">Awaiting reply</p>
+                  </div>
+                </Link>
+              )}
+
+              {depositsToCollect.length > 0 && (
+                <Link
+                  href="/pipeline?stage=deposit_collected"
+                  className="flex-shrink-0 flex items-center gap-2.5 rounded-2xl bg-white dark:bg-gray-900 shadow-sm ring-1 ring-black/[0.04] dark:ring-white/[0.06] px-4 py-3 active:bg-gray-50 dark:active:bg-gray-800 transition-colors"
+                >
+                  <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-50 dark:bg-emerald-900/20">
+                    <svg className="h-4 w-4 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" aria-hidden="true">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-[15px] font-bold text-gray-900 dark:text-gray-100">{depositsToCollect.length}</p>
+                    <p className="text-[11px] text-gray-500 dark:text-gray-400 whitespace-nowrap">Deposits to collect</p>
+                  </div>
+                </Link>
+              )}
+
+              {jobsToSchedule.length > 0 && (
+                <Link
+                  href="/schedule"
+                  className="flex-shrink-0 flex items-center gap-2.5 rounded-2xl bg-white dark:bg-gray-900 shadow-sm ring-1 ring-black/[0.04] dark:ring-white/[0.06] px-4 py-3 active:bg-gray-50 dark:active:bg-gray-800 transition-colors"
+                >
+                  <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-50 dark:bg-blue-900/20">
+                    <svg className="h-4 w-4 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" aria-hidden="true">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-[15px] font-bold text-gray-900 dark:text-gray-100">{jobsToSchedule.length}</p>
+                    <p className="text-[11px] text-gray-500 dark:text-gray-400 whitespace-nowrap">Jobs to schedule</p>
+                  </div>
+                </Link>
+              )}
+
+              {followUpNeeded.length > 0 && (
+                <Link
+                  href="/pipeline?stage=quote_sent"
+                  className="flex-shrink-0 flex items-center gap-2.5 rounded-2xl bg-white dark:bg-gray-900 shadow-sm ring-1 ring-black/[0.04] dark:ring-white/[0.06] px-4 py-3 active:bg-gray-50 dark:active:bg-gray-800 transition-colors"
+                >
+                  <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-orange-50 dark:bg-orange-900/20">
+                    <svg className="h-4 w-4 text-orange-600 dark:text-orange-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" aria-hidden="true">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-[15px] font-bold text-gray-900 dark:text-gray-100">{followUpNeeded.length}</p>
+                    <p className="text-[11px] text-gray-500 dark:text-gray-400 whitespace-nowrap">Follow up needed</p>
+                  </div>
+                </Link>
+              )}
+            </div>
+          </section>
+        )}
+
+        {/* ══════════════════════════════════════════
+            3. ACTIVE JOBS
+            ══════════════════════════════════════════ */}
+        {activeJobs.length > 0 && (
+          <section>
+            <div className="flex items-center justify-between mb-3 px-1">
+              <h2 className="text-[11px] font-semibold uppercase tracking-widest text-gray-400">
+                Active Jobs
+              </h2>
+              <Link href="/pipeline" className="text-[12px] font-medium text-brand-600 dark:text-brand-400">
+                View All &rarr;
+              </Link>
+            </div>
+            <div className="space-y-2">
+              {activeJobs.map(job => {
+                const badge = stageBadge(job.pipeline_stage);
+                const tasks = (job.job_tasks as { id: string; text: string; done: boolean; created_at: string }[]) || [];
+                const doneTasks = tasks.filter(t => t.done).length;
+                const totalTasks = tasks.length;
+                const progress = totalTasks > 0 ? Math.round((doneTasks / totalTasks) * 100) : 0;
+                const scheduledDate = job.scheduled_date
+                  ? new Date(job.scheduled_date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+                  : null;
+
+                return (
+                  <Link
+                    key={job.id}
+                    href={`/jobs/${job.id}`}
+                    className="block rounded-2xl bg-white dark:bg-gray-900 shadow-sm ring-1 ring-black/[0.04] dark:ring-white/[0.06] px-4 py-3 active:bg-gray-50 dark:active:bg-gray-800 transition-colors"
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[14px] font-semibold text-gray-900 dark:text-gray-100 truncate">
+                          {job.customer_name}
+                        </p>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold ${badge.classes}`}>
+                            {badge.label}
+                          </span>
+                          {scheduledDate && (
+                            <span className="text-[11px] text-gray-400 dark:text-gray-500">{scheduledDate}</span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3 flex-shrink-0">
+                        {totalTasks > 0 && (
+                          <div className="flex items-center gap-1.5">
+                            <div className="w-12 h-1.5 rounded-full bg-gray-100 dark:bg-gray-800 overflow-hidden">
+                              <div
+                                className="h-full rounded-full bg-brand-500 transition-all"
+                                style={{ width: `${progress}%` }}
+                              />
+                            </div>
+                            <span className="text-[10px] text-gray-400 dark:text-gray-500 tabular-nums">
+                              {doneTasks}/{totalTasks}
+                            </span>
+                          </div>
+                        )}
+                        <svg className="h-4 w-4 text-gray-300 dark:text-gray-600" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" aria-hidden="true">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                        </svg>
+                      </div>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          </section>
+        )}
 
         {/* ── Stats ──────────────────────────────── */}
         <DashboardStats

@@ -102,22 +102,23 @@ export function JobTaskList({ quoteId, tasks: initialTasks }: JobTaskListProps) 
   }
 
   return (
-    <div className="rounded-2xl bg-white p-5 shadow-sm border border-gray-100 dark:bg-gray-900 dark:border-gray-800">
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Tasks</h3>
-        {totalCount > 0 && (
-          <span className="text-[12px] text-gray-400 dark:text-gray-500">
-            {completedCount} of {totalCount} complete
-          </span>
-        )}
-      </div>
-
-      {/* Progress bar */}
+    <div>
+      {/* Progress bar + counter */}
       {totalCount > 0 && (
         <div className="mb-4">
-          <div className="h-1.5 w-full rounded-full bg-gray-100 dark:bg-gray-800 overflow-hidden">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[13px] font-medium text-gray-900 dark:text-gray-100 tabular-nums">
+              {completedCount} of {totalCount}
+            </span>
+            <span className="text-[12px] text-gray-400 dark:text-gray-500 tabular-nums">
+              {pct}%
+            </span>
+          </div>
+          <div className="h-1 w-full rounded-full bg-gray-100 dark:bg-gray-800 overflow-hidden">
             <div
-              className="h-full rounded-full bg-brand-500 transition-all duration-300 ease-out"
+              className={`h-full rounded-full transition-all duration-500 ease-out ${
+                completedCount > 0 ? 'bg-emerald-500' : 'bg-gray-200 dark:bg-gray-700'
+              }`}
               style={{ width: `${pct}%` }}
             />
           </div>
@@ -125,25 +126,25 @@ export function JobTaskList({ quoteId, tasks: initialTasks }: JobTaskListProps) 
       )}
 
       {/* Task list */}
-      <div className="space-y-1">
+      <div className="space-y-0.5">
         {sorted.map((task) => (
           <div
             key={task.id}
-            className="group flex items-center gap-3 rounded-lg px-1 py-1.5 -mx-1 transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/50"
+            className="group flex items-center gap-3 rounded-lg px-1.5 py-2 -mx-1.5 transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/40"
           >
-            {/* Custom checkbox */}
+            {/* Checkbox */}
             <button
               type="button"
               onClick={() => handleToggle(task.id)}
-              className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md border-2 transition-all ${
+              className={`flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-md border transition-all duration-200 ${
                 task.done
-                  ? 'border-brand-500 bg-brand-500'
-                  : 'border-gray-300 bg-white hover:border-brand-400 dark:border-gray-600 dark:bg-gray-800'
+                  ? 'border-emerald-500 bg-emerald-500'
+                  : 'border-gray-300 bg-white hover:border-gray-400 dark:border-gray-600 dark:bg-gray-800 dark:hover:border-gray-500'
               }`}
               aria-label={task.done ? 'Mark incomplete' : 'Mark complete'}
             >
               {task.done && (
-                <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor">
+                <svg className="h-2.5 w-2.5 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
                 </svg>
               )}
@@ -151,23 +152,23 @@ export function JobTaskList({ quoteId, tasks: initialTasks }: JobTaskListProps) 
 
             {/* Task text */}
             <span
-              className={`flex-1 text-[14px] transition-all ${
+              className={`flex-1 text-[14px] leading-snug transition-all duration-200 ${
                 task.done
                   ? 'line-through text-gray-400 dark:text-gray-600'
-                  : 'text-gray-700 dark:text-gray-300'
+                  : 'text-gray-800 dark:text-gray-200'
               }`}
             >
               {task.text}
             </span>
 
-            {/* Delete button */}
+            {/* Delete button - always visible on mobile, hover on desktop */}
             <button
               type="button"
               onClick={() => handleDelete(task.id)}
-              className="opacity-0 group-hover:opacity-100 p-0.5 text-gray-300 hover:text-red-500 transition-opacity shrink-0"
+              className="opacity-100 md:opacity-0 md:group-hover:opacity-100 p-0.5 text-gray-300 hover:text-red-500 transition-all duration-150 shrink-0"
               aria-label="Delete task"
             >
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
@@ -176,25 +177,28 @@ export function JobTaskList({ quoteId, tasks: initialTasks }: JobTaskListProps) 
       </div>
 
       {/* Add task input */}
-      <div className="flex items-center gap-2 mt-3 pt-3 border-t border-gray-100 dark:border-gray-800">
+      <div className="flex items-center gap-2 mt-3 pt-3 border-t border-gray-100/80 dark:border-gray-800/60">
+        <svg className="h-[18px] w-[18px] shrink-0 text-gray-300 dark:text-gray-600" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+        </svg>
         <input
           type="text"
           value={newTask}
           onChange={(e) => setNewTask(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
-          placeholder="Add task..."
-          className="flex-1 rounded-lg border-0 bg-transparent px-0 py-1.5 text-[14px] text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-0 dark:text-gray-100 dark:placeholder-gray-500"
+          placeholder="Add a task..."
+          className="flex-1 border-0 bg-transparent px-0 py-1.5 text-[14px] text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-0 dark:text-gray-100 dark:placeholder-gray-600"
         />
-        <button
-          type="button"
-          onClick={handleAdd}
-          disabled={!newTask.trim() || submitting}
-          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-brand-600 text-white transition-all hover:bg-brand-700 disabled:opacity-40 disabled:cursor-not-allowed active:scale-95"
-        >
-          <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-          </svg>
-        </button>
+        {newTask.trim() && (
+          <button
+            type="button"
+            onClick={handleAdd}
+            disabled={submitting}
+            className="text-[13px] font-medium text-brand-600 hover:text-brand-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed dark:text-brand-400 dark:hover:text-brand-300"
+          >
+            Add
+          </button>
+        )}
       </div>
     </div>
   );

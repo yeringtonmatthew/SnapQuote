@@ -57,6 +57,8 @@ export interface User {
   plan: PlanType;
   webhook_url: string | null;
   brand_color: string | null;
+  auto_follow_up: boolean;
+  follow_up_templates: string[];
   onboarded: boolean;
   created_at: string;
 }
@@ -64,6 +66,7 @@ export interface User {
 export interface Quote {
   id: string;
   contractor_id: string;
+  client_id: string | null;
   customer_name: string;
   customer_phone: string | null;
   customer_email: string | null;
@@ -141,6 +144,70 @@ export interface InspectionFinding {
   finding: string;
   severity: 'critical' | 'moderate' | 'minor';
   urgency_message: string;
+}
+
+export type EventType =
+  | 'estimate'
+  | 'follow_up'
+  | 'job_scheduled'
+  | 'material_dropoff'
+  | 'production'
+  | 'walkthrough'
+  | 'payment_collection'
+  | 'blocked_time';
+
+export interface CalendarEvent {
+  id: string;
+  contractor_id: string;
+  quote_id: string | null;
+  title: string;
+  event_type: EventType;
+  event_date: string;
+  start_time: string | null;
+  end_time: string | null;
+  all_day: boolean;
+  notes: string | null;
+  color: string | null;
+  completed: boolean;
+  created_at: string;
+  updated_at: string;
+  // Joined from quotes table when fetching
+  customer_name?: string;
+  job_address?: string;
+  customer_phone?: string;
+  quote_number?: number;
+  pipeline_stage?: string;
+  total?: number;
+}
+
+export interface FollowUp {
+  id: string;
+  quote_id: string;
+  contractor_id: string;
+  follow_up_number: number;
+  channel: 'sms' | 'email';
+  message: string;
+  sent_at: string;
+  status: 'sent' | 'delivered' | 'failed';
+  created_at: string;
+}
+
+export interface Client {
+  id: string;
+  user_id: string;
+  name: string;
+  phone: string | null;
+  email: string | null;
+  address: string | null;
+  company: string | null;
+  notes: string | null;
+  tags: string[];
+  created_at: string;
+  updated_at: string;
+  // Computed / joined fields
+  total_revenue?: number;
+  job_count?: number;
+  last_job_date?: string;
 }
 
 export interface AIQuoteResponse {
