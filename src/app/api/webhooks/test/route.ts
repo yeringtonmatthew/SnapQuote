@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { isAllowedWebhookUrl } from '@/lib/validate-url';
 
 export async function POST() {
   const supabase = createClient();
@@ -20,6 +21,13 @@ export async function POST() {
   if (!profile?.webhook_url) {
     return NextResponse.json(
       { error: 'No webhook URL configured' },
+      { status: 400 }
+    );
+  }
+
+  if (!isAllowedWebhookUrl(profile.webhook_url)) {
+    return NextResponse.json(
+      { error: 'Webhook URL must be a publicly reachable HTTP or HTTPS address' },
       { status: 400 }
     );
   }

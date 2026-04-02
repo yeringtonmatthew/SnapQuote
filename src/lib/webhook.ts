@@ -1,3 +1,5 @@
+import { isAllowedWebhookUrl } from '@/lib/validate-url';
+
 /**
  * Fire a webhook notification to the user's configured webhook URL.
  * This is fire-and-forget — failures are silently ignored so they
@@ -20,6 +22,7 @@ export async function fireWebhook(
       .single();
 
     if (!user?.webhook_url) return;
+    if (!isAllowedWebhookUrl(user.webhook_url)) return;
 
     fetch(user.webhook_url, {
       method: 'POST',

@@ -21,7 +21,7 @@ export async function POST(
   // Public endpoint — no auth required (customer is accepting)
   const { data: quote, error: fetchError } = await supabase
     .from('quotes')
-    .select('id, status, pipeline_stage, customer_name, customer_email, contractor_id, quote_number, total, deposit_amount')
+    .select('id, status, pipeline_stage, customer_name, customer_email, contractor_id, quote_number, total, deposit_amount, expires_at')
     .eq('id', params.id)
     .single();
 
@@ -31,6 +31,10 @@ export async function POST(
 
   if (quote.status === 'approved' || quote.status === 'deposit_paid') {
     return NextResponse.json({ error: 'Quote has already been accepted' }, { status: 400 });
+  }
+
+  if (quote.expires_at && new Date(quote.expires_at) < new Date() && quote.status === 'sent') {
+    return NextResponse.json({ error: 'This quote has expired. Please contact the contractor for a new quote.' }, { status: 410 });
   }
 
   // Advance pipeline past quote_sent on approval

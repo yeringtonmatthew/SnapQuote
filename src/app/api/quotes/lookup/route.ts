@@ -38,7 +38,7 @@ export async function POST(request: Request) {
     if (phone) {
       // Strip all non-digits for comparison
       const digits = phone.replace(/\D/g, '');
-      query = query.ilike('customer_phone', `%${digits.slice(-10)}%`);
+      query = query.ilike('customer_phone', `%${digits.slice(-10)}`);
     } else if (email) {
       query = query.ilike('customer_email', email.trim());
     }

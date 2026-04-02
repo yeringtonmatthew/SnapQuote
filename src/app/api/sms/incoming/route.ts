@@ -6,6 +6,8 @@
  * so STOP just gets an empty TwiML acknowledgement.
  */
 
+import { validateRequest } from 'twilio';
+
 function twiml(message?: string): Response {
   const body = message
     ? `<?xml version="1.0" encoding="UTF-8"?><Response><Message>${message}</Message></Response>`
@@ -18,6 +20,38 @@ function twiml(message?: string): Response {
 
 export async function POST(request: Request) {
   const formData = await request.formData();
+
+  // --- Twilio signature validation ---
+  const authToken = process.env.TWILIO_AUTH_TOKEN;
+
+  if (!authToken) {
+    console.warn('[sms/incoming] TWILIO_AUTH_TOKEN not set — skipping signature validation (dev mode)');
+  } else {
+    const twilioSignature = request.headers.get('X-Twilio-Signature') ?? '';
+
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+    const webhookUrl = appUrl
+      ? `${appUrl}/api/sms/incoming`
+      : request.url;
+
+    // Build a plain object of all form fields for validation
+    const params: Record<string, string> = {};
+    formData.forEach((value, key) => {
+      params[key] = value as string;
+    });
+
+    const isValid = validateRequest(authToken, twilioSignature, webhookUrl, params);
+
+    if (!isValid) {
+      console.warn('[sms/incoming] Invalid Twilio signature — rejecting request');
+      return new Response('<?xml version="1.0" encoding="UTF-8"?><Response></Response>', {
+        status: 403,
+        headers: { 'Content-Type': 'text/xml' },
+      });
+    }
+  }
+  // --- End signature validation ---
+
   const body = (formData.get('Body') as string || '').trim().toLowerCase();
   const from = formData.get('From') as string;
 

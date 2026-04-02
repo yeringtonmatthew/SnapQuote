@@ -67,7 +67,7 @@ export async function GET(
         metadata: {
           quote_id: quote.id,
         },
-        success_url: `${appUrl}/receipt/${quote.id}?paid=true`,
+        success_url: `${appUrl}/receipt/${quote.id}?paid=true&new=1`,
         cancel_url: `${appUrl}/q/${quote.id}?cancelled=true`,
       },
       {

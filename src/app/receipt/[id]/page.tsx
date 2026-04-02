@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { ReviewPrompt } from '@/components/ReviewPrompt';
@@ -47,7 +48,7 @@ export default async function ReceiptPage({ params }: { params: { id: string } }
 
   return (
     <div className="force-light min-h-dvh bg-[#f5f5f7]">
-      <ConfettiOnMount />
+      <Suspense><ConfettiOnMount /></Suspense>
 
       {/* Header */}
       <div className="bg-white border-b border-gray-100 px-6 py-5">

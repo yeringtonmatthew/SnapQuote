@@ -805,9 +805,11 @@ export default async function CustomerProposalPage({
               >
                 <div className="min-w-0 flex-1 pr-4">
                   <p className="text-[15px] font-medium text-gray-900 leading-snug">{item.description}</p>
-                  <p className="mt-1 text-[12px] text-gray-400">
-                    {item.quantity} {item.unit} × {fmt(Number(item.unit_price))}
-                  </p>
+                  {(Number(item.quantity) > 1 || (item.unit && item.unit.trim() !== '')) && (
+                    <p className="mt-1 text-[12px] text-gray-400">
+                      {item.quantity} {item.unit} × {fmt(Number(item.unit_price))}
+                    </p>
+                  )}
                 </div>
                 <p className="shrink-0 text-[15px] font-semibold text-gray-900 tabular-nums">
                   {fmt(Number(item.total))}
