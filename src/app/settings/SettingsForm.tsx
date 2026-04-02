@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { LogoUpload } from '@/components/LogoUpload';
@@ -8,6 +8,7 @@ import { StripeConnectButton } from '@/components/StripeConnectButton';
 import PhoneInput from '@/components/ui/PhoneInput';
 import FormField from '@/components/ui/FormField';
 import { Spinner } from '@/components/ui/Spinner';
+import { TeamSection } from './TeamSection';
 
 interface Props {
   profile: any;
@@ -17,13 +18,63 @@ interface Props {
   stripeStatus?: string | null;
 }
 
-const TABS = ['Profile', 'Pricing', 'Branding', 'Payments', 'Automation', 'Advanced'] as const;
+const TABS = ['Account', 'Profile', 'Team', 'Pricing', 'Branding', 'Payments', 'Automation', 'Advanced'] as const;
 type Tab = typeof TABS[number];
 
 export function SettingsForm({ profile, userId, email, stripeConnected, stripeStatus }: Props) {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<Tab>('Profile');
+  const [activeTab, setActiveTab] = useState<Tab>('Account');
   const [saving, setSaving] = useState(false);
+
+  // Account tab state
+  const [editingEmail, setEditingEmail] = useState(false);
+  const [newEmail, setNewEmail] = useState('');
+  const [emailUpdating, setEmailUpdating] = useState(false);
+  const [emailError, setEmailError] = useState<string | null>(null);
+  const [emailSuccess, setEmailSuccess] = useState(false);
+  const [emailCooldown, setEmailCooldown] = useState(0);
+
+  // Cooldown timer for email change rate limiting
+  useEffect(() => {
+    if (emailCooldown <= 0) return;
+    const timer = setInterval(() => {
+      setEmailCooldown((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [emailCooldown]);
+
+  const handleEmailUpdate = useCallback(async () => {
+    if (!newEmail.trim() || emailCooldown > 0) return;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(newEmail.trim())) {
+      setEmailError('Please enter a valid email address');
+      return;
+    }
+    setEmailError(null);
+    setEmailSuccess(false);
+    setEmailUpdating(true);
+
+    try {
+      const supabase = createClient();
+      const { error } = await supabase.auth.updateUser({ email: newEmail.trim() });
+      if (error) {
+        setEmailError(error.message);
+      } else {
+        setEmailSuccess(true);
+        setEmailCooldown(60);
+      }
+    } catch {
+      setEmailError('Something went wrong. Please try again.');
+    } finally {
+      setEmailUpdating(false);
+    }
+  }, [newEmail, emailCooldown]);
   const [saved, setSaved] = useState(false);
   const [logoUrl, setLogoUrl] = useState<string | null>(profile?.logo_url || null);
   const [businessName, setBusinessName] = useState(profile?.business_name || '');
@@ -146,6 +197,116 @@ export function SettingsForm({ profile, userId, email, stripeConnected, stripeSt
           </button>
         ))}
       </div>
+
+      {/* Account Tab */}
+      {activeTab === 'Account' && (
+        <div className="card space-y-4">
+          <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">Account</p>
+
+          <div>
+            <label className="label">Email Address</label>
+            {!editingEmail ? (
+              <div className="flex items-center justify-between rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 px-4 py-3">
+                <span className="text-sm text-gray-900 dark:text-gray-100">{email}</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditingEmail(true);
+                    setNewEmail('');
+                    setEmailError(null);
+                    setEmailSuccess(false);
+                  }}
+                  className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                  title="Edit email"
+                >
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" />
+                  </svg>
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 px-4 py-2 text-xs text-gray-400">
+                  <svg className="h-3.5 w-3.5 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+                  </svg>
+                  Current: {email}
+                </div>
+
+                <div>
+                  <label className="label">New Email Address</label>
+                  <input
+                    type="email"
+                    value={newEmail}
+                    onChange={(e) => {
+                      setNewEmail(e.target.value);
+                      setEmailError(null);
+                    }}
+                    placeholder="newemail@example.com"
+                    className="input-field"
+                    autoFocus
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') handleEmailUpdate();
+                      if (e.key === 'Escape') setEditingEmail(false);
+                    }}
+                  />
+                </div>
+
+                <p className="text-xs text-gray-400">
+                  A confirmation link will be sent to your new email.
+                </p>
+
+                {emailError && (
+                  <div className="rounded-xl border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 px-3 py-2 text-[13px] font-medium text-red-700 dark:text-red-400">
+                    {emailError}
+                  </div>
+                )}
+
+                {emailSuccess && (
+                  <div className="rounded-xl border border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/20 px-3 py-2 text-[13px] font-medium text-green-700 dark:text-green-400">
+                    Check your new email inbox for a confirmation link
+                  </div>
+                )}
+
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditingEmail(false);
+                      setNewEmail('');
+                      setEmailError(null);
+                      setEmailSuccess(false);
+                    }}
+                    className="flex-1 rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 py-2.5 text-[13px] font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors press-scale"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleEmailUpdate}
+                    disabled={!newEmail.trim() || emailUpdating || emailCooldown > 0}
+                    className="flex-1 rounded-2xl bg-brand-600 py-2.5 text-[13px] font-semibold text-white hover:bg-brand-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors press-scale"
+                  >
+                    {emailUpdating ? (
+                      <span className="flex items-center justify-center gap-2">
+                        <Spinner size="sm" />
+                        Updating...
+                      </span>
+                    ) : emailCooldown > 0 ? (
+                      `Wait ${emailCooldown}s`
+                    ) : (
+                      'Update Email'
+                    )}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Team Tab */}
+      {activeTab === 'Team' && <TeamSection />}
 
       {/* Profile Tab */}
       {activeTab === 'Profile' && (

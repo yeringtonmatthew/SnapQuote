@@ -221,6 +221,17 @@ export interface Client {
   last_job_date?: string;
 }
 
+export interface TeamMember {
+  id: string;
+  owner_id: string;
+  email: string;
+  full_name: string | null;
+  role: 'admin' | 'member';
+  status: 'invited' | 'active';
+  invited_at: string;
+  joined_at: string | null;
+}
+
 export interface AIQuoteResponse {
   job_summary: string;
   scope_of_work: string;
