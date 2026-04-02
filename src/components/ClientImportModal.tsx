@@ -168,7 +168,7 @@ export default function ClientImportModal({ isOpen, onClose, onComplete }: Clien
   const [mapping, setMapping] = useState<Record<string, string | null>>({});
   const [error, setError] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState(false);
-  const [results, setResults] = useState<{ imported: number; skipped: number; duplicates: number; errors: string[] } | null>(null);
+  const [results, setResults] = useState<{ imported: number; updated: number; skipped: number; duplicates: number; errors: string[] } | null>(null);
   const [progress, setProgress] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -252,6 +252,7 @@ export default function ClientImportModal({ isOpen, onClose, onComplete }: Clien
     // For large files, send in chunks and report progress
     const CHUNK_SIZE = 500;
     let totalImported = 0;
+    let totalUpdated = 0;
     let totalSkipped = 0;
     let totalDuplicates = 0;
     const allErrors: string[] = [];
@@ -270,6 +271,7 @@ export default function ClientImportModal({ isOpen, onClose, onComplete }: Clien
           allErrors.push(data.error || `Chunk ${Math.floor(i / CHUNK_SIZE) + 1} failed`);
         } else {
           totalImported += data.imported || 0;
+          totalUpdated += data.updated || 0;
           totalSkipped += data.skipped || 0;
           totalDuplicates += data.duplicates || 0;
           if (data.errors?.length) allErrors.push(...data.errors);
@@ -280,9 +282,9 @@ export default function ClientImportModal({ isOpen, onClose, onComplete }: Clien
       setProgress(Math.round(((Math.floor(i / CHUNK_SIZE) + 1) / totalChunks) * 100));
     }
 
-    setResults({ imported: totalImported, skipped: totalSkipped, duplicates: totalDuplicates, errors: allErrors });
+    setResults({ imported: totalImported, updated: totalUpdated, skipped: totalSkipped, duplicates: totalDuplicates, errors: allErrors });
     setStep('results');
-    if (totalImported > 0) onComplete();
+    if (totalImported > 0 || totalUpdated > 0) onComplete();
   }
 
   if (!isOpen) return null;
@@ -534,6 +536,16 @@ export default function ClientImportModal({ isOpen, onClose, onComplete }: Clien
                     <span className="text-[13px] font-medium text-green-700 dark:text-green-400">{results.imported} clients imported</span>
                   </div>
                 </div>
+                {results.updated > 0 && (
+                  <div className="flex items-center justify-between rounded-xl bg-blue-50 dark:bg-blue-950/20 px-4 py-2.5">
+                    <div className="flex items-center gap-2">
+                      <svg className="h-4 w-4 text-blue-500" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182" />
+                      </svg>
+                      <span className="text-[13px] font-medium text-blue-700 dark:text-blue-400">{results.updated} existing clients updated</span>
+                    </div>
+                  </div>
+                )}
                 {results.duplicates > 0 && (
                   <div className="flex items-center justify-between rounded-xl bg-amber-50 dark:bg-amber-950/20 px-4 py-2.5">
                     <div className="flex items-center gap-2">

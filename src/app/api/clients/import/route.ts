@@ -82,18 +82,21 @@ export async function POST(req: NextRequest) {
   // Fetch existing clients for duplicate checking
   const { data: existingClients } = await supabase
     .from('clients')
-    .select('phone, email')
+    .select('name, phone, email')
     .eq('user_id', user.id);
 
+  const existingNames = new Set<string>();
   const existingPhones = new Set<string>();
   const existingEmails = new Set<string>();
   for (const c of existingClients || []) {
+    if (c.name) existingNames.add(c.name.toLowerCase().trim());
     if (c.phone) existingPhones.add(c.phone.replace(/\D/g, ''));
     if (c.email) existingEmails.add(c.email.toLowerCase());
   }
 
   let skipped = 0;
   let duplicates = 0;
+  let updated = 0;
   const errors: string[] = [];
   const toInsert: {
     user_id: string;
@@ -107,6 +110,7 @@ export async function POST(req: NextRequest) {
   }[] = [];
 
   // Track duplicates within the import itself
+  const importNames = new Set<string>();
   const importPhones = new Set<string>();
   const importEmails = new Set<string>();
 
@@ -147,7 +151,9 @@ export async function POST(req: NextRequest) {
     // Duplicate check against existing clients
     const phoneDigits = phone ? phone.replace(/\D/g, '') : '';
     const emailLower = email ? email.toLowerCase() : '';
+    const nameLower = name.toLowerCase().trim();
 
+    // Exact duplicate (phone or email already exists) — skip entirely
     let isDuplicate = false;
     if (phoneDigits && (existingPhones.has(phoneDigits) || importPhones.has(phoneDigits))) {
       isDuplicate = true;
@@ -161,7 +167,31 @@ export async function POST(req: NextRequest) {
       continue;
     }
 
+    // Name match — update existing client with new data instead of creating duplicate
+    if (existingNames.has(nameLower) || importNames.has(nameLower)) {
+      // Update the existing client with any new fields
+      const updateFields: Record<string, string | null> = {};
+      if (phone) updateFields.phone = phone;
+      if (email) updateFields.email = email;
+      if (address) updateFields.address = address;
+      if (company) updateFields.company = company;
+      if (notes) updateFields.notes = notes;
+
+      if (Object.keys(updateFields).length > 0) {
+        await supabase
+          .from('clients')
+          .update(updateFields)
+          .eq('user_id', user.id)
+          .ilike('name', nameLower);
+        updated++;
+      } else {
+        duplicates++;
+      }
+      continue;
+    }
+
     // Track for intra-import dedup
+    importNames.add(nameLower);
     if (phoneDigits) importPhones.add(phoneDigits);
     if (emailLower) importEmails.add(emailLower);
 
@@ -193,5 +223,5 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  return NextResponse.json({ imported, skipped, duplicates, errors });
+  return NextResponse.json({ imported, updated, skipped, duplicates, errors });
 }
