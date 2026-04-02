@@ -20,6 +20,7 @@ interface PipelineBoardProps {
 
 const STAGE_OPTIONS = [
   { stage: 'lead', label: 'Lead', color: 'gray-400' },
+  { stage: 'follow_up', label: 'Follow Up', color: 'orange-500' },
   { stage: 'quote_created', label: 'Quote Created', color: 'slate-500' },
   { stage: 'quote_sent', label: 'Quote Sent', color: 'blue-500' },
   { stage: 'deposit_collected', label: 'Deposit Collected', color: 'green-500' },
@@ -31,6 +32,7 @@ const STAGE_OPTIONS = [
 // Map color strings to Tailwind bg classes for the dot
 const dotColorMap: Record<string, string> = {
   'gray-400': 'bg-gray-400',
+  'orange-500': 'bg-orange-500',
   'slate-500': 'bg-slate-500',
   'blue-500': 'bg-blue-500',
   'green-500': 'bg-green-500',
