@@ -47,7 +47,7 @@ function isBlockedIPv4(hostname: string): boolean {
 
 function isBlockedIPv6(hostname: string): boolean {
   // Node / browser URL parsing wraps bare IPv6 in brackets: [::1]
-  const bare = hostname.startsWith('[') && hostname.endsWith(')')
+  const bare = hostname.startsWith('[') && hostname.endsWith(']')
     ? hostname.slice(1, -1)
     : hostname.replace(/^\[|\]$/g, '').toLowerCase();
 

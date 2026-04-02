@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Spinner } from '@/components/ui/Spinner';
 
 interface ClientImportModalProps {
@@ -170,6 +171,8 @@ export default function ClientImportModal({ isOpen, onClose, onComplete }: Clien
   const [dragOver, setDragOver] = useState(false);
   const [results, setResults] = useState<{ imported: number; updated: number; skipped: number; duplicates: number; errors: string[] } | null>(null);
   const [progress, setProgress] = useState(0);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const reset = useCallback(() => {
@@ -287,7 +290,7 @@ export default function ClientImportModal({ isOpen, onClose, onComplete }: Clien
     if (totalImported > 0 || totalUpdated > 0) onComplete();
   }
 
-  if (!isOpen) return null;
+  if (!isOpen || !mounted) return null;
 
   // Determine which primary fields are detected
   const nameDetected = !!(mapping.name || (mapping.first_name && mapping.last_name));
@@ -300,7 +303,7 @@ export default function ClientImportModal({ isOpen, onClose, onComplete }: Clien
     return !!mapping[f];
   });
 
-  return (
+  return createPortal(
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
       onClick={(e) => { if (e.target === e.currentTarget) handleClose(); }}
@@ -615,6 +618,7 @@ export default function ClientImportModal({ isOpen, onClose, onComplete }: Clien
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

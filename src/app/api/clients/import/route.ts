@@ -178,11 +178,13 @@ export async function POST(req: NextRequest) {
       if (notes) updateFields.notes = notes;
 
       if (Object.keys(updateFields).length > 0) {
+        // Escape LIKE special characters to prevent unintended matches
+        const escapedName = nameLower.replace(/%/g, '\\%').replace(/_/g, '\\_');
         await supabase
           .from('clients')
           .update(updateFields)
           .eq('user_id', user.id)
-          .ilike('name', nameLower);
+          .ilike('name', escapedName);
         updated++;
       } else {
         duplicates++;

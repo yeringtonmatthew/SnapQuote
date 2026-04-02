@@ -225,13 +225,22 @@ export async function POST(request: NextRequest) {
     generatePropertyReportForClient(supabase, clientId, address.trim(), contractorId).catch(() => {});
   }
 
-  // Update lead source stats
+  // Update lead source stats (atomic increment via rpc, fallback to direct update)
+  await supabase.rpc('increment_lead_source_count', { source_id: leadSource.id }).then(
+    () => {},
+    // Fallback if RPC doesn't exist yet
+    () => supabase
+      .from('lead_sources')
+      .update({
+        lead_count: (leadSource.lead_count || 0) + 1,
+        last_lead_at: new Date().toISOString(),
+      })
+      .eq('id', leadSource.id)
+  );
+  // Always update last_lead_at
   await supabase
     .from('lead_sources')
-    .update({
-      lead_count: (leadSource.lead_count || 0) + 1,
-      last_lead_at: new Date().toISOString(),
-    })
+    .update({ last_lead_at: new Date().toISOString() })
     .eq('id', leadSource.id);
 
   return NextResponse.json({
