@@ -4,6 +4,8 @@ import { StarRating } from './StarRating';
 import EmptyState from '@/components/EmptyState';
 import type { Metadata } from 'next';
 
+export const dynamic = 'force-dynamic';
+
 const tradeLabels: Record<string, string> = {
   plumber: 'Plumber',
   hvac: 'HVAC Specialist',

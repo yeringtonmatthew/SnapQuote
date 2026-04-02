@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
+
+export const dynamic = 'force-dynamic';
 import { AcceptQuoteButton } from '@/components/AcceptQuoteButton';
 import { DownloadPdfButton } from '@/components/DownloadPdfButton';
 import { PrintButton } from '@/components/PrintButton';
@@ -167,8 +169,9 @@ export default async function CustomerProposalPage({
     painter: 'Professional Painter',
     landscaper: 'Professional Landscaper',
     general: 'Licensed General Contractor',
+    other: 'Licensed Contractor',
   };
-  const tradeLabel = (profile?.trade_type && tradeMap[profile.trade_type]) || profile?.trade_type || 'Licensed Contractor';
+  const tradeLabel = (profile?.trade_type && tradeMap[profile.trade_type]) || 'Licensed Contractor';
   const contractorPhone = profile?.phone || null;
 
   if (isCancelled) {

@@ -3,6 +3,8 @@ import { createClient } from '@/lib/supabase/server';
 import { ReviewPrompt } from '@/components/ReviewPrompt';
 import { ConfettiOnMount } from '@/components/ConfettiOnMount';
 
+export const dynamic = 'force-dynamic';
+
 const fmt = (n: number) =>
   '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
