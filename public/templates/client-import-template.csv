@@ -1,0 +1,3 @@
+Name,Phone,Email,Address,Company,Notes,Tags
+John Smith,555-123-4567,john@example.com,"123 Main St, Indianapolis IN 46201",Smith Construction,Great customer,residential
+Jane Doe,555-987-6543,jane@example.com,"456 Oak Ave, Carmel IN 46032",,Referred by John,commercial

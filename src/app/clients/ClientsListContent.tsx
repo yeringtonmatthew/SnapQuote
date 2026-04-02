@@ -1,8 +1,10 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import ClientCreateSheet from '@/components/ClientCreateSheet';
+import ClientImportModal from '@/components/ClientImportModal';
 
 interface ClientItem {
   id: string;
@@ -34,8 +36,10 @@ function avatarColor(name: string): string {
 }
 
 export default function ClientsListContent({ clients }: { clients: ClientItem[] }) {
+  const router = useRouter();
   const [search, setSearch] = useState('');
   const [showCreate, setShowCreate] = useState(false);
+  const [showImport, setShowImport] = useState(false);
 
   const filtered = clients.filter((c) =>
     c.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -76,6 +80,15 @@ export default function ClientsListContent({ clients }: { clients: ClientItem[] 
               className="w-full rounded-xl bg-white dark:bg-gray-900 pl-10 pr-4 py-2.5 text-[14px] text-gray-900 dark:text-gray-100 placeholder:text-gray-400 ring-1 ring-black/[0.04] dark:ring-white/[0.06] focus:outline-none focus:ring-2 focus:ring-brand-500"
             />
           </div>
+          <button
+            onClick={() => setShowImport(true)}
+            className="flex items-center gap-1.5 rounded-xl bg-white dark:bg-gray-900 px-4 py-2.5 text-[13px] font-semibold text-gray-700 dark:text-gray-300 ring-1 ring-black/[0.04] dark:ring-white/[0.06] shadow-sm press-scale hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+          >
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+            </svg>
+            <span className="hidden sm:inline">Import</span>
+          </button>
           <button
             onClick={() => setShowCreate(true)}
             className="flex items-center gap-1.5 rounded-xl bg-brand-600 px-4 py-2.5 text-[13px] font-semibold text-white shadow-sm press-scale"
@@ -194,6 +207,12 @@ export default function ClientsListContent({ clients }: { clients: ClientItem[] 
       <ClientCreateSheet
         open={showCreate}
         onClose={() => setShowCreate(false)}
+      />
+
+      <ClientImportModal
+        isOpen={showImport}
+        onClose={() => setShowImport(false)}
+        onComplete={() => router.refresh()}
       />
     </>
   );
