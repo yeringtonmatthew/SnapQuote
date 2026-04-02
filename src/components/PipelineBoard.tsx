@@ -396,7 +396,8 @@ export default function PipelineBoard({ columns: initialColumns }: PipelineBoard
           onClick={closeQuickActions}
         >
           <div
-            className="w-full max-w-lg rounded-t-2xl bg-white dark:bg-gray-900 p-5 pb-10 animate-sheet-up"
+            className="w-full max-w-lg rounded-t-2xl bg-white dark:bg-gray-900 p-5 pb-10 animate-sheet-up overflow-y-auto"
+            style={{ maxHeight: '85vh' }}
             onClick={(e) => e.stopPropagation()}
           >
             <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-gray-200 dark:bg-gray-700" />
