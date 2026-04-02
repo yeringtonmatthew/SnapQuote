@@ -22,7 +22,7 @@ export default async function SchedulePage() {
   const endStr = `${end.getFullYear()}-${String(end.getMonth() + 1).padStart(2, '0')}-${String(end.getDate()).padStart(2, '0')}`;
 
   const { data: events } = await supabase
-    .from('calendar_events')
+    .from('events')
     .select(`
       *,
       quotes:quote_id (
@@ -32,6 +32,11 @@ export default async function SchedulePage() {
         quote_number,
         pipeline_stage,
         total
+      ),
+      clients:client_id (
+        name,
+        phone,
+        address
       )
     `)
     .eq('contractor_id', user.id)
@@ -40,40 +45,43 @@ export default async function SchedulePage() {
     .order('event_date', { ascending: true })
     .order('start_time', { ascending: true });
 
-  // Flatten joined quote data onto event
+  // Flatten joined quote/client data onto event
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const calendarEvents: CalendarEvent[] = (events || []).map((e: any) => {
     const quote = e.quotes as Record<string, unknown> | null;
-    const { quotes: _q, ...rest } = e;
+    const client = e.clients as Record<string, unknown> | null;
+    const { quotes: _q, clients: _c, ...rest } = e;
     return {
       ...rest,
-      customer_name: (quote?.customer_name as string) ?? undefined,
-      job_address: (quote?.job_address as string) ?? undefined,
-      customer_phone: (quote?.customer_phone as string) ?? undefined,
+      customer_name: (client?.name as string) ?? (quote?.customer_name as string) ?? undefined,
+      job_address: (client?.address as string) ?? (quote?.job_address as string) ?? undefined,
+      customer_phone: (client?.phone as string) ?? (quote?.customer_phone as string) ?? undefined,
       quote_number: (quote?.quote_number as number) ?? undefined,
       pipeline_stage: (quote?.pipeline_stage as string) ?? undefined,
       total: (quote?.total as number) ?? undefined,
     } as CalendarEvent;
   });
 
-  // Fetch approved/deposit_paid quotes that have no calendar events (needs scheduling)
-  const { data: needsScheduling } = await supabase
+  // Fetch all active quotes for linking (not just unscheduled)
+  const { data: allQuotes } = await supabase
     .from('quotes')
     .select('id, customer_name, job_address, quote_number, status, total, pipeline_stage')
     .eq('contractor_id', user.id)
-    .in('status', ['approved', 'deposit_paid'])
     .eq('archived', false)
+    .neq('status', 'cancelled')
     .order('created_at', { ascending: false })
-    .limit(20);
+    .limit(50);
 
-  // Filter out quotes that already have events
+  // Filter unscheduled quotes for the "Needs Scheduling" section
   const eventQuoteIds = new Set(
     (events || [])
       .map((e: Record<string, unknown>) => e.quote_id as string | null)
       .filter(Boolean)
   );
-  const unscheduledQuotes = (needsScheduling || []).filter(
-    (q: Record<string, unknown>) => !eventQuoteIds.has(q.id as string)
+  const unscheduledQuotes = (allQuotes || []).filter(
+    (q: Record<string, unknown>) =>
+      ['approved', 'deposit_paid'].includes(q.status as string) &&
+      !eventQuoteIds.has(q.id as string)
   );
 
   return (
@@ -83,6 +91,7 @@ export default async function SchedulePage() {
         <CalendarView
           initialEvents={calendarEvents}
           unscheduledQuotes={unscheduledQuotes}
+          allQuotes={(allQuotes || []) as any}
         />
         <BottomNav active="schedule" />
       </div>

@@ -110,6 +110,7 @@ interface UnscheduledQuote {
 interface CalendarViewProps {
   initialEvents: CalendarEvent[];
   unscheduledQuotes: UnscheduledQuote[];
+  allQuotes?: { id: string; customer_name: string; job_address: string | null }[];
 }
 
 // ── Event Card Component ─────────────────────────────────
@@ -135,7 +136,7 @@ function EventCard({
       >
         <div className="flex items-center gap-1.5">
           <div className={`h-2 w-2 rounded-full shrink-0 ${colorBar}`} />
-          <span className="text-[12px] font-semibold text-gray-900 truncate">
+          <span className="text-[12px] font-bold text-gray-900 truncate">
             {event.customer_name || event.title}
           </span>
         </div>
@@ -145,43 +146,214 @@ function EventCard({
 
   return (
     <button
-      onClick={() => {
-        if (event.quote_id) {
-          window.location.href = `/jobs/${event.quote_id}`;
-        } else {
-          onTap(event);
-        }
-      }}
-      className="w-full text-left rounded-xl bg-white ring-1 ring-black/[0.04] overflow-hidden active:scale-[0.98] transition-transform"
+      onClick={() => onTap(event)}
+      className="w-full text-left rounded-xl bg-white ring-1 ring-black/[0.04] overflow-hidden active:scale-[0.98] transition-all hover:shadow-md hover:ring-black/[0.08]"
     >
       <div className="flex">
         <div className={`w-1 shrink-0 ${colorBar}`} />
-        <div className="flex-1 px-3.5 py-3 min-w-0">
+        <div className="flex-1 px-3.5 py-2.5 min-w-0">
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0 flex-1">
-              <p className="text-[14px] font-semibold text-gray-900 truncate">
+              <p className="text-[14px] font-bold text-gray-900 truncate">
                 {event.customer_name || event.title}
               </p>
-              <p className="text-[13px] text-gray-500 mt-0.5">
+              <p className="text-[12px] text-gray-400 mt-0.5">
                 {event.all_day ? 'All day' : formatTimeRange(event.start_time, event.end_time)}
               </p>
             </div>
-            <span className={`shrink-0 inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ${lightBg} ${textColor}`}>
+            <span className={`shrink-0 inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold ${lightBg} ${textColor}`}>
               {EVENT_TYPE_LABELS[eventType] || eventType}
             </span>
           </div>
-          {event.job_address && (
-            <div className="flex items-center gap-1 mt-1.5">
-              <svg className="h-3 w-3 shrink-0 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
-              </svg>
-              <span className="text-[12px] text-gray-400 truncate">{event.job_address}</span>
-            </div>
+          {event.job_address && typeof event.job_address === 'string' && (
+            <p className="text-[11px] text-gray-400 truncate mt-1">{event.job_address}</p>
           )}
         </div>
       </div>
     </button>
+  );
+}
+
+// ── Event Detail Sheet ──────────────────────────────────
+function EventDetailSheet({
+  event,
+  onClose,
+  onEdit,
+  onStageUpdate,
+}: {
+  event: CalendarEvent;
+  onClose: () => void;
+  onEdit: () => void;
+  onStageUpdate: (quoteId: string, stage: string) => void;
+}) {
+  const eventType = event.event_type as EventType;
+  const colorBar = EVENT_COLORS[eventType] || 'bg-gray-400';
+  const addr = typeof event.job_address === 'string' ? event.job_address : null;
+  const phone = typeof event.customer_phone === 'string' ? event.customer_phone : null;
+  const [updating, setUpdating] = useState(false);
+
+  const handleStageChange = async (stage: string) => {
+    if (!event.quote_id) return;
+    setUpdating(true);
+    try {
+      await fetch(`/api/quotes/${event.quote_id}/pipeline`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pipeline_stage: stage }),
+      });
+      onStageUpdate(event.quote_id, stage);
+      onClose();
+    } catch { /* silent */ } finally {
+      setUpdating(false);
+    }
+  };
+
+  const pipelineStage = event.pipeline_stage as string | undefined;
+  const canStart = event.quote_id && pipelineStage !== 'in_progress' && pipelineStage !== 'completed';
+  const canComplete = event.quote_id && pipelineStage === 'in_progress';
+
+  return (
+    <>
+      <div className="fixed inset-0 z-50 bg-black/40 animate-sheet-backdrop" onClick={onClose} />
+      <div className="fixed inset-x-0 bottom-0 lg:inset-y-0 lg:left-auto lg:right-0 lg:bottom-auto lg:w-[420px] z-50 animate-sheet-up lg:animate-none">
+        <div className="mx-auto max-w-lg lg:max-w-none lg:h-full rounded-t-2xl lg:rounded-none bg-white dark:bg-gray-900 shadow-2xl pb-8 lg:pb-0 lg:overflow-y-auto">
+          <div className="flex justify-center pt-3 pb-2">
+            <div className="h-1 w-8 rounded-full bg-gray-300 dark:bg-gray-700" />
+          </div>
+
+          {/* Title */}
+          <div className="px-5 pb-3">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2 mb-1">
+                  <div className={`h-2.5 w-2.5 rounded-full ${colorBar}`} />
+                  <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
+                    {EVENT_TYPE_LABELS[eventType] || eventType}
+                  </span>
+                </div>
+                <h2 className="text-[20px] font-bold text-gray-900 dark:text-gray-100 truncate">
+                  {event.customer_name || event.title}
+                </h2>
+              </div>
+              <button onClick={onEdit} className="shrink-0 rounded-lg bg-gray-100 dark:bg-gray-800 px-3 py-1.5 text-[12px] font-semibold text-gray-600 dark:text-gray-300 press-scale">
+                Edit
+              </button>
+            </div>
+
+            {/* Address */}
+            {addr && (
+              <a
+                href={`maps://maps.apple.com/?daddr=${encodeURIComponent(addr)}`}
+                className="flex items-center gap-1.5 mt-2 text-[13px] text-gray-500 press-scale"
+              >
+                <svg className="h-3.5 w-3.5 shrink-0 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.75} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
+                </svg>
+                <span className="truncate">{addr}</span>
+              </a>
+            )}
+
+            {/* Time */}
+            <p className="text-[13px] text-gray-400 mt-1.5">
+              {event.all_day ? 'All day' : formatTimeRange(event.start_time, event.end_time)}
+            </p>
+          </div>
+
+          {/* Directions — primary CTA */}
+          {addr && (
+            <div className="px-5 mb-4">
+              <a
+                href={`maps://maps.apple.com/?daddr=${encodeURIComponent(addr)}`}
+                className="flex items-center justify-center gap-2 w-full rounded-xl bg-brand-600 py-3.5 text-[15px] font-semibold text-white shadow-sm press-scale"
+              >
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.75} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 6.75V15m6-6v8.25m.503 3.498l4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 00-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0z" />
+                </svg>
+                Directions
+              </a>
+            </div>
+          )}
+
+          {/* Action row */}
+          <div className="px-5 grid grid-cols-4 gap-2 mb-4">
+            {/* Call */}
+            {phone ? (
+              <a href={`tel:${phone}`} className="flex flex-col items-center gap-1 rounded-xl bg-gray-50 dark:bg-gray-800 py-3 press-scale">
+                <svg className="h-5 w-5 text-green-600" fill="none" viewBox="0 0 24 24" strokeWidth={1.75} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z" /></svg>
+                <span className="text-[10px] font-semibold text-gray-500">Call</span>
+              </a>
+            ) : (
+              <div className="flex flex-col items-center gap-1 rounded-xl bg-gray-50/50 py-3 opacity-30">
+                <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.75} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z" /></svg>
+                <span className="text-[10px] font-semibold text-gray-400">Call</span>
+              </div>
+            )}
+
+            {/* Text */}
+            {phone ? (
+              <a href={`sms:${phone}`} className="flex flex-col items-center gap-1 rounded-xl bg-gray-50 dark:bg-gray-800 py-3 press-scale">
+                <svg className="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" strokeWidth={1.75} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" /></svg>
+                <span className="text-[10px] font-semibold text-gray-500">Text</span>
+              </a>
+            ) : (
+              <div className="flex flex-col items-center gap-1 rounded-xl bg-gray-50/50 py-3 opacity-30">
+                <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.75} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" /></svg>
+                <span className="text-[10px] font-semibold text-gray-400">Text</span>
+              </div>
+            )}
+
+            {/* View Job */}
+            {event.quote_id ? (
+              <a href={`/jobs/${event.quote_id}`} className="flex flex-col items-center gap-1 rounded-xl bg-gray-50 dark:bg-gray-800 py-3 press-scale">
+                <svg className="h-5 w-5 text-violet-600" fill="none" viewBox="0 0 24 24" strokeWidth={1.75} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>
+                <span className="text-[10px] font-semibold text-gray-500">View Job</span>
+              </a>
+            ) : (
+              <div className="flex flex-col items-center gap-1 rounded-xl bg-gray-50/50 py-3 opacity-30">
+                <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.75} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>
+                <span className="text-[10px] font-semibold text-gray-400">Job</span>
+              </div>
+            )}
+
+            {/* Start / Complete */}
+            {canStart && (
+              <button
+                onClick={() => handleStageChange('in_progress')}
+                disabled={updating}
+                className="flex flex-col items-center gap-1 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 py-3 press-scale"
+              >
+                <svg className="h-5 w-5 text-emerald-600" fill="none" viewBox="0 0 24 24" strokeWidth={1.75} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 010 1.972l-11.54 6.347a1.125 1.125 0 01-1.667-.986V5.653z" /></svg>
+                <span className="text-[10px] font-semibold text-emerald-600">{updating ? '...' : 'Start'}</span>
+              </button>
+            )}
+            {canComplete && (
+              <button
+                onClick={() => handleStageChange('completed')}
+                disabled={updating}
+                className="flex flex-col items-center gap-1 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 py-3 press-scale"
+              >
+                <svg className="h-5 w-5 text-emerald-600" fill="none" viewBox="0 0 24 24" strokeWidth={1.75} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                <span className="text-[10px] font-semibold text-emerald-600">{updating ? '...' : 'Complete'}</span>
+              </button>
+            )}
+            {!canStart && !canComplete && (
+              <div className="flex flex-col items-center gap-1 rounded-xl bg-gray-50/50 py-3 opacity-30">
+                <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.75} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                <span className="text-[10px] font-semibold text-gray-400">Done</span>
+              </div>
+            )}
+          </div>
+
+          {/* Notes */}
+          {event.notes && (
+            <div className="px-5 pb-2">
+              <p className="text-[12px] text-gray-400 whitespace-pre-wrap">{event.notes}</p>
+            </div>
+          )}
+        </div>
+      </div>
+    </>
   );
 }
 
@@ -275,29 +447,23 @@ function DayView({
           return (
             <button
               key={ev.id}
-              onClick={() => {
-                if (ev.quote_id) {
-                  window.location.href = `/jobs/${ev.quote_id}`;
-                } else {
-                  onEventTap(ev);
-                }
-              }}
-              className={`absolute left-14 right-2 z-10 rounded-lg border overflow-hidden active:scale-[0.98] transition-transform ${lightBg}`}
+              onClick={() => onEventTap(ev)}
+              className={`absolute left-14 right-2 lg:right-[40%] z-10 rounded-lg border overflow-hidden active:scale-[0.98] transition-transform hover:shadow-md ${lightBg}`}
               style={{ top: `${top}px`, height: `${height}px` }}
             >
               <div className="flex h-full">
                 <div className={`w-1 shrink-0 ${colorBar}`} />
                 <div className="flex-1 px-2.5 py-1.5 min-w-0">
-                  <p className={`text-[12px] font-semibold truncate ${textColor}`}>
+                  <p className={`text-[12px] font-bold truncate ${textColor}`}>
                     {ev.customer_name || ev.title}
                   </p>
                   {height >= 48 && (
-                    <p className="text-[11px] text-gray-500 mt-0.5">
+                    <p className="text-[11px] text-gray-400 mt-0.5">
                       {formatTimeRange(ev.start_time, ev.end_time)}
                     </p>
                   )}
                   {height >= 64 && ev.job_address && (
-                    <p className="text-[10px] text-gray-400 mt-0.5 truncate">{ev.job_address}</p>
+                    <p className="text-[10px] text-gray-400 mt-0.5 truncate">{typeof ev.job_address === 'string' ? ev.job_address : ''}</p>
                   )}
                 </div>
               </div>
@@ -363,7 +529,7 @@ function WeekView({
   return (
     <div className="space-y-4">
       {/* Week strip */}
-      <div className="grid grid-cols-7 gap-1">
+      <div className="grid grid-cols-7 gap-1 lg:gap-2">
         {weekDays.map((day, i) => {
           const isToday = isSameDay(day, today);
           const key = toDateKey(day);
@@ -373,9 +539,9 @@ function WeekView({
             <button
               key={i}
               onClick={() => onDaySelect(day)}
-              className="text-center py-1 active:scale-[0.96] transition-transform"
+              className="text-center py-1 lg:py-3 lg:rounded-xl lg:bg-white lg:ring-1 lg:ring-black/[0.04] lg:hover:shadow-sm active:scale-[0.96] transition-all"
             >
-              <p className="text-[10px] font-medium text-gray-400 uppercase">{DAY_NAMES[i]}</p>
+              <p className="text-[10px] lg:text-[11px] font-medium text-gray-400 uppercase">{DAY_NAMES[i]}</p>
               <div
                 className={`mt-1 mx-auto flex h-9 w-9 items-center justify-center rounded-full text-sm font-semibold transition-colors ${
                   isToday ? 'bg-brand-600 text-white' : 'text-gray-900'
@@ -391,6 +557,10 @@ function WeekView({
                   />
                 ))}
               </div>
+              {/* Desktop: show event count */}
+              {dayEvents.length > 0 && (
+                <p className="hidden lg:block text-[10px] text-gray-400 mt-1">{dayEvents.length} event{dayEvents.length !== 1 ? 's' : ''}</p>
+              )}
             </button>
           );
         })}
@@ -544,7 +714,7 @@ function NeedsSchedulingSection({ quotes }: { quotes: UnscheduledQuote[] }) {
 }
 
 // ── Main CalendarView Component ──────────────────────────
-export function CalendarView({ initialEvents, unscheduledQuotes }: CalendarViewProps) {
+export function CalendarView({ initialEvents, unscheduledQuotes, allQuotes = [] }: CalendarViewProps) {
   const [view, setView] = useState<ViewType>('day');
   const [selectedDate, setSelectedDate] = useState(() => new Date());
   const [events, setEvents] = useState<CalendarEvent[]>(initialEvents);
@@ -625,9 +795,23 @@ export function CalendarView({ initialEvents, unscheduledQuotes }: CalendarViewP
     setDefaultTime(undefined);
   }, [editingEvent]);
 
+  // Event detail sheet state
+  const [detailEvent, setDetailEvent] = useState<CalendarEvent | null>(null);
+
   const handleEventTap = useCallback((event: CalendarEvent) => {
-    setEditingEvent(event);
-    setSheetOpen(true);
+    setDetailEvent(event);
+  }, []);
+
+  const handleEditFromDetail = useCallback(() => {
+    if (detailEvent) {
+      setEditingEvent(detailEvent);
+      setDetailEvent(null);
+      setSheetOpen(true);
+    }
+  }, [detailEvent]);
+
+  const handleStageUpdate = useCallback((quoteId: string, stage: string) => {
+    setEvents((prev) => prev.map((e) => e.quote_id === quoteId ? { ...e, pipeline_stage: stage } : e));
   }, []);
 
   const handleEmptySlotTap = useCallback((hour: number) => {
@@ -645,8 +829,8 @@ export function CalendarView({ initialEvents, unscheduledQuotes }: CalendarViewP
   return (
     <>
       {/* Header */}
-      <header className="sticky top-0 z-10 bg-[#f2f2f7]/90 backdrop-blur-xl border-b border-black/5 px-5 pt-14 pb-3">
-        <div className="mx-auto max-w-lg">
+      <header className="sticky top-0 z-10 bg-[#f2f2f7]/90 backdrop-blur-xl border-b border-black/5 px-5 pt-14 lg:pt-6 pb-3">
+        <div className="mx-auto max-w-7xl">
           {/* Title row */}
           <div className="flex items-center justify-between mb-3">
             <h1 className="text-[22px] font-bold tracking-tight text-gray-900">Schedule</h1>
@@ -690,7 +874,7 @@ export function CalendarView({ initialEvents, unscheduledQuotes }: CalendarViewP
         </div>
       </header>
 
-      <main className="mx-auto max-w-lg px-4 pt-4 space-y-5">
+      <main className="mx-auto max-w-7xl px-4 pt-4 space-y-5 lg:px-8">
         {/* Date navigation (Day and Week views) */}
         {view !== 'agenda' && (
           <div className="flex items-center justify-between">
@@ -748,6 +932,16 @@ export function CalendarView({ initialEvents, unscheduledQuotes }: CalendarViewP
         <NeedsSchedulingSection quotes={unscheduledQuotes} />
       </main>
 
+      {/* Event Detail Sheet */}
+      {detailEvent && (
+        <EventDetailSheet
+          event={detailEvent}
+          onClose={() => setDetailEvent(null)}
+          onEdit={handleEditFromDetail}
+          onStageUpdate={handleStageUpdate}
+        />
+      )}
+
       {/* Event Create/Edit Sheet */}
       <EventCreateSheet
         isOpen={sheetOpen}
@@ -759,7 +953,7 @@ export function CalendarView({ initialEvents, unscheduledQuotes }: CalendarViewP
         onSave={handleSaveEvent}
         defaultDate={toDateKey(selectedDate)}
         defaultTime={defaultTime}
-        quotes={unscheduledQuotes.map((q) => ({
+        quotes={allQuotes.map((q) => ({
           id: q.id,
           customer_name: q.customer_name,
           job_address: q.job_address,

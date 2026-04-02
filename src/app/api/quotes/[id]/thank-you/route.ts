@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createClient } from '@supabase/supabase-js';
 import { Resend } from 'resend';
 
 export async function POST(
@@ -15,7 +15,10 @@ export async function POST(
     });
   }
 
-  const supabase = createClient();
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
 
   const { data: quote, error: quoteError } = await supabase
     .from('quotes')
@@ -41,7 +44,7 @@ export async function POST(
     .eq('id', quote.contractor_id)
     .single();
 
-  const businessName = profile?.business_name || profile?.full_name || 'Your contractor';
+  const businessName = profile?.business_name || profile?.full_name || 'Licensed Professional';
   const amount = Number(quote.deposit_amount).toLocaleString('en-US', {
     minimumFractionDigits: 2,
   });

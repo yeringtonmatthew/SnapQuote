@@ -55,7 +55,7 @@ export default function ClientsListContent({ clients }: { clients: ClientItem[] 
 
   return (
     <>
-      <div className="mx-auto max-w-5xl px-5 pt-4">
+      <div className="mx-auto max-w-7xl px-5 pt-4 lg:px-8">
         {/* Search + Add */}
         <div className="flex items-center gap-3 mb-4">
           <div className="relative flex-1">
@@ -122,7 +122,7 @@ export default function ClientsListContent({ clients }: { clients: ClientItem[] 
                     {letter}
                   </span>
                 </div>
-                <div className="space-y-1">
+                <div className="space-y-1 lg:grid lg:grid-cols-2 lg:gap-2 lg:space-y-0">
                   {grouped[letter].map((client) => {
                     const initial = client.name.charAt(0).toUpperCase();
                     const colors = avatarColor(client.name);
@@ -130,7 +130,7 @@ export default function ClientsListContent({ clients }: { clients: ClientItem[] 
                       <Link
                         key={client.id}
                         href={`/clients/${client.id}`}
-                        className="flex items-center gap-3 rounded-xl bg-white dark:bg-gray-900 p-3 ring-1 ring-black/[0.04] dark:ring-white/[0.06] press-scale transition-all hover:shadow-sm"
+                        className="flex items-center gap-3 rounded-xl bg-white dark:bg-gray-900 p-3 lg:px-5 lg:py-4 ring-1 ring-black/[0.04] dark:ring-white/[0.06] press-scale transition-all hover:shadow-md hover:ring-black/[0.08]"
                       >
                         <div className={`h-10 w-10 shrink-0 rounded-xl flex items-center justify-center text-[13px] font-semibold ${colors}`}>
                           {initial}
@@ -164,6 +164,17 @@ export default function ClientsListContent({ clients }: { clients: ClientItem[] 
                                   {client.job_count} job{client.job_count !== 1 ? 's' : ''}
                                 </span>
                               </>
+                            )}
+                            {/* Desktop: show phone + email inline */}
+                            {client.phone && client.company && (
+                              <span className="hidden lg:inline text-[12px] text-gray-400 tabular-nums">
+                                <span className="text-gray-300 dark:text-gray-600">&middot;</span> {client.phone}
+                              </span>
+                            )}
+                            {client.email && (
+                              <span className="hidden lg:inline text-[12px] text-gray-400 truncate">
+                                <span className="text-gray-300 dark:text-gray-600">&middot;</span> {client.email}
+                              </span>
                             )}
                           </div>
                         </div>

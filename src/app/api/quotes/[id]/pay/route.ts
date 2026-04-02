@@ -55,7 +55,7 @@ export async function POST(
         .eq('id', user.id)
         .single();
 
-      const businessName = profile?.business_name || profile?.full_name || 'Your contractor';
+      const businessName = profile?.business_name || profile?.full_name || 'Licensed Professional';
       const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
       const receiptUrl = `${appUrl}/receipt/${params.id}`;
       const paidAmount = amount || quote.deposit_amount;

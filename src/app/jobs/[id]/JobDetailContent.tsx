@@ -9,9 +9,11 @@ import { JobTaskList } from '@/components/JobTaskList';
 import { JobPhotoManager } from '@/components/JobPhotoManager';
 import StagePicker from '@/components/StagePicker';
 import { BeforeAfterGenerator } from '@/components/BeforeAfterGenerator';
+import { SmartFollowUpButton } from '@/components/SmartFollowUpButton';
 import type { PipelineStage, Quote, JobPhoto } from '@/types/database';
 import { formatQuoteNumber } from '@/lib/format-quote-number';
 import { haptic } from '@/lib/haptic';
+import { getLeadScore, temperatureStyles } from '@/lib/lead-temperature';
 
 const fmt = (n: number) =>
   '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -90,6 +92,9 @@ export function JobDetailContent({ quote, profile, brandColor }: Props) {
   const hasTax = quote.tax_rate != null && Number(quote.tax_rate) > 0;
   const afterDiscount = Math.round((subtotal - discountDisplay) * 100) / 100;
   const taxAmount = hasTax ? Math.round(afterDiscount * (Number(quote.tax_rate!) / 100) * 100) / 100 : 0;
+
+  const leadScore = getLeadScore(quote as unknown as Quote);
+  const tempStyle = temperatureStyles[leadScore.temperature];
 
   const beforePhotos = (quote.job_photos || []).filter((p: JobPhoto) => p.category === 'before');
   const afterPhotos = (quote.job_photos || []).filter((p: JobPhoto) => p.category === 'after');
@@ -358,7 +363,7 @@ export function JobDetailContent({ quote, profile, brandColor }: Props) {
       {/* ── HEADER COMMAND CENTER ──────────────────────── */}
       <div className="sticky top-0 z-10 bg-[#f2f2f7]/80 backdrop-blur-xl">
         {/* Top bar: back + quote number + status */}
-        <div className="mx-auto max-w-lg px-4 pt-3 pb-0">
+        <div className="mx-auto max-w-lg lg:max-w-6xl px-4 pt-3 pb-0">
           <div className="flex items-center justify-between">
             <Link
               href="/pipeline"
@@ -380,7 +385,7 @@ export function JobDetailContent({ quote, profile, brandColor }: Props) {
         </div>
 
         {/* Customer name + address + value + stage */}
-        <div className="mx-auto max-w-lg px-4 pt-3 pb-2">
+        <div className="mx-auto max-w-lg lg:max-w-6xl px-4 pt-3 pb-2">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0 flex-1">
               <h1 className="text-[22px] font-bold tracking-tight text-gray-900 truncate leading-tight">
@@ -389,6 +394,12 @@ export function JobDetailContent({ quote, profile, brandColor }: Props) {
               {quote.job_address && (
                 <p className="mt-0.5 text-[13px] text-gray-400 truncate">{quote.job_address}</p>
               )}
+              <div className="mt-1.5 flex items-center gap-1.5">
+                <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold ${tempStyle.bg} ${tempStyle.text} ring-1 ${tempStyle.ring}`}>
+                  {tempStyle.icon} {leadScore.label} · {leadScore.score}
+                </span>
+                <span className="text-[11px] text-gray-400">{leadScore.reason}</span>
+              </div>
             </div>
             <div className="flex flex-col items-end shrink-0">
               <p className="text-[22px] font-bold tracking-tight text-gray-900 tabular-nums leading-tight">
@@ -411,8 +422,8 @@ export function JobDetailContent({ quote, profile, brandColor }: Props) {
         </div>
 
         {/* Quick-action bar */}
-        <div className="mx-auto max-w-lg px-4 pt-1 pb-3">
-          <div className="flex items-center justify-around">
+        <div className="mx-auto max-w-lg lg:max-w-6xl px-4 pt-1 pb-3">
+          <div className="flex items-center justify-around lg:justify-start lg:gap-8">
             {/* Call */}
             {quote.customer_phone ? (
               <a href={`tel:${quote.customer_phone}`} className="flex flex-col items-center gap-1 group">
@@ -488,9 +499,11 @@ export function JobDetailContent({ quote, profile, brandColor }: Props) {
         <div className="h-px bg-black/5" />
       </div>
 
+      {/* ── NEXT ACTION + SCHEDULE (side by side on desktop) ──────────────────────── */}
+      <div className="mx-auto max-w-lg lg:max-w-6xl px-4 pt-3 lg:grid lg:grid-cols-[1fr_1fr] lg:gap-4 space-y-2 lg:space-y-0">
       {/* ── NEXT ACTION CARD ──────────────────────── */}
       {nextAction && (
-        <div className="mx-auto max-w-lg px-4 pt-3">
+        <div>
           <div className={`rounded-2xl bg-white shadow-sm ring-1 ring-black/[0.04] border-l-[3px] ${nextAction.borderColor} overflow-hidden`}>
             <div className="flex items-start gap-3 px-4 py-3.5">
               <div className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${nextAction.bgColor} ${nextAction.textColor}`}>
@@ -536,8 +549,20 @@ export function JobDetailContent({ quote, profile, brandColor }: Props) {
         </div>
       )}
 
+      {/* Smart Follow-Up — shown for quote_sent stage */}
+      {currentStage === 'quote_sent' && quote.status === 'sent' && (
+        <div>
+          <SmartFollowUpButton
+            quoteId={quote.id}
+            customerName={quote.customer_name}
+            customerPhone={quote.customer_phone}
+            brandColor={brandColor}
+          />
+        </div>
+      )}
+
       {/* ── SCHEDULE ROW ──────────────────────── */}
-      <div className="mx-auto max-w-lg px-4 pt-2">
+      <div>
         <div className="flex items-center justify-between rounded-xl bg-white/60 px-3.5 py-2.5 ring-1 ring-black/[0.04]">
           <div className="flex items-center gap-2.5">
             <svg className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.75} stroke="currentColor">
@@ -562,12 +587,16 @@ export function JobDetailContent({ quote, profile, brandColor }: Props) {
           </button>
         </div>
       </div>
+      </div>{/* end next action + schedule grid */}
 
       {/* Tabs */}
       <JobDetailTabs activeTab={activeTab} onTabChange={setActiveTab} />
 
       {/* Tab Content */}
-      <div className="mx-auto max-w-lg px-4 pb-24">
+      <div className="mx-auto max-w-lg lg:max-w-6xl px-4 pb-24">
+        <div className="lg:grid lg:grid-cols-[1fr_380px] lg:gap-8">
+        {/* Left column: active tab content */}
+        <div>
 
         {/* ── QUOTE TAB ──────────────────────── */}
         {activeTab === 'quote' && (
@@ -780,7 +809,8 @@ export function JobDetailContent({ quote, profile, brandColor }: Props) {
           </div>
         )}
 
-        {/* ── ACTIVITY TAB ──────────────────────── */}
+        {/* ── ACTIVITY TAB (mobile only) ──────────────────────── */}
+        <div className="lg:hidden">
         {activeTab === 'activity' && (
           <div className="pt-3">
             <JobTimeline
@@ -795,6 +825,26 @@ export function JobDetailContent({ quote, profile, brandColor }: Props) {
             />
           </div>
         )}
+        </div>
+        </div>{/* end left column */}
+
+        {/* ── ACTIVITY SIDEBAR (desktop always visible) ──────────────────────── */}
+        <div className="hidden lg:block pt-3">
+          <div className="sticky top-[200px]">
+            <p className="mb-3 px-1 text-[11px] font-semibold uppercase tracking-widest text-gray-400">Activity</p>
+            <JobTimeline
+              quoteId={quote.id}
+              notes={quote.job_notes || []}
+              createdAt={quote.created_at}
+              sentAt={quote.sent_at}
+              approvedAt={quote.approved_at}
+              paidAt={quote.paid_at}
+              startedAt={quote.started_at}
+              completedAt={quote.completed_at}
+            />
+          </div>
+        </div>
+        </div>{/* end grid */}
       </div>
 
       {/* Stage Picker */}

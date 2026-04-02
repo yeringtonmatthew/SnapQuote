@@ -7,6 +7,8 @@ interface PhotoUploadProps {
   files: File[];
   onFilesChange: (files: File[]) => void;
   maxPhotos?: number;
+  /** Already-uploaded photo URLs (used for draft recovery when File objects are gone) */
+  photoUrls?: string[];
 }
 
 // Grip dots drag handle icon
@@ -27,6 +29,7 @@ export default function PhotoUpload({
   files,
   onFilesChange,
   maxPhotos = 10,
+  photoUrls = [],
 }: PhotoUploadProps) {
   const [previews, setPreviews] = useState<string[]>([]);
   const [compressing, setCompressing] = useState(false);
@@ -44,12 +47,19 @@ export default function PhotoUpload({
   const gridRef = useRef<HTMLDivElement>(null);
   const itemRectsRef = useRef<DOMRect[]>([]);
 
-  // Generate object URL previews whenever files change, revoke on cleanup
+  // Generate previews: use object URLs for File objects, fall back to photoUrls for draft recovery
   useEffect(() => {
-    const urls = files.map((f) => URL.createObjectURL(f));
-    setPreviews(urls);
-    return () => urls.forEach((url) => URL.revokeObjectURL(url));
-  }, [files]);
+    if (files.length > 0) {
+      const urls = files.map((f) => URL.createObjectURL(f));
+      setPreviews(urls);
+      return () => urls.forEach((url) => URL.revokeObjectURL(url));
+    } else if (photoUrls.length > 0) {
+      // No File objects (draft recovery) — use persisted URLs directly
+      setPreviews(photoUrls);
+    } else {
+      setPreviews([]);
+    }
+  }, [files, photoUrls]);
 
   const reorder = useCallback((fromIndex: number, toIndex: number) => {
     if (fromIndex === toIndex) return;
@@ -290,7 +300,7 @@ export default function PhotoUpload({
           </div>
         ))}
 
-        {files.length < maxPhotos && (
+        {Math.max(files.length, photoUrls.length) < maxPhotos && (
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
@@ -325,7 +335,7 @@ export default function PhotoUpload({
         </p>
       ) : (
         <p className="mt-2 text-xs text-gray-500">
-          {files.length}/{maxPhotos} photos{files.length >= 1 ? ' — hold any photo to drag and reorder' : ' — tap to use camera or choose from gallery'}
+          {Math.max(files.length, photoUrls.length)}/{maxPhotos} photos{previews.length >= 1 ? ' — hold any photo to drag and reorder' : ' — tap to use camera or choose from gallery'}
         </p>
       )}
     </div>

@@ -74,8 +74,8 @@ export async function POST(
         .eq('id', user.id)
         .single();
 
-      const businessName = profile?.business_name || profile?.full_name || 'Your contractor';
-      const message = `Hi ${quote.customer_name}, ${businessName} sent you a quote for $${Number(quote.subtotal).toLocaleString('en-US', { minimumFractionDigits: 2 })}. View and approve here: ${proposalUrl}`;
+      const businessName = profile?.business_name || profile?.full_name || 'Licensed Professional';
+      const message = `Hi ${quote.customer_name}, ${businessName} sent you a quote for $${Number(quote.total ?? quote.subtotal).toLocaleString('en-US', { minimumFractionDigits: 2 })}. View and approve here: ${proposalUrl}`;
 
       // Normalize to E.164 format (+1XXXXXXXXXX for US numbers)
       const digits = quote.customer_phone.replace(/\D/g, '');

@@ -30,6 +30,11 @@ export async function GET(request: Request) {
         quote_number,
         pipeline_stage,
         total
+      ),
+      clients:client_id (
+        name,
+        phone,
+        address
       )
     `)
     .eq('contractor_id', user.id)
@@ -45,12 +50,12 @@ export async function GET(request: Request) {
 
   // Flatten the joined quotes data onto each event
   const flattened = (events || []).map((event: any) => {
-    const { quotes, ...rest } = event;
+    const { quotes, clients, ...rest } = event;
     return {
       ...rest,
-      customer_name: quotes?.customer_name ?? null,
-      job_address: quotes?.job_address ?? null,
-      customer_phone: quotes?.customer_phone ?? null,
+      customer_name: clients?.name ?? quotes?.customer_name ?? null,
+      job_address: clients?.address ?? quotes?.job_address ?? null,
+      customer_phone: clients?.phone ?? quotes?.customer_phone ?? null,
       quote_number: quotes?.quote_number ?? null,
       pipeline_stage: quotes?.pipeline_stage ?? null,
       total: quotes?.total ?? null,
@@ -73,6 +78,7 @@ export async function POST(request: Request) {
     event_type,
     event_date,
     quote_id,
+    client_id,
     start_time,
     end_time,
     all_day,
@@ -100,6 +106,7 @@ export async function POST(request: Request) {
       event_type,
       event_date,
       quote_id: quote_id || null,
+      client_id: client_id || null,
       start_time: start_time || null,
       end_time: end_time || null,
       all_day: all_day ?? false,

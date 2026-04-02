@@ -133,7 +133,7 @@ export default function OnboardingPage() {
         business_name: businessName.trim() || null,
         trade_type: tradeType,
         hourly_rate: parseFloat(hourlyRate) || null,
-        default_deposit_percent: 33,
+        default_deposit_percent: 0,
         onboarded: true,
       })
       .eq('id', user.id);

@@ -489,9 +489,25 @@ export default function QuoteList({ quotes, defaultFilter = 'All' }: { quotes: Q
               <SwipeableCard id={quote.id} actions={getSwipeActions(quote)}>
               <Link
                 href={`/quotes/${quote.id}`}
-                className="flex items-center gap-4 rounded-2xl bg-white px-4 py-3.5 shadow-sm hover-lift press-scale focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
+                className="group/card relative flex items-center gap-4 rounded-2xl bg-white px-4 py-3.5 shadow-sm hover-lift press-scale overflow-hidden focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
               >
                 {cardContent}
+                {/* Desktop hover archive button */}
+                {!isArchivedView && (
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleArchiveSingle(quote.id);
+                    }}
+                    title="Archive"
+                    className="absolute right-2 top-2 hidden md:group-hover/card:flex h-7 w-7 items-center justify-center rounded-lg bg-gray-100 text-gray-400 hover:bg-amber-100 hover:text-amber-600 transition-colors z-10"
+                  >
+                    <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
+                    </svg>
+                  </button>
+                )}
               </Link>
               </SwipeableCard>
               </div>

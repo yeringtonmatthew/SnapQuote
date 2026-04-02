@@ -124,7 +124,7 @@ export async function GET(request: Request) {
 
       const sentAt = new Date(quote.sent_at);
       const hoursSinceSent = (now.getTime() - sentAt.getTime()) / (1000 * 60 * 60);
-      const businessName = contractor.business_name || contractor.full_name || 'Your contractor';
+      const businessName = contractor.business_name || contractor.full_name || 'Licensed Professional';
       const proposalUrl = `${appUrl}/q/${quote.id}`;
       const templates: string[] = contractor.follow_up_templates || DEFAULT_TEMPLATES;
 

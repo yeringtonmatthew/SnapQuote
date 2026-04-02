@@ -7,6 +7,7 @@ export interface DraftData {
   customerName: string;
   customerPhone: string;
   customerEmail: string;
+  jobAddress?: string;
   lineItems: LineItem[];
   notes: string;
   scopeOfWork: string;

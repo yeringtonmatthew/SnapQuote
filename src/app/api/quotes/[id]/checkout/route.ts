@@ -34,7 +34,7 @@ export async function GET(
   }
 
   const depositCents = Math.round(Number(quote.deposit_amount) * 100);
-  const businessName = profile.business_name || profile.full_name || 'Your Contractor';
+  const businessName = profile.business_name || profile.full_name || 'Licensed Professional';
 
   const session = await getStripe().checkout.sessions.create(
     {

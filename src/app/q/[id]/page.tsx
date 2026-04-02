@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { createClient } from '@/lib/supabase/server';
+import { createClient as createServiceClient } from '@supabase/supabase-js';
 import { AcceptQuoteButton } from '@/components/AcceptQuoteButton';
 import { DownloadPdfButton } from '@/components/DownloadPdfButton';
 import { PrintButton } from '@/components/PrintButton';
@@ -9,6 +9,13 @@ import { formatQuoteNumber } from '@/lib/format-quote-number';
 import PageTransition from '@/components/PageTransition';
 import CustomerPhotoGallery from '@/components/CustomerPhotoGallery';
 import { CustomerShareButton } from '@/components/CustomerShareButton';
+
+function getServiceClient() {
+  return createServiceClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+}
 
 const fmt = (n: number) =>
   '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -21,9 +28,9 @@ export async function generateMetadata({
 }: {
   params: { id: string };
 }): Promise<Metadata> {
-  const supabase = createClient();
+  const serviceClient = getServiceClient();
 
-  const { data: quote } = await supabase
+  const { data: quote } = await serviceClient
     .from('quotes')
     .select('total, subtotal, contractor_id, customer_name')
     .eq('id', params.id)
@@ -31,13 +38,16 @@ export async function generateMetadata({
 
   if (!quote) return {};
 
-  const { data: profile } = await supabase
+  const { data: profile } = await serviceClient
     .from('users')
-    .select('business_name, full_name')
+    .select('business_name, full_name, email')
     .eq('id', quote.contractor_id)
     .single();
 
-  const businessName = profile?.business_name || profile?.full_name || 'Your Contractor';
+  const businessName = profile?.business_name
+    || profile?.full_name
+    || (profile?.email ? profile.email.split('@')[0].replace(/[._-]/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()) : null)
+    || 'Licensed Professional';
   const total = Number(quote.total ?? quote.subtotal);
   const amountStr = '$' + total.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
 
@@ -71,9 +81,9 @@ export default async function CustomerProposalPage({
 }: {
   params: { id: string };
 }) {
-  const supabase = createClient();
+  const serviceClient = getServiceClient();
 
-  const { data: quote } = await supabase
+  const { data: quote } = await serviceClient
     .from('quotes')
     .select('*')
     .eq('id', params.id)
@@ -81,11 +91,29 @@ export default async function CustomerProposalPage({
 
   if (!quote) notFound();
 
-  const { data: profile } = await supabase
+  const { data: profile } = await serviceClient
     .from('users')
-    .select('business_name, full_name, email, trade_type, logo_url, stripe_account_id, brand_color, phone')
+    .select('business_name, full_name, email, trade_type, logo_url, stripe_account_id, brand_color, show_reviews_on_quotes')
     .eq('id', quote.contractor_id)
     .single();
+
+  // Fetch reviews if contractor has them enabled
+  const showReviews = profile?.show_reviews_on_quotes !== false;
+  let reviews: { customer_name: string; rating: number; comment: string | null; source: string; reviewer_photo_url: string | null; created_at: string }[] = [];
+  if (showReviews) {
+    const { data: reviewData } = await serviceClient
+      .from('reviews')
+      .select('customer_name, rating, comment, source, reviewer_photo_url, created_at')
+      .eq('contractor_id', quote.contractor_id)
+      .gte('rating', 4) // Only show 4+ star reviews on proposals
+      .order('rating', { ascending: false })
+      .order('created_at', { ascending: false })
+      .limit(5);
+    reviews = reviewData || [];
+  }
+  const avgRating = reviews.length > 0
+    ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
+    : 0;
 
   const brandColor = profile?.brand_color || '#4f46e5';
   const subtotal = Number(quote.subtotal);
@@ -102,8 +130,12 @@ export default async function CustomerProposalPage({
   const hasTax = quote.tax_rate != null && Number(quote.tax_rate) > 0;
   const afterDiscount = Math.round((subtotal - discountDisplay) * 100) / 100;
   const taxAmount = hasTax ? Math.round(afterDiscount * (Number(quote.tax_rate) / 100) * 100) / 100 : 0;
-  const businessName = profile?.business_name || profile?.full_name || 'Your Contractor';
+  const businessName = profile?.business_name
+    || profile?.full_name
+    || (profile?.email ? profile.email.split('@')[0].replace(/[._-]/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()) : null)
+    || 'Licensed Professional';
   const stripeEnabled = !!profile?.stripe_account_id;
+  const lineItems: any[] = quote.line_items || [];
   const photos: string[] = quote.photos || [];
   const inspectionFindings: { photo_index: number; finding: string; severity: string; urgency_message: string }[] = quote.inspection_findings || [];
   const heroPhoto = photos[0] || null;
@@ -123,8 +155,17 @@ export default async function CustomerProposalPage({
   const moderateCount = inspectionFindings.filter(f => f.severity === 'moderate').length;
   const totalIssueCount = inspectionFindings.length;
 
-  const tradeLabel = profile?.trade_type || 'Licensed Contractor';
-  const contractorPhone = (profile as any)?.phone || null;
+  const tradeMap: Record<string, string> = {
+    roofing: 'Licensed Roofing Contractor',
+    plumber: 'Licensed Plumber',
+    hvac: 'Licensed HVAC Contractor',
+    electrician: 'Licensed Electrician',
+    painter: 'Professional Painter',
+    landscaper: 'Professional Landscaper',
+    general: 'Licensed General Contractor',
+  };
+  const tradeLabel = (profile?.trade_type && tradeMap[profile.trade_type]) || profile?.trade_type || 'Licensed Contractor';
+  const contractorPhone = null; // TODO: add phone column to users table
 
   if (isCancelled) {
     return (
@@ -298,74 +339,70 @@ export default async function CustomerProposalPage({
 
       <main className="mx-auto max-w-lg px-4 pt-5 pb-12 space-y-4">
 
-        {/* ── Your Contractor — premium card ──────── */}
-        <div className="rounded-2xl bg-white px-5 py-5 shadow-sm ring-1 ring-black/[0.04]">
-          <p className="mb-4 text-[11px] font-semibold uppercase tracking-widest text-gray-400">Your Contractor</p>
-          <div className="flex items-start gap-4">
-            {profile?.logo_url ? (
-              <img
-                src={profile.logo_url}
-                alt={businessName}
-                className="h-14 w-14 rounded-xl object-contain bg-gray-50"
-              />
-            ) : (
-              <div
-                className="flex h-14 w-14 items-center justify-center rounded-xl"
-                style={{ backgroundColor: brandColor }}
-              >
-                <span className="text-base font-bold text-white">{businessName.slice(0, 2).toUpperCase()}</span>
-              </div>
-            )}
-            <div className="flex-1 min-w-0">
-              <p className="text-[17px] font-bold text-gray-900 tracking-tight">{businessName}</p>
-              <p className="text-[13px] text-gray-500 mt-0.5">{tradeLabel}</p>
-              {/* Trust badges */}
-              <div className="flex flex-wrap gap-1.5 mt-2.5">
-                <span className="inline-flex items-center gap-1 rounded-full bg-green-50 border border-green-200/80 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-green-700">
-                  <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 01-1.043 3.296 3.745 3.745 0 01-3.296 1.043A3.745 3.745 0 0112 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 01-3.296-1.043 3.745 3.745 0 01-1.043-3.296A3.745 3.745 0 013 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 011.043-3.296 3.746 3.746 0 013.296-1.043A3.746 3.746 0 0112 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 013.296 1.043 3.746 3.746 0 011.043 3.296A3.745 3.745 0 0121 12z" />
-                  </svg>
-                  Verified
-                </span>
-                <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 border border-blue-200/80 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-blue-700">
-                  <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
-                  </svg>
-                  Licensed &amp; Insured
-                </span>
+        {/* ── Contractor Identity Card ──────── */}
+        <div className="rounded-2xl bg-white shadow-sm ring-1 ring-black/[0.04] overflow-hidden animate-fade-up" style={{ animationDelay: '0.05s' }}>
+          {/* Brand accent bar */}
+          <div className="h-1" style={{ backgroundColor: brandColor }} />
+          <div className="px-5 py-5">
+            <div className="flex items-start gap-4">
+              {profile?.logo_url ? (
+                <img
+                  src={profile.logo_url}
+                  alt={businessName}
+                  className="h-14 w-14 rounded-xl object-contain bg-gray-50 ring-1 ring-black/[0.04]"
+                />
+              ) : (
+                <div
+                  className="flex h-14 w-14 items-center justify-center rounded-xl shadow-inner"
+                  style={{ backgroundColor: brandColor }}
+                >
+                  <span className="text-lg font-bold text-white tracking-tight">{businessName.slice(0, 2).toUpperCase()}</span>
+                </div>
+              )}
+              <div className="flex-1 min-w-0">
+                <p className="text-[18px] font-bold text-gray-900 tracking-tight leading-tight">{businessName}</p>
+                <p className="text-[13px] text-gray-500 mt-0.5">{tradeLabel}</p>
+                <div className="flex flex-wrap gap-1.5 mt-2.5">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-green-50 border border-green-200/60 px-2 py-0.5 text-[10px] font-semibold text-green-700">
+                    <svg className="h-2.5 w-2.5" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 01-1.043 3.296 3.745 3.745 0 01-3.296 1.043A3.745 3.745 0 0112 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 01-3.296-1.043 3.745 3.745 0 01-1.043-3.296A3.745 3.745 0 013 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 011.043-3.296 3.746 3.746 0 013.296-1.043A3.746 3.746 0 0112 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 013.296 1.043 3.746 3.746 0 011.043 3.296A3.745 3.745 0 0121 12z" />
+                    </svg>
+                    Verified Professional
+                  </span>
+                  <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 border border-blue-200/60 px-2 py-0.5 text-[10px] font-semibold text-blue-700">
+                    <svg className="h-2.5 w-2.5" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+                    </svg>
+                    Fully Insured
+                  </span>
+                </div>
               </div>
             </div>
-          </div>
-          {/* Contact row */}
-          <div className="mt-4 pt-3 border-t border-gray-100 flex flex-wrap gap-x-5 gap-y-1.5">
-            {profile?.email && (
-              <a href={`mailto:${profile.email}`} className="flex items-center gap-1.5 text-[13px] font-medium" style={{ color: brandColor }}>
-                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
-                </svg>
-                {profile.email}
-              </a>
-            )}
-            {contractorPhone && (
-              <a href={`tel:${contractorPhone}`} className="flex items-center gap-1.5 text-[13px] font-medium" style={{ color: brandColor }}>
-                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z" />
-                </svg>
-                {contractorPhone}
-              </a>
-            )}
-          </div>
-          {/* #5 Social proof / local legitimacy */}
-          <div className="mt-3 pt-3 border-t border-gray-100">
-            <p className="text-[12px] text-gray-400 text-center">
-              Trusted by homeowners for professional, reliable workmanship
-            </p>
+            {/* Contact row */}
+            <div className="mt-4 pt-3 border-t border-gray-100 flex flex-wrap gap-x-5 gap-y-1.5">
+              {contractorPhone && (
+                <a href={`tel:${contractorPhone}`} className="flex items-center gap-1.5 text-[13px] font-medium transition-opacity hover:opacity-70" style={{ color: brandColor }}>
+                  <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z" />
+                  </svg>
+                  {contractorPhone}
+                </a>
+              )}
+              {profile?.email && (
+                <a href={`mailto:${profile.email}`} className="flex items-center gap-1.5 text-[13px] font-medium transition-opacity hover:opacity-70" style={{ color: brandColor }}>
+                  <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+                  </svg>
+                  {profile.email}
+                </a>
+              )}
+            </div>
           </div>
         </div>
 
         {/* ── Why This Work Is Needed ────────────── */}
         {inspectionFindings.length > 0 && (criticalCount > 0 || moderateCount > 0) && (
-          <div className="rounded-2xl bg-gradient-to-br from-red-50 to-amber-50/50 border border-red-100/80 px-5 py-5 shadow-sm">
+          <div className="rounded-2xl bg-gradient-to-br from-red-50 to-amber-50/50 border border-red-100/80 px-5 py-5 shadow-sm animate-fade-up" style={{ animationDelay: '0.1s' }}>
             <div className="flex items-start gap-3">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-100">
                 <svg className="h-5 w-5 text-red-600" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
@@ -373,17 +410,17 @@ export default async function CustomerProposalPage({
                 </svg>
               </div>
               <div>
-                <p className="text-[16px] font-bold text-gray-900 tracking-tight">Why This Work Is Needed</p>
+                <p className="text-[16px] font-bold text-gray-900 tracking-tight">Professional Assessment</p>
                 <p className="text-[14px] text-gray-600 mt-1.5 leading-relaxed">
-                  Our on-site inspection identified{' '}
+                  Our certified inspection identified{' '}
                   {criticalCount > 0 && (
                     <span className="font-semibold text-red-700">{criticalCount} critical issue{criticalCount !== 1 ? 's' : ''}</span>
                   )}
                   {criticalCount > 0 && moderateCount > 0 && ' and '}
                   {moderateCount > 0 && (
-                    <span className="font-semibold text-amber-700">{moderateCount} moderate issue{moderateCount !== 1 ? 's' : ''}</span>
+                    <span className="font-semibold text-amber-700">{moderateCount} area{moderateCount !== 1 ? 's' : ''} requiring attention</span>
                   )}
-                  {' '}that require professional attention. Addressing these now prevents further damage and protects your home&apos;s value.
+                  . Early intervention protects your property value and prevents escalating repair costs.
                 </p>
               </div>
             </div>
@@ -391,7 +428,7 @@ export default async function CustomerProposalPage({
         )}
 
         {/* ── Property Inspection Report — #2 upgraded moat ── */}
-        {inspectionFindings.length > 0 && photos.length > 0 ? (
+        {inspectionFindings.length > 0 ? (
           <div>
             <div className="flex items-center justify-between mb-2 px-1">
               <div className="flex items-center gap-2">
@@ -406,7 +443,7 @@ export default async function CustomerProposalPage({
             </div>
 
             <div className="space-y-3">
-              {photos.map((photoUrl, photoIdx) => {
+              {photos.length > 0 ? photos.map((photoUrl, photoIdx) => {
                 const findings = inspectionFindings.filter(f => f.photo_index === photoIdx);
                 if (findings.length === 0) return null;
                 return (
@@ -422,57 +459,77 @@ export default async function CustomerProposalPage({
                       {/* Subtle bottom fade for badge legibility */}
                       <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/50 to-transparent" />
                       <div className="absolute top-3 left-3">
-                        <span className="rounded-full bg-black/60 backdrop-blur-sm px-2.5 py-1 text-[11px] font-semibold text-white">
-                          Photo {photoIdx + 1} of {photos.length}
+                        <span className="rounded-full bg-black/50 backdrop-blur-md px-2.5 py-1 text-[10px] font-medium text-white/90 tabular-nums">
+                          {photoIdx + 1} / {photos.length}
                         </span>
                       </div>
-                      {/* Issue count badge on photo — #2 stronger callouts */}
-                      <div className="absolute bottom-3 left-3 flex gap-1.5">
-                        {findings.map((f, fIdx) => {
-                          const badgeColor = f.severity === 'critical' ? 'bg-red-500' : f.severity === 'moderate' ? 'bg-amber-500' : 'bg-blue-500';
-                          return (
-                            <span key={fIdx} className={`flex h-7 w-7 items-center justify-center rounded-full ${badgeColor} text-[12px] font-bold text-white shadow-lg ring-2 ring-white/30`}>
-                              {fIdx + 1}
-                            </span>
-                          );
-                        })}
+                      {/* Clean annotation markers */}
+                      <div className="absolute bottom-3 left-3 flex gap-1">
+                        {findings.length === 1 ? (
+                          <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-semibold text-white shadow-sm backdrop-blur-sm ${
+                            findings[0].severity === 'critical' ? 'bg-red-500/90' : findings[0].severity === 'moderate' ? 'bg-amber-500/90' : 'bg-blue-500/90'
+                          }`}>
+                            <span className="h-1.5 w-1.5 rounded-full bg-white/70" />
+                            {findings[0].severity === 'critical' ? 'Critical' : findings[0].severity === 'moderate' ? 'Moderate' : 'Minor'}
+                          </span>
+                        ) : (
+                          findings.map((f, fIdx) => {
+                            const badgeColor = f.severity === 'critical' ? 'bg-red-500/90' : f.severity === 'moderate' ? 'bg-amber-500/90' : 'bg-blue-500/90';
+                            return (
+                              <span key={fIdx} className={`flex h-5.5 w-5.5 items-center justify-center rounded-full ${badgeColor} text-[10px] font-semibold text-white shadow-sm backdrop-blur-sm`} style={{ height: 22, width: 22 }}>
+                                {fIdx + 1}
+                              </span>
+                            );
+                          })
+                        )}
                       </div>
-                      {/* Severity summary pill on photo */}
-                      {findings.some(f => f.severity === 'critical') && (
+                      {findings.some(f => f.severity === 'critical') && findings.length > 1 && (
                         <div className="absolute top-3 right-3">
-                          <span className="rounded-full bg-red-500/90 backdrop-blur-sm px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white">
-                            Needs Attention
+                          <span className="rounded-full bg-red-500/85 backdrop-blur-sm px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-white">
+                            Action Required
                           </span>
                         </div>
                       )}
                     </div>
-                    {/* Findings list — #2 improved hierarchy */}
+                    {/* Findings list — structured breakdown */}
                     <div className="px-5 py-4 space-y-2.5">
                       {findings.map((f, fIdx) => {
                         const severityStyles = {
-                          critical: { bg: 'bg-red-50', border: 'border-red-200/80', text: 'text-red-800', badge: 'bg-red-100 text-red-700', badgeColor: 'bg-red-500', label: 'Critical' },
-                          moderate: { bg: 'bg-amber-50', border: 'border-amber-200/80', text: 'text-amber-800', badge: 'bg-amber-100 text-amber-700', badgeColor: 'bg-amber-500', label: 'Moderate' },
-                          minor: { bg: 'bg-blue-50', border: 'border-blue-200/80', text: 'text-blue-800', badge: 'bg-blue-100 text-blue-700', badgeColor: 'bg-blue-500', label: 'Minor' },
+                          critical: { bg: 'bg-red-50/60', border: 'border-red-100', text: 'text-red-900', badge: 'text-red-600', dot: 'bg-red-500', label: 'Critical', labelBg: 'bg-red-100' },
+                          moderate: { bg: 'bg-amber-50/60', border: 'border-amber-100', text: 'text-amber-900', badge: 'text-amber-600', dot: 'bg-amber-500', label: 'Moderate', labelBg: 'bg-amber-100' },
+                          minor: { bg: 'bg-blue-50/60', border: 'border-blue-100', text: 'text-blue-900', badge: 'text-blue-600', dot: 'bg-blue-500', label: 'Minor', labelBg: 'bg-blue-100' },
                         };
                         const style = severityStyles[f.severity as keyof typeof severityStyles] || severityStyles.moderate;
                         return (
-                          <div key={fIdx} className={`rounded-xl ${style.bg} border ${style.border} px-4 py-3.5`}>
-                            <div className="flex items-start gap-2.5">
-                              <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${style.badgeColor} text-[11px] font-bold text-white mt-0.5`}>
-                                {fIdx + 1}
-                              </span>
-                              <div className="min-w-0 flex-1">
-                                <div className="flex items-center gap-2 mb-1.5">
-                                  <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${style.badge}`}>
+                          <div key={fIdx} className={`rounded-xl ${style.bg} border ${style.border} px-4 py-3.5 animate-fade-up`} style={{ animationDelay: `${0.15 + fIdx * 0.05}s` }}>
+                            <div className="flex items-start gap-3">
+                              <div className="flex flex-col items-center gap-1 pt-0.5 shrink-0">
+                                <span className={`h-2 w-2 rounded-full ${style.dot}`} />
+                                {findings.length > 1 && (
+                                  <span className={`text-[10px] font-semibold ${style.badge}`}>{fIdx + 1}</span>
+                                )}
+                              </div>
+                              <div className="min-w-0 flex-1 space-y-2">
+                                <div>
+                                  <span className={`inline-block text-[10px] font-semibold uppercase tracking-wider ${style.badge} ${style.labelBg} rounded px-1.5 py-0.5 mb-1`}>
                                     {style.label}
                                   </span>
+                                  <p className={`text-[14px] font-semibold ${style.text} leading-snug`}>
+                                    {f.finding}
+                                  </p>
                                 </div>
-                                <p className={`text-[15px] font-semibold ${style.text} leading-snug tracking-tight`}>
-                                  {f.finding}
-                                </p>
-                                <p className="text-[13px] text-gray-600 mt-1.5 leading-relaxed">
-                                  {f.urgency_message}
-                                </p>
+                                {f.urgency_message && (
+                                  <div className="border-t border-black/[0.04] pt-2 space-y-1.5">
+                                    <div className="flex items-start gap-2">
+                                      <svg className="h-3.5 w-3.5 text-gray-400 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+                                      </svg>
+                                      <p className="text-[12px] text-gray-500 leading-relaxed">
+                                        <span className="font-medium text-gray-600">If left unaddressed:</span> {f.urgency_message}
+                                      </p>
+                                    </div>
+                                  </div>
+                                )}
                               </div>
                             </div>
                           </div>
@@ -481,7 +538,31 @@ export default async function CustomerProposalPage({
                     </div>
                   </div>
                 );
-              })}
+              }) : (
+                /* No photos available — render findings as text-only cards */
+                inspectionFindings.map((f, fIdx) => {
+                  const severityStyles = {
+                    critical: { bg: 'bg-red-50/60', border: 'border-red-100', text: 'text-red-900', dot: 'bg-red-500', label: 'Critical', labelBg: 'bg-red-100' },
+                    moderate: { bg: 'bg-amber-50/60', border: 'border-amber-100', text: 'text-amber-900', dot: 'bg-amber-500', label: 'Moderate', labelBg: 'bg-amber-100' },
+                    minor: { bg: 'bg-blue-50/60', border: 'border-blue-100', text: 'text-blue-900', dot: 'bg-blue-500', label: 'Minor', labelBg: 'bg-blue-100' },
+                  };
+                  const style = severityStyles[f.severity as keyof typeof severityStyles] || severityStyles.moderate;
+                  return (
+                    <div key={fIdx} className={`rounded-xl ${style.bg} border ${style.border} px-4 py-3.5 animate-fade-up`} style={{ animationDelay: `${0.15 + fIdx * 0.05}s` }}>
+                      <div className="flex items-start gap-3">
+                        <span className={`mt-1 h-2 w-2 shrink-0 rounded-full ${style.dot}`} />
+                        <div>
+                          <span className={`inline-block rounded-full ${style.labelBg} px-2 py-0.5 text-[10px] font-semibold ${style.text} mb-1`}>{style.label}</span>
+                          <p className={`text-[14px] font-medium ${style.text} leading-snug`}>{f.finding}</p>
+                          {f.urgency_message && (
+                            <p className="mt-1.5 text-[12px] text-gray-500 leading-snug">{f.urgency_message}</p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
 
               {/* #3 Fear-of-inaction line — after inspection findings */}
               {(criticalCount > 0 || moderateCount > 0) && (
@@ -494,8 +575,30 @@ export default async function CustomerProposalPage({
                 </div>
               )}
 
+              {/* Orphaned findings (photo_index beyond array bounds) */}
+              {photos.length > 0 && inspectionFindings.filter(f => f.photo_index >= photos.length).map((f, fIdx) => {
+                const severityStyles = {
+                  critical: { bg: 'bg-red-50/60', border: 'border-red-100', text: 'text-red-900', dot: 'bg-red-500', label: 'Critical', labelBg: 'bg-red-100' },
+                  moderate: { bg: 'bg-amber-50/60', border: 'border-amber-100', text: 'text-amber-900', dot: 'bg-amber-500', label: 'Moderate', labelBg: 'bg-amber-100' },
+                  minor: { bg: 'bg-blue-50/60', border: 'border-blue-100', text: 'text-blue-900', dot: 'bg-blue-500', label: 'Minor', labelBg: 'bg-blue-100' },
+                };
+                const style = severityStyles[f.severity as keyof typeof severityStyles] || severityStyles.moderate;
+                return (
+                  <div key={`orphan-${fIdx}`} className={`rounded-xl ${style.bg} border ${style.border} px-4 py-3.5`}>
+                    <div className="flex items-start gap-3">
+                      <span className={`mt-1 h-2 w-2 shrink-0 rounded-full ${style.dot}`} />
+                      <div>
+                        <span className={`inline-block rounded-full ${style.labelBg} px-2 py-0.5 text-[10px] font-semibold ${style.text} mb-1`}>{style.label}</span>
+                        <p className={`text-[14px] font-medium ${style.text} leading-snug`}>{f.finding}</p>
+                        {f.urgency_message && <p className="mt-1.5 text-[12px] text-gray-500 leading-snug">{f.urgency_message}</p>}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+
               {/* Photos with no findings */}
-              {photos.some((_, i) => !inspectionFindings.some(f => f.photo_index === i)) && (
+              {photos.length > 0 && photos.some((_, i) => !inspectionFindings.some(f => f.photo_index === i)) && (
                 <div className="rounded-2xl bg-white px-5 py-4 shadow-sm ring-1 ring-black/[0.04]">
                   <p className="mb-2.5 text-[11px] font-semibold uppercase tracking-widest text-gray-400">Additional Photos</p>
                   <div className="flex gap-2.5 overflow-x-auto scrollbar-none -mx-1 px-1 pb-1">
@@ -525,7 +628,7 @@ export default async function CustomerProposalPage({
 
         {/* ── Scope ────────────────────────────── */}
         {(quote.scope_of_work || quote.ai_description) && (
-          <div className="rounded-2xl bg-white px-5 py-5 shadow-sm ring-1 ring-black/[0.04]">
+          <div className="rounded-2xl bg-white px-5 py-5 shadow-sm ring-1 ring-black/[0.04] animate-fade-up" style={{ animationDelay: '0.15s' }}>
             <p className="mb-2.5 text-[11px] font-semibold uppercase tracking-widest text-gray-400">Scope of Work</p>
             <p className="text-[15px] leading-[1.7] text-gray-700">
               {quote.scope_of_work || quote.ai_description}
@@ -553,59 +656,63 @@ export default async function CustomerProposalPage({
           </div>
         )}
 
-        {/* ── Why Homeowners Choose Us — #5 ──────── */}
-        <div className="rounded-2xl bg-white px-5 py-5 shadow-sm ring-1 ring-black/[0.04]">
-          <p className="mb-4 text-[11px] font-semibold uppercase tracking-widest text-gray-400">Why Homeowners Choose Us</p>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="flex items-start gap-3">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl" style={{ backgroundColor: brandColor + '12' }}>
-                <svg className="h-4.5 w-4.5" style={{ color: brandColor }} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+        {/* ── Our Guarantee ──────── */}
+        <div className="rounded-2xl bg-gradient-to-b from-white to-gray-50/80 px-5 py-6 shadow-sm ring-1 ring-black/[0.04] animate-fade-up" style={{ animationDelay: '0.2s' }}>
+          <p className="mb-1 text-[11px] font-semibold uppercase tracking-widest text-gray-400">Our Guarantee</p>
+          <p className="mb-5 text-[13px] text-gray-500">The {businessName} standard of service</p>
+          <div className="space-y-4">
+            <div className="flex items-start gap-3.5">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl" style={{ backgroundColor: brandColor + '10' }}>
+                <svg className="h-5 w-5" style={{ color: brandColor }} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" />
                 </svg>
               </div>
-              <div>
-                <p className="text-[13px] font-semibold text-gray-900">Quality Work</p>
-                <p className="text-[11px] text-gray-500 mt-0.5 leading-relaxed">Premium materials &amp; expert craftsmanship</p>
+              <div className="pt-0.5">
+                <p className="text-[14px] font-semibold text-gray-900">Backed by Our Reputation</p>
+                <p className="text-[12px] text-gray-500 mt-0.5 leading-relaxed">We stand behind every project. Premium materials, expert craftsmanship, and results that last.</p>
               </div>
             </div>
-            <div className="flex items-start gap-3">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl" style={{ backgroundColor: brandColor + '12' }}>
-                <svg className="h-4.5 w-4.5" style={{ color: brandColor }} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+            <div className="h-px bg-gray-100" />
+            <div className="flex items-start gap-3.5">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl" style={{ backgroundColor: brandColor + '10' }}>
+                <svg className="h-5 w-5" style={{ color: brandColor }} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
                 </svg>
               </div>
-              <div>
-                <p className="text-[13px] font-semibold text-gray-900">Fully Insured</p>
-                <p className="text-[11px] text-gray-500 mt-0.5 leading-relaxed">Your property is protected</p>
+              <div className="pt-0.5">
+                <p className="text-[14px] font-semibold text-gray-900">Your Property Is Protected</p>
+                <p className="text-[12px] text-gray-500 mt-0.5 leading-relaxed">Full liability coverage and workers&apos; comp on every job. You carry zero risk.</p>
               </div>
             </div>
-            <div className="flex items-start gap-3">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl" style={{ backgroundColor: brandColor + '12' }}>
-                <svg className="h-4.5 w-4.5" style={{ color: brandColor }} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+            <div className="h-px bg-gray-100" />
+            <div className="flex items-start gap-3.5">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl" style={{ backgroundColor: brandColor + '10' }}>
+                <svg className="h-5 w-5" style={{ color: brandColor }} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-              <div>
-                <p className="text-[13px] font-semibold text-gray-900">On-Time Arrival</p>
-                <p className="text-[11px] text-gray-500 mt-0.5 leading-relaxed">We show up when we say we will</p>
+              <div className="pt-0.5">
+                <p className="text-[14px] font-semibold text-gray-900">On Time, Every Time</p>
+                <p className="text-[12px] text-gray-500 mt-0.5 leading-relaxed">Confirmed windows, proactive updates, and crew that shows up when promised.</p>
               </div>
             </div>
-            <div className="flex items-start gap-3">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl" style={{ backgroundColor: brandColor + '12' }}>
-                <svg className="h-4.5 w-4.5" style={{ color: brandColor }} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+            <div className="h-px bg-gray-100" />
+            <div className="flex items-start gap-3.5">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl" style={{ backgroundColor: brandColor + '10' }}>
+                <svg className="h-5 w-5" style={{ color: brandColor }} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z" />
                 </svg>
               </div>
-              <div>
-                <p className="text-[13px] font-semibold text-gray-900">Clear Pricing</p>
-                <p className="text-[11px] text-gray-500 mt-0.5 leading-relaxed">No surprises or hidden charges</p>
+              <div className="pt-0.5">
+                <p className="text-[14px] font-semibold text-gray-900">No Surprises, Period</p>
+                <p className="text-[12px] text-gray-500 mt-0.5 leading-relaxed">Every dollar itemized upfront. Balance due only when you&apos;re completely satisfied with the work.</p>
               </div>
             </div>
           </div>
         </div>
 
         {/* ── Line Items — #1 premium framing ────── */}
-        <div>
+        <div className="animate-fade-up" style={{ animationDelay: '0.2s' }}>
           <div className="flex items-center justify-between mb-3 px-1">
             <div>
               <p className="text-[11px] font-semibold uppercase tracking-widest text-gray-400">Your Investment</p>
@@ -613,14 +720,14 @@ export default async function CustomerProposalPage({
                 Itemized pricing — no markups, no surprises
               </p>
             </div>
-            <span className="text-[11px] font-medium text-gray-400">{quote.line_items.length} item{quote.line_items.length !== 1 ? 's' : ''}</span>
+            <span className="text-[11px] font-medium text-gray-400">{lineItems.length} item{lineItems.length !== 1 ? 's' : ''}</span>
           </div>
           <div className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/[0.04]">
-            {quote.line_items.map((item: any, i: number) => (
+            {lineItems.map((item: any, i: number) => (
               <div
                 key={i}
                 className={`flex items-start justify-between px-5 py-4 ${
-                  i < quote.line_items.length - 1 ? 'border-b border-gray-100' : ''
+                  i < lineItems.length - 1 ? 'border-b border-gray-100' : ''
                 }`}
               >
                 <div className="min-w-0 flex-1 pr-4">
@@ -661,23 +768,27 @@ export default async function CustomerProposalPage({
             <span className="text-[15px] font-bold text-gray-900">Project Total</span>
             <span className="text-[17px] font-extrabold text-gray-900 tabular-nums">{fmt(quoteTotal)}</span>
           </div>
-          {/* Deposit with justification */}
-          <div className="px-5 py-5 border-b border-gray-100" style={{ backgroundColor: brandColor + '0a' }}>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-[15px] font-bold" style={{ color: brandColor }}>Deposit to Book ({quote.deposit_percent}%)</p>
-                <p className="text-[12px] mt-0.5 opacity-60" style={{ color: brandColor }}>Reserves your project date &amp; materials</p>
+          {/* Deposit with justification — hidden when 0% */}
+          {deposit > 0 && (
+            <>
+              <div className="px-5 py-5 border-b border-gray-100" style={{ backgroundColor: brandColor + '0a' }}>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-[15px] font-bold" style={{ color: brandColor }}>Deposit to Book ({quote.deposit_percent ?? 0}%)</p>
+                    <p className="text-[12px] mt-0.5 opacity-60" style={{ color: brandColor }}>Reserves your project date &amp; materials</p>
+                  </div>
+                  <span className="text-[26px] font-extrabold tabular-nums" style={{ color: brandColor }}>{fmt(deposit)}</span>
+                </div>
+                <p className="text-[11px] text-gray-400 mt-3 leading-relaxed">
+                  Your deposit locks in today&apos;s pricing and secures your spot on our schedule. The remaining balance of {fmt(balance)} is due only when the work is complete and you&apos;re satisfied.
+                </p>
               </div>
-              <span className="text-[26px] font-extrabold tabular-nums" style={{ color: brandColor }}>{fmt(deposit)}</span>
-            </div>
-            <p className="text-[11px] text-gray-400 mt-3 leading-relaxed">
-              Your deposit locks in today&apos;s pricing and secures your spot on our schedule. The remaining balance of {fmt(balance)} is due only when the work is complete and you&apos;re satisfied.
-            </p>
-          </div>
-          <div className="flex items-center justify-between px-5 py-3.5">
-            <span className="text-[13px] text-gray-400">Balance due on completion</span>
-            <span className="text-[14px] font-medium text-gray-500 tabular-nums">{fmt(balance)}</span>
-          </div>
+              <div className="flex items-center justify-between px-5 py-3.5">
+                <span className="text-[13px] text-gray-400">Balance due on completion</span>
+                <span className="text-[14px] font-medium text-gray-500 tabular-nums">{fmt(balance)}</span>
+              </div>
+            </>
+          )}
           {expiresAt && (
             <div className="flex items-center justify-center gap-1.5 border-t border-gray-100 px-5 py-3">
               <svg className="h-3.5 w-3.5 text-gray-300" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
@@ -693,15 +804,93 @@ export default async function CustomerProposalPage({
           )}
         </div>
 
+        {/* ── Customer Reviews ──────────────────── */}
+        {reviews.length > 0 && (
+          <div className="rounded-2xl bg-white px-5 py-6 shadow-sm ring-1 ring-black/[0.04] animate-fade-up" style={{ animationDelay: '0.22s' }}>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <p className="text-[11px] font-semibold uppercase tracking-widest text-gray-400">Customer Reviews</p>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <div className="flex items-center">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <svg
+                      key={star}
+                      className={`h-3.5 w-3.5 ${star <= Math.round(avgRating) ? 'text-amber-400' : 'text-gray-200'}`}
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                    </svg>
+                  ))}
+                </div>
+                <span className="text-[11px] font-semibold text-gray-500">{avgRating.toFixed(1)}</span>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              {reviews.map((review, idx) => (
+                <div key={idx} className="rounded-xl bg-gray-50 px-4 py-3.5">
+                  <div className="flex items-center gap-2.5 mb-2">
+                    {review.reviewer_photo_url ? (
+                      <img
+                        src={review.reviewer_photo_url}
+                        alt=""
+                        className="h-7 w-7 rounded-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gray-200 text-[11px] font-bold text-gray-500">
+                        {review.customer_name.charAt(0).toUpperCase()}
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[13px] font-semibold text-gray-900 truncate">{review.customer_name}</span>
+                        {review.source === 'google' && (
+                          <svg className="h-3.5 w-3.5 shrink-0" viewBox="0 0 24 24">
+                            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
+                            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                          </svg>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <svg
+                            key={star}
+                            className={`h-3 w-3 ${star <= review.rating ? 'text-amber-400' : 'text-gray-200'}`}
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                          </svg>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                  {review.comment && (
+                    <p className="text-[13px] text-gray-600 leading-relaxed line-clamp-3">&ldquo;{review.comment}&rdquo;</p>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* ── What Happens Next ──────────────────── */}
-        <div className="rounded-2xl bg-white px-5 py-6 shadow-sm ring-1 ring-black/[0.04]">
+        <div className="rounded-2xl bg-white px-5 py-6 shadow-sm ring-1 ring-black/[0.04] animate-fade-up" style={{ animationDelay: '0.25s' }}>
           <p className="mb-5 text-[11px] font-semibold uppercase tracking-widest text-gray-400">What Happens Next</p>
           <div className="space-y-5">
             <div className="flex items-start gap-3.5">
               <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[13px] font-bold text-white" style={{backgroundColor: brandColor}}>1</div>
               <div>
                 <p className="text-[15px] font-semibold text-gray-900">Approve &amp; Secure Your Date</p>
-                <p className="text-[13px] text-gray-500 mt-0.5 leading-relaxed">Your {quote.deposit_percent}% deposit locks in today&apos;s pricing and reserves your project on our calendar.</p>
+                <p className="text-[13px] text-gray-500 mt-0.5 leading-relaxed">
+                  {deposit > 0
+                    ? `Your ${quote.deposit_percent ?? 0}% deposit locks in today's pricing and reserves your project on our calendar.`
+                    : "Approve this quote to lock in today's pricing and reserve your project on our calendar."}
+                </p>
               </div>
             </div>
             <div className="flex items-start gap-3.5">
@@ -763,8 +952,8 @@ export default async function CustomerProposalPage({
               <>
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-[18px] font-bold text-white tracking-tight">Ready to move forward?</p>
-                    <p className="text-[13px] text-white/40 mt-0.5">Secure your project with a deposit today.</p>
+                    <p className="text-[18px] font-bold text-white tracking-tight">Lock in your project</p>
+                    <p className="text-[13px] text-white/40 mt-0.5">Secure your date, pricing, and peace of mind.</p>
                   </div>
                   <div className="text-right">
                     <p className="text-[28px] font-extrabold text-white tabular-nums tracking-tight">{fmt(deposit)}</p>
@@ -807,7 +996,7 @@ export default async function CustomerProposalPage({
             <p className="text-[13px] text-gray-400 mb-2.5">Have questions or need adjustments?</p>
             <a
               href={`mailto:${profile.email}?subject=Question about Quote ${quote.quote_number ? formatQuoteNumber(quote.quote_number) : ''}&body=Hi ${profile?.full_name || businessName},%0D%0A%0D%0AI have a question about the quote for ${quote.job_address || 'my project'}:%0D%0A%0D%0A`}
-              className="inline-flex items-center gap-2 rounded-xl border-2 border-gray-200 px-5 py-2.5 text-[14px] font-semibold text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-all"
+              className="inline-flex items-center gap-2 rounded-xl border-2 border-gray-200 px-5 py-2.5 text-[14px] font-semibold text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-all press-scale"
             >
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" />
@@ -820,15 +1009,15 @@ export default async function CustomerProposalPage({
         {/* ── #7 Final Reassurance Block ────────── */}
         {!isExpired && (
           <div className="rounded-2xl bg-gray-50 border border-gray-200/60 px-5 py-5 text-center" data-no-print>
-            <p className="text-[15px] font-semibold text-gray-800">Still have questions?</p>
+            <p className="text-[15px] font-semibold text-gray-800">We&apos;re here when you&apos;re ready</p>
             <p className="text-[13px] text-gray-500 mt-1 leading-relaxed">
-              We&apos;re here to help. Reach out anytime &mdash; no pressure, no obligation.
+              Have questions? Need changes? Call or email anytime &mdash; zero pressure, zero obligation.
             </p>
             <div className="mt-4 flex items-center justify-center gap-3">
               {contractorPhone && (
                 <a
                   href={`tel:${contractorPhone}`}
-                  className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-[13px] font-semibold text-white transition-colors"
+                  className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-[13px] font-semibold text-white transition-all hover:opacity-90 press-scale"
                   style={{ backgroundColor: brandColor }}
                 >
                   <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">

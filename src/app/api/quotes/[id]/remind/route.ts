@@ -43,7 +43,7 @@ export async function POST(
     .eq('id', user.id)
     .single();
 
-  const businessName = profile?.business_name || profile?.full_name || 'Your contractor';
+  const businessName = profile?.business_name || profile?.full_name || 'Licensed Professional';
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
   const proposalUrl = `${appUrl}/q/${params.id}`;
   const amount = Number(quote.subtotal).toLocaleString('en-US', { minimumFractionDigits: 2 });

@@ -21,6 +21,7 @@ import { relativeTime } from '@/lib/relative-time';
 import { ShareButton } from '@/components/ShareButton';
 import { PrintButton } from '@/components/PrintButton';
 import { QuoteActionsDropdown, DropdownItem } from '@/components/QuoteActionsDropdown';
+import { ArchiveQuoteButton } from '@/components/ArchiveQuoteButton';
 
 const statusColors: Record<string, string> = {
   draft: 'bg-gray-100 text-gray-700',
@@ -173,6 +174,9 @@ export default async function QuoteDetailPage({
                   Download Invoice
                 </DropdownItem>
               )}
+              <div className="border-t border-gray-100 mt-1 pt-1">
+                <ArchiveQuoteButton quoteId={quote.id} isArchived={!!quote.archived} />
+              </div>
             </QuoteActionsDropdown>
           </div>
         </div>

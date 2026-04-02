@@ -219,7 +219,7 @@ html {
 @keyframes page-enter {
   from {
     opacity: 0;
-    transform: translateY(8px);
+    transform: translateY(6px);
   }
   to {
     opacity: 1;
@@ -228,7 +228,7 @@ html {
 }
 
 .animate-page-enter {
-  animation: page-enter 0.25s ease-out both;
+  animation: page-enter 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 /* ── Modal transitions ─────────────────────────── */
@@ -240,7 +240,7 @@ html {
 @keyframes modal-content-in {
   from {
     opacity: 0;
-    transform: scale(0.95) translateY(8px);
+    transform: scale(0.96) translateY(10px);
   }
   to {
     opacity: 1;
@@ -249,11 +249,11 @@ html {
 }
 
 .animate-modal-backdrop {
-  animation: modal-backdrop-in 0.2s ease-out both;
+  animation: modal-backdrop-in 0.25s ease-out both;
 }
 
 .animate-modal-content {
-  animation: modal-content-in 0.2s ease-out both;
+  animation: modal-content-in 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 /* ── Bottom sheet slide-up ───────────────────── */
@@ -278,7 +278,7 @@ html {
 }
 
 .animate-sheet-up {
-  animation: sheet-slide-up 0.3s cubic-bezier(0.32, 0.72, 0, 1) both;
+  animation: sheet-slide-up 0.35s cubic-bezier(0.32, 0.72, 0, 1) both;
 }
 
 /* ── Staggered list item fade-in ───────────────── */
@@ -354,21 +354,25 @@ html {
 
 /* ── Micro-interaction utilities ─────────────── */
 
-/* Button press effect */
+/* Button press effect — refined spring feel */
 .press-scale {
-  transition: transform 0.1s ease;
+  transition: transform 0.15s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.15s ease;
+  will-change: transform;
 }
 .press-scale:active {
-  transform: scale(0.97);
+  transform: scale(0.96);
+}
+.press-scale:hover {
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
 }
 
 /* Smooth hover lift */
 .hover-lift {
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.2s ease;
 }
 .hover-lift:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
 }
 
 /* Toggle switch animation */
@@ -379,13 +383,14 @@ html {
   transition: transform 0.2s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 
-/* Card hover glow */
+/* Card hover glow — consistent interactive feel */
 .card-interactive {
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s cubic-bezier(0.22, 1, 0.36, 1);
 }
 .card-interactive:hover {
-  border-color: rgba(79, 70, 229, 0.3);
-  box-shadow: 0 0 0 1px rgba(79, 70, 229, 0.1);
+  border-color: rgba(79, 70, 229, 0.2);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  transform: translateY(-0.5px);
 }
 
 /* Pulse for attention */
@@ -407,6 +412,61 @@ html {
   animation: badge-pop 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 
+/* ── Staggered fade-up for content sections ─── */
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-fade-up {
+  animation: fade-up 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* ── Smooth skeleton shimmer for loading states ─ */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.animate-shimmer {
+  background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+/* ── Subtle scale-in for cards/modals ────────── */
+@keyframes scale-up {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+.animate-scale-up {
+  animation: scale-up 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* ── Smooth content swap (no layout shift) ───── */
+.content-transition {
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+/* ── Focus ring consistency ──────────────────── */
+.focus-ring {
+  transition: box-shadow 0.15s ease;
+}
+.focus-ring:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px white, 0 0 0 4px rgba(79, 70, 229, 0.5);
+}
+
 /* ── Reduced motion ───────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   *,
@@ -418,10 +478,12 @@ html {
     scroll-behavior: auto !important;
   }
   .press-scale, .hover-lift, .card-interactive,
-  .toggle-switch, .toggle-switch .toggle-dot {
+  .toggle-switch, .toggle-switch .toggle-dot,
+  .content-transition, .focus-ring {
     transition: none !important;
   }
-  .animate-gentle-pulse, .animate-badge-pop {
+  .animate-gentle-pulse, .animate-badge-pop,
+  .animate-fade-up, .animate-shimmer, .animate-scale-up {
     animation: none !important;
   }
 }
@@ -478,15 +540,18 @@ html {
 
 @layer components {
   .btn-primary {
-    @apply w-full rounded-xl bg-brand-600 px-4 py-3.5 text-center text-base font-semibold text-white shadow-sm transition-all hover:bg-brand-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed dark:focus-visible:ring-offset-gray-900 active:scale-[0.97];
+    @apply w-full rounded-xl bg-brand-600 px-4 py-3.5 text-center text-base font-semibold text-white shadow-sm hover:bg-brand-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed dark:focus-visible:ring-offset-gray-900 active:scale-[0.96];
+    transition: all 0.15s cubic-bezier(0.22, 1, 0.36, 1);
   }
 
   .btn-secondary {
-    @apply w-full rounded-xl border border-gray-300 bg-white px-4 py-3.5 text-center text-base font-semibold text-gray-700 shadow-sm transition-all hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700 dark:focus-visible:ring-offset-gray-900 active:scale-[0.97];
+    @apply w-full rounded-xl border border-gray-300 bg-white px-4 py-3.5 text-center text-base font-semibold text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700 dark:focus-visible:ring-offset-gray-900 active:scale-[0.96];
+    transition: all 0.15s cubic-bezier(0.22, 1, 0.36, 1);
   }
 
   .btn-danger {
-    @apply w-full rounded-xl bg-danger px-4 py-3.5 text-center text-base font-semibold text-white shadow-sm transition-all hover:bg-red-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-900 active:scale-[0.97];
+    @apply w-full rounded-xl bg-danger px-4 py-3.5 text-center text-base font-semibold text-white shadow-sm hover:bg-red-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-900 active:scale-[0.96];
+    transition: all 0.15s cubic-bezier(0.22, 1, 0.36, 1);
   }
 
   .input-field {

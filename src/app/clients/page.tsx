@@ -48,7 +48,7 @@ export default async function ClientsPage() {
       <div className="min-h-dvh bg-[#f2f2f7] dark:bg-gray-950 pb-24 lg:pb-8 lg:pl-[220px]">
         {/* Header */}
         <header className="sticky top-0 z-10 bg-[#f2f2f7]/90 dark:bg-gray-950/90 backdrop-blur-xl border-b border-black/5 dark:border-white/5 px-5 pt-14 lg:pt-6 pb-4">
-          <div className="mx-auto max-w-5xl flex items-center justify-between">
+          <div className="mx-auto max-w-7xl flex items-center justify-between">
             <div>
               <h1 className="text-[28px] font-bold tracking-tight text-gray-900 dark:text-gray-100">
                 Clients

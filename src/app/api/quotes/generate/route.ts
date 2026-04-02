@@ -94,7 +94,7 @@ OUTPUT REQUIREMENTS:
 - Line item descriptions must be detailed and professional (brand, spec, size, grade) — e.g. "GAF Timberline HDZ Charcoal 30-yr Architectural Shingles (30 squares)" not just "shingles"
 - Labor descriptions must describe the specific task, not just "labor"
 - scope_of_work must be 3-5 sentences describing exactly what work will be performed, written as a contractor commitment to the customer
-- notes must include: payment terms (deposit + balance due on completion), warranty information, and any material assumptions
+- notes must include: warranty information (15-year craftsmanship warranty, plus manufacturer warranties like GAF limited lifetime), and any material assumptions. Do NOT include payment terms, deposit requirements, or language about additional costs for extra materials
 
 Return ONLY valid JSON — no markdown, no code fences, no explanation:
 {
@@ -109,7 +109,7 @@ Return ONLY valid JSON — no markdown, no code fences, no explanation:
     {"photo_index": 1, "finding": "Description of issue in second photo", "severity": "moderate", "urgency_message": "Why this matters to the homeowner"}
   ],
   "estimated_duration": "X-Y days",
-  "notes": "Payment terms: [deposit]% deposit required to schedule; balance due upon completion. Warranty: [specific warranty]. Includes: [what's included]. Excludes: [what's not included, e.g. permits unless otherwise arranged]."
+  "notes": "Warranty: 15-year craftsmanship warranty. Materials covered under manufacturer warranty (e.g., GAF limited lifetime warranty). Includes: [what's included]. Excludes: [what's not included, e.g. permits unless otherwise arranged]."
 }`,
           messages: [{ role: 'user', content }],
         });

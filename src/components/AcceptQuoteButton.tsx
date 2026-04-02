@@ -59,66 +59,83 @@ export function AcceptQuoteButton({ quoteId, depositAmount, currentStatus, strip
 
   if (accepted) {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/95 backdrop-blur-sm animate-page-enter">
-        <div className="text-center px-8 space-y-5 max-w-sm mx-auto">
-          {/* Animated checkmark */}
-          <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-green-100 shadow-lg shadow-green-100/50">
-            <svg className="h-12 w-12 text-green-600" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-            </svg>
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md" style={{ animation: 'successFadeIn 0.4s ease-out' }}>
+        <div className="mx-4 max-w-md w-full rounded-3xl bg-white shadow-2xl overflow-hidden" style={{ animation: 'successCardIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.1s both' }}>
+          {/* Green gradient header */}
+          <div className="bg-gradient-to-br from-green-500 to-emerald-600 px-6 pt-10 pb-7 text-center relative overflow-hidden">
+            {/* Subtle radial glow */}
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_30%,rgba(255,255,255,0.15),transparent_70%)]" />
+            <div className="relative">
+              <div className="mx-auto flex h-18 w-18 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm mb-5" style={{ height: 72, width: 72, animation: 'successCheckIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s both' }}>
+                <svg className="h-9 w-9 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" style={{ animation: 'successDrawCheck 0.4s ease-out 0.6s both' }}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" style={{ strokeDasharray: 30, strokeDashoffset: 30, animation: 'successStrokeDraw 0.5s ease-out 0.7s forwards' }} />
+                </svg>
+              </div>
+              <h2 className="text-[24px] font-bold text-white" style={{ animation: 'successTextIn 0.4s ease-out 0.5s both' }}>Project Confirmed</h2>
+              <p className="text-[14px] text-white/80 mt-1.5" style={{ animation: 'successTextIn 0.4s ease-out 0.6s both' }}>
+                You&apos;re officially on the schedule. We&apos;ll take it from here.
+              </p>
+            </div>
           </div>
 
-          <div>
-            <h2 className="text-[26px] font-bold text-gray-900">You&apos;re All Set!</h2>
-            <p className="text-[15px] text-gray-500 mt-1.5 leading-relaxed">
-              Your project has been confirmed. We&apos;re excited to get started on your home.
-            </p>
-          </div>
-
-          {/* Timeline steps */}
-          <div className="rounded-2xl bg-gray-50 border border-gray-100 p-5 text-left space-y-4">
+          {/* Content */}
+          <div className="px-6 py-6 space-y-4">
             <p className="text-[11px] font-semibold uppercase tracking-widest text-gray-400">Here&apos;s What Happens Now</p>
-            <div className="flex items-start gap-3">
-              <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-green-500 mt-0.5">
-                <svg className="h-3.5 w-3.5 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                </svg>
-              </div>
-              <div>
-                <p className="text-[14px] font-semibold text-gray-900">Confirmation sent</p>
-                <p className="text-[12px] text-gray-500">A receipt and project details are on the way to your email.</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3">
-              <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-green-500 mt-0.5">
-                <svg className="h-3.5 w-3.5 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                </svg>
-              </div>
-              <div>
-                <p className="text-[14px] font-semibold text-gray-900">Your contractor has been notified</p>
-                <p className="text-[12px] text-gray-500">They&apos;re already preparing for your project.</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3">
-              <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 border-gray-300 bg-white mt-0.5">
-                <span className="text-[10px] font-bold text-gray-400">3</span>
-              </div>
-              <div>
-                <p className="text-[14px] font-semibold text-gray-900">Scheduling call coming soon</p>
-                <p className="text-[12px] text-gray-500">Expect a call within 24 hours to lock in your project date.</p>
-              </div>
-            </div>
-          </div>
 
-          {/* Reassurance */}
-          <div className="flex items-center justify-center gap-2 text-[12px] text-gray-400">
-            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
-            </svg>
-            Your payment is secure and your deposit is protected.
+            <div className="space-y-4">
+              <div className="flex items-start gap-3" style={{ animation: 'successStepIn 0.3s ease-out 0.7s both' }}>
+                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-green-500 mt-0.5">
+                  <svg className="h-3.5 w-3.5 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-[13px] font-semibold text-gray-900">Confirmation sent to your inbox</p>
+                  <p className="text-[12px] text-gray-400">Full receipt and project summary included.</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3" style={{ animation: 'successStepIn 0.3s ease-out 0.8s both' }}>
+                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-green-500 mt-0.5">
+                  <svg className="h-3.5 w-3.5 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-[13px] font-semibold text-gray-900">Your team is preparing</p>
+                  <p className="text-[12px] text-gray-400">Materials and scheduling are already in motion.</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3" style={{ animation: 'successStepIn 0.3s ease-out 0.9s both' }}>
+                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-50 ring-1 ring-emerald-200 mt-0.5">
+                  <svg className="h-3.5 w-3.5 text-emerald-600" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-[13px] font-semibold text-gray-900">Expect a call within 24 hours</p>
+                  <p className="text-[12px] text-gray-400">We&apos;ll confirm your preferred start date.</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Reassurance */}
+            <div className="flex items-center justify-center gap-2 pt-3 pb-1 text-[11px] text-gray-400 border-t border-gray-100">
+              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+              </svg>
+              Secure payment processed. You&apos;re in good hands.
+            </div>
           </div>
         </div>
+        <style>{`
+          @keyframes successFadeIn { from { opacity: 0; } to { opacity: 1; } }
+          @keyframes successCardIn { from { opacity: 0; transform: scale(0.92) translateY(20px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+          @keyframes successCheckIn { from { opacity: 0; transform: scale(0); } to { opacity: 1; transform: scale(1); } }
+          @keyframes successDrawCheck { from { opacity: 0; } to { opacity: 1; } }
+          @keyframes successStrokeDraw { to { stroke-dashoffset: 0; } }
+          @keyframes successTextIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+          @keyframes successStepIn { from { opacity: 0; transform: translateX(-8px); } to { opacity: 1; transform: translateX(0); } }
+        `}</style>
       </div>
     );
   }
@@ -131,7 +148,7 @@ export function AcceptQuoteButton({ quoteId, depositAmount, currentStatus, strip
         className="w-full rounded-2xl py-3.5 text-[15px] font-semibold text-white shadow-sm press-scale transition-colors focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
         style={{ backgroundColor: brandColor }}
       >
-        {stripeEnabled ? `Approve & Secure Your Project — ${fmt(depositAmount)}` : `Approve & Secure Your Project — ${fmt(depositAmount)}`}
+        {depositAmount > 0 ? `Approve & Secure Your Project — ${fmt(depositAmount)}` : 'Approve & Secure Your Project'}
       </button>
 
       {showModal && (
@@ -190,7 +207,7 @@ export function AcceptQuoteButton({ quoteId, depositAmount, currentStatus, strip
                   </div>
                 </div>
                 <p className="text-[13px] text-gray-600 leading-relaxed">
-                  I agree to the scope of work, pricing, and terms outlined in this quote. I understand a deposit of {fmt(depositAmount)} is required to begin work.
+                  I agree to the scope of work, pricing, and terms outlined in this quote.{depositAmount > 0 ? ` I understand a deposit of ${fmt(depositAmount)} is required to begin work.` : ''}
                 </p>
               </label>
 
@@ -206,7 +223,7 @@ export function AcceptQuoteButton({ quoteId, depositAmount, currentStatus, strip
                     <Spinner size="sm" />
                     Accepting...
                   </span>
-                ) : `Sign & Approve — ${fmt(depositAmount)} Deposit`}
+                ) : depositAmount > 0 ? `Sign & Approve — ${fmt(depositAmount)} Deposit` : 'Sign & Approve'}
               </button>
 
               <button

@@ -31,7 +31,7 @@ export function SettingsForm({ profile, userId, email, stripeConnected, stripeSt
   const [phone, setPhone] = useState(profile?.phone || '');
   const [tradeType, setTradeType] = useState(profile?.trade_type || 'general');
   const [hourlyRate, setHourlyRate] = useState(String(profile?.hourly_rate || '125'));
-  const [depositPercent, setDepositPercent] = useState(String(profile?.default_deposit_percent || '33'));
+  const [depositPercent, setDepositPercent] = useState(String(profile?.default_deposit_percent ?? '0'));
   const [defaultTaxRate, setDefaultTaxRate] = useState(String(profile?.default_tax_rate ?? ''));
   const [profileSlug, setProfileSlug] = useState(profile?.profile_slug || '');
   const [profileBio, setProfileBio] = useState(profile?.profile_bio || '');
@@ -49,6 +49,10 @@ export function SettingsForm({ profile, userId, email, stripeConnected, stripeSt
       "Hey {{name}}, just wanted to follow up — happy to adjust anything if needed or get you scheduled.",
     ]
   );
+  const [googlePlaceId, setGooglePlaceId] = useState(profile?.google_place_id || '');
+  const [showReviewsOnQuotes, setShowReviewsOnQuotes] = useState(profile?.show_reviews_on_quotes ?? true);
+  const [fetchingReviews, setFetchingReviews] = useState(false);
+  const [reviewsFetched, setReviewsFetched] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<{ businessName?: string; webhookUrl?: string }>({});
 
   function isValidUrl(str: string): boolean {
@@ -96,10 +100,10 @@ export function SettingsForm({ profile, userId, email, stripeConnected, stripeSt
       .update({
         business_name: businessName,
         full_name: fullName,
-        phone,
+        phone: phone.trim() || null,
         trade_type: tradeType,
         hourly_rate: parseFloat(hourlyRate) || 0,
-        default_deposit_percent: parseInt(depositPercent) || 33,
+        default_deposit_percent: parseInt(depositPercent) || 0,
         default_tax_rate: defaultTaxRate.trim() !== '' ? parseFloat(defaultTaxRate) || 0 : null,
         profile_slug: profileSlug.trim() || null,
         profile_bio: profileBio.trim() || null,
@@ -108,6 +112,8 @@ export function SettingsForm({ profile, userId, email, stripeConnected, stripeSt
         brand_color: brandColor.trim() || null,
         auto_follow_up: autoFollowUp,
         follow_up_templates: followUpTemplates,
+        google_place_id: googlePlaceId.trim() || null,
+        show_reviews_on_quotes: showReviewsOnQuotes,
       })
       .eq('id', userId);
     setSaving(false);
@@ -197,13 +203,107 @@ export function SettingsForm({ profile, userId, email, stripeConnected, stripeSt
                 onChange={(e) => setTradeType(e.target.value)}
                 className="input-field"
               >
+                <option value="roofing">Roofing</option>
                 <option value="plumber">Plumber</option>
                 <option value="hvac">HVAC</option>
                 <option value="electrician">Electrician</option>
+                <option value="painter">Painter</option>
+                <option value="landscaper">Landscaper</option>
                 <option value="general">General Contractor</option>
                 <option value="other">Other</option>
               </select>
             </div>
+          </div>
+
+          {/* Reviews Integration */}
+          <div className="card space-y-4">
+            <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">Reviews</p>
+
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">Show reviews on quotes</p>
+                <p className="text-xs text-gray-400">Display your Google reviews on every proposal you send</p>
+              </div>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={showReviewsOnQuotes}
+                onClick={() => setShowReviewsOnQuotes(!showReviewsOnQuotes)}
+                className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors ${
+                  showReviewsOnQuotes ? 'bg-brand-600' : 'bg-gray-200 dark:bg-gray-700'
+                }`}
+              >
+                <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition-transform ${
+                  showReviewsOnQuotes ? 'translate-x-5' : 'translate-x-0'
+                }`} />
+              </button>
+            </div>
+
+            <div>
+              <label className="label">Google Place ID</label>
+              <input
+                type="text"
+                value={googlePlaceId}
+                onChange={(e) => setGooglePlaceId(e.target.value)}
+                placeholder="ChIJ..."
+                className="input-field"
+              />
+              <p className="mt-1 text-xs text-gray-400">
+                Find your Place ID at{' '}
+                <a href="https://developers.google.com/maps/documentation/places/web-service/place-id" target="_blank" rel="noopener noreferrer" className="text-brand-600 hover:underline">
+                  Google Place ID Finder
+                </a>
+              </p>
+            </div>
+
+            {googlePlaceId.trim() && (
+              <button
+                type="button"
+                onClick={async () => {
+                  setFetchingReviews(true);
+                  setReviewsFetched(false);
+                  try {
+                    const res = await fetch(`/api/reviews/sync-google`, {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ google_place_id: googlePlaceId.trim() }),
+                    });
+                    if (res.ok) {
+                      const data = await res.json();
+                      setReviewsFetched(true);
+                      setTimeout(() => setReviewsFetched(false), 3000);
+                    }
+                  } catch (err) {
+                    console.error('Failed to sync reviews:', err);
+                  } finally {
+                    setFetchingReviews(false);
+                  }
+                }}
+                disabled={fetchingReviews}
+                className="flex items-center gap-2 rounded-xl bg-gray-100 dark:bg-gray-800 px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors disabled:opacity-50"
+              >
+                {fetchingReviews ? (
+                  <>
+                    <Spinner size="sm" />
+                    Fetching reviews...
+                  </>
+                ) : reviewsFetched ? (
+                  <>
+                    <svg className="h-4 w-4 text-green-500" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                    </svg>
+                    Reviews synced!
+                  </>
+                ) : (
+                  <>
+                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182" />
+                    </svg>
+                    Sync Google Reviews
+                  </>
+                )}
+              </button>
+            )}
           </div>
         </>
       )}

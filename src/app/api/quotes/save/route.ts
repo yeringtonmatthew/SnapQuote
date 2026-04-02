@@ -28,6 +28,8 @@ export async function POST(request: Request) {
     deposit_percent,
     notes,
     status,
+    pipeline_stage,
+    client_id,
   } = body;
 
   if (customer_name === undefined || customer_name === null || typeof customer_name !== 'string') {
@@ -71,15 +73,17 @@ export async function POST(request: Request) {
       scope_of_work: scope_of_work || null,
       line_items: line_items || [],
       inspection_findings: inspection_findings || null,
-      subtotal: subtotal || 0,
+      subtotal: subtotal ?? 0,
       tax_rate: tax_rate ?? null,
       discount_amount: discount_amount ?? null,
       discount_percent: discount_percent ?? null,
       total: total ?? subtotal ?? 0,
-      deposit_amount: deposit_amount || 0,
-      deposit_percent: deposit_percent || 33,
+      deposit_amount: deposit_amount ?? 0,
+      deposit_percent: deposit_percent ?? 0,
       notes: notes || null,
       status: status || 'draft',
+      pipeline_stage: pipeline_stage || undefined,
+      client_id: client_id || null,
       sent_at: status === 'sent' ? new Date().toISOString() : null,
       expires_at: status === 'sent'
         ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()

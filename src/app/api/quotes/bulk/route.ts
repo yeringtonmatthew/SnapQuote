@@ -13,11 +13,27 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: 'ids must be a non-empty array' }, { status: 400 });
   }
 
-  if (action !== 'archive' && action !== 'unarchive') {
+  if (action !== 'archive' && action !== 'unarchive' && action !== 'delete') {
     return NextResponse.json(
-      { error: 'action must be "archive" or "unarchive"' },
+      { error: 'action must be "archive", "unarchive", or "delete"' },
       { status: 400 }
     );
+  }
+
+  if (action === 'delete') {
+    const { data, error } = await supabase
+      .from('quotes')
+      .delete()
+      .in('id', ids)
+      .eq('contractor_id', user.id)
+      .select('id');
+
+    if (error) {
+      console.error('Bulk delete error:', error);
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    return NextResponse.json({ success: true, count: data?.length ?? 0 });
   }
 
   const archived = action === 'archive';

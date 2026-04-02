@@ -38,7 +38,7 @@ export default function DashboardStats({
     <>
       <h2 className="sr-only">Dashboard Statistics</h2>
       <div className="grid grid-cols-2 gap-3">
-        <div className="rounded-2xl bg-white dark:bg-gray-900 p-4 shadow-sm border border-gray-100 dark:border-gray-800 card-interactive">
+        <div className="rounded-2xl bg-white dark:bg-gray-900 p-4 shadow-sm ring-1 ring-black/[0.04] dark:ring-white/[0.06] card-interactive">
           <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">This Month</p>
           <p className="mt-1 text-2xl font-bold text-gray-900 dark:text-gray-100 tabular-nums">
             <AnimatedNumber value={monthlyRevenue} prefix="$" />
@@ -46,7 +46,7 @@ export default function DashboardStats({
           </p>
           <p className="text-[12px] text-gray-500 mt-0.5">deposits collected</p>
         </div>
-        <div className="rounded-2xl bg-white dark:bg-gray-900 p-4 shadow-sm border border-gray-100 dark:border-gray-800 card-interactive">
+        <div className="rounded-2xl bg-white dark:bg-gray-900 p-4 shadow-sm ring-1 ring-black/[0.04] dark:ring-white/[0.06] card-interactive">
           <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Quotes Sent</p>
           <p className="mt-1 text-2xl font-bold text-gray-900 dark:text-gray-100 tabular-nums">
             <AnimatedNumber value={quotesSentCount} />
@@ -54,14 +54,14 @@ export default function DashboardStats({
           </p>
           <p className="text-[12px] text-gray-500 mt-0.5">this month</p>
         </div>
-        <div className="rounded-2xl bg-white dark:bg-gray-900 p-4 shadow-sm border border-gray-100 dark:border-gray-800 card-interactive">
+        <div className="rounded-2xl bg-white dark:bg-gray-900 p-4 shadow-sm ring-1 ring-black/[0.04] dark:ring-white/[0.06] card-interactive">
           <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Approval Rate</p>
           <p className="mt-1 text-2xl font-bold text-gray-900 dark:text-gray-100 tabular-nums">
             <AnimatedNumber value={approvalRate} suffix="%" />
           </p>
           <p className="text-[12px] text-gray-500 mt-0.5">all time</p>
         </div>
-        <div className="rounded-2xl bg-white dark:bg-gray-900 p-4 shadow-sm border border-gray-100 dark:border-gray-800 card-interactive">
+        <div className="rounded-2xl bg-white dark:bg-gray-900 p-4 shadow-sm ring-1 ring-black/[0.04] dark:ring-white/[0.06] card-interactive">
           <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Pending</p>
           <p className="mt-1 text-2xl font-bold text-gray-900 dark:text-gray-100 tabular-nums">
             <AnimatedNumber value={pendingValue} prefix="$" />

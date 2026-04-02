@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getStripe } from '@/lib/stripe';
-import { createClient } from '@/lib/supabase/server';
+import { createClient } from '@supabase/supabase-js';
 import { createNotification, sendNotificationEmail } from '@/lib/notify';
 import { formatQuoteNumber } from '@/lib/format-quote-number';
 import { fireWebhook } from '@/lib/webhook';
@@ -31,7 +31,10 @@ export async function POST(request: NextRequest) {
     const quoteId = session.metadata?.quote_id;
 
     if (quoteId) {
-      const supabase = createClient();
+      const supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
+      );
       await supabase
         .from('quotes')
         .update({
@@ -111,7 +114,7 @@ export async function POST(request: NextRequest) {
         const messagingServiceSid = process.env.TWILIO_MESSAGING_SERVICE_SID;
 
         if (sid && token && (from || messagingServiceSid) && quote.customer_phone) {
-          const businessName = contractor?.business_name || contractor?.full_name || 'Your contractor';
+          const businessName = contractor?.business_name || contractor?.full_name || 'Licensed Professional';
           const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
           const receiptUrl = `${appUrl}/receipt/${quoteId}`;
           const digits = quote.customer_phone.replace(/\D/g, '');

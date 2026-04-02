@@ -65,6 +65,9 @@ export default function NewQuotePage() {
 
   // Job details — File objects are compressed client-side by PhotoUpload
   const [files, setFiles] = useState<File[]>([]);
+  // Persisted photo URLs — uploaded to Supabase as soon as files are added
+  const [photoUrls, setPhotoUrls] = useState<string[]>([]);
+  const [uploadingPhotos, setUploadingPhotos] = useState(false);
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
   const [customerEmail, setCustomerEmail] = useState('');
@@ -80,7 +83,7 @@ export default function NewQuotePage() {
   const [estimatedDuration, setEstimatedDuration] = useState('');
 
   // Calculated
-  const [depositPercent, setDepositPercent] = useState(33);
+  const [depositPercent, setDepositPercent] = useState(0);
   const [taxRate, setTaxRate] = useState<string>('');
   const [discountType, setDiscountType] = useState<'none' | 'amount' | 'percent'>('none');
   const [discountValue, setDiscountValue] = useState<string>('');
@@ -113,7 +116,7 @@ export default function NewQuotePage() {
         .single();
       if (data) {
         setProfile(data);
-        setDepositPercent(data.default_deposit_percent || 33);
+        setDepositPercent(data.default_deposit_percent ?? 0);
         if (data.default_tax_rate != null) {
           setTaxRate(String(data.default_tax_rate));
         }
@@ -136,6 +139,64 @@ export default function NewQuotePage() {
     loadTemplates();
   }, []);
 
+  // --- Upload photos to Supabase immediately when files are added ---
+  async function uploadPhotosToStorage(newFiles: File[]) {
+    if (newFiles.length === 0) return;
+    setUploadingPhotos(true);
+    try {
+      const supabase = createClient();
+      const newUrls: string[] = [];
+      for (const file of newFiles) {
+        const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.jpg`;
+        const filePath = `quotes/${fileName}`;
+        const { error: uploadError } = await supabase.storage
+          .from('photos')
+          .upload(filePath, file, { contentType: file.type || 'image/jpeg' });
+        if (!uploadError) {
+          const { data: urlData } = supabase.storage.from('photos').getPublicUrl(filePath);
+          newUrls.push(urlData.publicUrl);
+        } else {
+          console.error('[PhotoUpload] Upload error:', uploadError.message);
+        }
+      }
+      setPhotoUrls(prev => [...prev, ...newUrls]);
+    } catch (err) {
+      console.error('[PhotoUpload] Failed to upload:', err);
+    } finally {
+      setUploadingPhotos(false);
+    }
+  }
+
+  // Wrap file change: update local File[] state AND upload to storage in background
+  function handleFilesChange(newFiles: File[]) {
+    clearFieldError('photos');
+
+    if (newFiles.length > files.length) {
+      // Addition: upload only the newly added files
+      const addedFiles = newFiles.slice(files.length);
+      setFiles(newFiles);
+      uploadPhotosToStorage(addedFiles);
+    } else if (newFiles.length < files.length) {
+      // Removal: find which file was removed by checking which one is missing
+      const removedIndex = files.findIndex(f => !newFiles.includes(f));
+      setFiles(newFiles);
+      if (removedIndex !== -1) {
+        setPhotoUrls(prev => prev.filter((_, i) => i !== removedIndex));
+      } else {
+        // Fallback: last file was removed (e.g., same object references)
+        setPhotoUrls(prev => prev.slice(0, newFiles.length));
+      }
+    } else {
+      // Reorder: update files and reorder photoUrls to match
+      const newOrder = newFiles.map(f => files.indexOf(f));
+      setFiles(newFiles);
+      setPhotoUrls(prev => {
+        if (prev.length === 0) return prev;
+        return newOrder.map(i => prev[i]).filter(Boolean);
+      });
+    }
+  }
+
   // --- Auto-save draft logic ---
   const getDraftData = useCallback(() => ({
     customerName,
@@ -146,15 +207,15 @@ export default function NewQuotePage() {
     notes,
     scopeOfWork,
     aiDescription,
-    photos: [] as string[], // photo URLs are only available after upload
-  }), [customerName, customerPhone, customerEmail, jobAddress, lineItems, notes, scopeOfWork, aiDescription]);
+    photos: photoUrls, // NOW persists uploaded photo URLs
+  }), [customerName, customerPhone, customerEmail, jobAddress, lineItems, notes, scopeOfWork, aiDescription, photoUrls]);
 
   // Auto-save every 30 seconds
   useEffect(() => {
     const interval = setInterval(() => {
       const data = getDraftData();
       // Only save if there's meaningful content
-      if (data.customerName || data.lineItems.length > 0 || data.aiDescription) {
+      if (data.customerName || data.lineItems.length > 0 || data.aiDescription || data.photos.length > 0) {
         saveDraft(data);
       }
     }, 30000);
@@ -165,7 +226,7 @@ export default function NewQuotePage() {
   useEffect(() => {
     function handleBeforeUnload() {
       const data = getDraftData();
-      if (data.customerName || data.lineItems.length > 0 || data.aiDescription) {
+      if (data.customerName || data.lineItems.length > 0 || data.aiDescription || data.photos.length > 0) {
         saveDraft(data);
       }
     }
@@ -183,10 +244,14 @@ export default function NewQuotePage() {
     setNotes(draft.notes || DEFAULT_TERMS);
     setScopeOfWork(draft.scopeOfWork || '');
     setAiDescription(draft.aiDescription || '');
+    // Restore persisted photo URLs
+    if (draft.photos && draft.photos.length > 0) {
+      setPhotoUrls(draft.photos);
+    }
     // Jump to review if we have line items, otherwise details
     if (draft.lineItems && draft.lineItems.length > 0) {
       setStep('review');
-    } else if (draft.customerName) {
+    } else if (draft.customerName || (draft.photos && draft.photos.length > 0)) {
       setStep('details');
     }
   }
@@ -249,7 +314,7 @@ export default function NewQuotePage() {
     const errors: FieldErrors = {};
     if (!customerName.trim()) errors.customerName = 'Customer name is required';
     if (!customerPhone.trim() && !customerEmail.trim()) errors.customerContact = 'Phone or email is required';
-    if (files.length === 0) errors.photos = 'Add at least one photo for AI generation';
+    if (files.length === 0 && photoUrls.length === 0) errors.photos = 'Add at least one photo for AI generation';
 
     if (Object.keys(errors).length > 0) {
       setFieldErrors(errors);
@@ -263,7 +328,22 @@ export default function NewQuotePage() {
 
     try {
       // Compress each file client-side, then send as JSON (avoids FormData/multipart issues)
-      const images = await Promise.all(files.map(compressToBase64));
+      let images: string[];
+      if (files.length > 0) {
+        images = await Promise.all(files.map(compressToBase64));
+      } else if (photoUrls.length > 0) {
+        // Draft recovery: files are gone but URLs exist — fetch and convert to base64
+        images = await Promise.all(
+          photoUrls.map(async (url) => {
+            const resp = await fetch(url);
+            const blob = await resp.blob();
+            const file = new File([blob], 'photo.jpg', { type: blob.type });
+            return compressToBase64(file);
+          })
+        );
+      } else {
+        images = [];
+      }
 
       const res = await fetch('/api/quotes/generate', {
         method: 'POST',
@@ -305,23 +385,26 @@ export default function NewQuotePage() {
     setFieldErrors({});
 
     try {
-      // Upload original files to Supabase storage now that quote is confirmed
+      // Photos are already uploaded to Supabase storage (uploaded on add).
+      // Only upload any remaining files that might not have URLs yet.
       const supabase = createClient();
-      const photoUrls: string[] = [];
+      let finalPhotoUrls = [...photoUrls];
 
-      for (const file of files) {
-        const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.jpg`;
-        const filePath = `quotes/${fileName}`;
-
-        const { error: uploadError } = await supabase.storage
-          .from('photos')
-          .upload(filePath, file, { contentType: file.type || 'image/jpeg' });
-
-        if (uploadError) {
-          console.error('[Save] Supabase upload error:', uploadError.message);
-        } else {
-          const { data: urlData } = supabase.storage.from('photos').getPublicUrl(filePath);
-          photoUrls.push(urlData.publicUrl);
+      // If there are more files than URLs, upload the extras
+      if (files.length > photoUrls.length) {
+        const remainingFiles = files.slice(photoUrls.length);
+        for (const file of remainingFiles) {
+          const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.jpg`;
+          const filePath = `quotes/${fileName}`;
+          const { error: uploadError } = await supabase.storage
+            .from('photos')
+            .upload(filePath, file, { contentType: file.type || 'image/jpeg' });
+          if (!uploadError) {
+            const { data: urlData } = supabase.storage.from('photos').getPublicUrl(filePath);
+            finalPhotoUrls.push(urlData.publicUrl);
+          } else {
+            console.error('[Save] Supabase upload error:', uploadError.message);
+          }
         }
       }
 
@@ -333,7 +416,7 @@ export default function NewQuotePage() {
           customer_phone: customerPhone,
           customer_email: customerEmail,
           job_address: jobAddress,
-          photos: photoUrls,
+          photos: finalPhotoUrls,
           ai_description: aiDescription,
           scope_of_work: scopeOfWork,
           line_items: lineItems,
@@ -482,7 +565,7 @@ export default function NewQuotePage() {
           <div className="space-y-6">
             <div>
               <h2 className="mb-3 text-sm font-semibold text-gray-700">Job Photos</h2>
-              <PhotoUpload files={files} onFilesChange={(f) => { setFiles(f); clearFieldError('photos'); }} />
+              <PhotoUpload files={files} onFilesChange={handleFilesChange} photoUrls={photoUrls} />
               {fieldErrors.photos && (
                 <p role="alert" className="mt-1.5 text-xs text-red-500 animate-shake">
                   {fieldErrors.photos}
@@ -523,19 +606,13 @@ export default function NewQuotePage() {
                 <label htmlFor="jobAddress" className="label">
                   Job Address <span className="font-normal text-gray-400">(optional)</span>
                 </label>
-                <div className="relative">
-                  <svg className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
-                  </svg>
-                  <AddressAutocomplete
-                    id="jobAddress"
-                    value={jobAddress}
-                    onChange={setJobAddress}
-                    placeholder="123 Main St, Indianapolis, IN"
-                    className="input-field pl-9"
-                  />
-                </div>
+                <AddressAutocomplete
+                  id="jobAddress"
+                  value={jobAddress}
+                  onChange={setJobAddress}
+                  placeholder="123 Main St, Indianapolis, IN"
+                  className="input-field"
+                />
               </div>
             </div>
 
@@ -558,10 +635,15 @@ export default function NewQuotePage() {
 
             <button
               onClick={handleGenerateQuote}
-              disabled={generating}
+              disabled={generating || uploadingPhotos}
               className="btn-primary flex items-center justify-center gap-2"
             >
-              {generating ? (
+              {uploadingPhotos ? (
+                <>
+                  <Spinner size="md" />
+                  Uploading photos...
+                </>
+              ) : generating ? (
                 <Spinner size="md" />
               ) : (
                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">

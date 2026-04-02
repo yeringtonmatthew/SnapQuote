@@ -2,6 +2,9 @@
 
 import Link from 'next/link';
 import { relativeTime } from '@/lib/relative-time';
+import { getSmartAction } from '@/lib/smart-actions';
+import { getLeadScore, temperatureStyles } from '@/lib/lead-temperature';
+import type { Quote } from '@/types/database';
 
 export interface PipelineCardProps {
   quote: {
@@ -121,13 +124,26 @@ export default function PipelineCard({
 
   const followUpBadge = getFollowUpBadge(
     quote.pipeline_stage,
-    quote.created_at,
+    quote.sent_at || quote.created_at,
   );
   const scheduleNudge = getScheduleNudge(
     quote.pipeline_stage,
     quote.scheduled_date,
   );
   const lastTouchTime = lastActivity(quote);
+
+  // Smart action badge — use the engine for richer context
+  const smartAction = getSmartAction(quote as unknown as Quote);
+  const leadScore = getLeadScore(quote as unknown as Quote);
+  const smartBadge = smartAction.badge;
+  const badgeColorMap: Record<string, string> = {
+    red: 'bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 ring-1 ring-red-200/60 dark:ring-red-800/40',
+    amber: 'bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 ring-1 ring-amber-200/60 dark:ring-amber-800/40',
+    blue: 'bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 ring-1 ring-blue-200/60 dark:ring-blue-800/40',
+    green: 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 ring-1 ring-emerald-200/60 dark:ring-emerald-800/40',
+    indigo: 'bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 ring-1 ring-indigo-200/60 dark:ring-indigo-800/40',
+    gray: 'bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400 ring-1 ring-gray-200/60 dark:ring-gray-700/40',
+  };
 
   // Use onQuickActions if provided, else fall back to onStageChange
   const handleMenuTap = onQuickActions || onStageChange;
@@ -212,7 +228,16 @@ export default function PipelineCard({
               </span>
             )}
 
-            {/* Follow-up urgency badge */}
+            {/* Smart action badge — powered by the engine */}
+            {smartBadge && !followUpBadge && !scheduleNudge && (
+              <span
+                className={`inline-flex items-center rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${badgeColorMap[smartBadge.color] || badgeColorMap.gray}`}
+              >
+                {smartBadge.label}
+              </span>
+            )}
+
+            {/* Follow-up urgency badge (fallback for quote_sent) */}
             {followUpBadge && (
               <span
                 className={`inline-flex items-center rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${followUpBadge.classes}`}
@@ -221,7 +246,7 @@ export default function PipelineCard({
               </span>
             )}
 
-            {/* Schedule nudge badge */}
+            {/* Schedule nudge badge (fallback for deposit_collected) */}
             {scheduleNudge && (
               <span
                 className={`inline-flex items-center rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${scheduleNudge.classes}`}
@@ -248,6 +273,9 @@ export default function PipelineCard({
 
             <span className="text-[11px] text-gray-300 dark:text-gray-600 tabular-nums">
               Last: {relativeTime(lastTouchTime)}
+            </span>
+            <span className={`text-[10px] font-semibold tabular-nums ${temperatureStyles[leadScore.temperature].text}`}>
+              {temperatureStyles[leadScore.temperature].icon} {leadScore.score}
             </span>
           </div>
         </div>

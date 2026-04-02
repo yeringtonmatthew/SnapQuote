@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import type { CalendarEvent, EventType } from '@/types/database';
+import { haptic } from '@/lib/haptic';
 
 // ── Constants ────────────────────────────────────────────
 const EVENT_TYPES: { value: EventType; label: string; color: string }[] = [
@@ -21,10 +22,17 @@ interface QuoteOption {
   job_address: string | null;
 }
 
+interface ClientOption {
+  id: string;
+  name: string;
+  phone: string | null;
+  address: string | null;
+}
+
 interface EventCreateSheetProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (event: Partial<CalendarEvent>) => void;
+  onSave: (event: Partial<CalendarEvent> & { client_id?: string | null }) => void;
   defaultDate?: string;
   defaultTime?: string;
   quotes?: QuoteOption[];
@@ -48,16 +56,46 @@ export default function EventCreateSheet({
   const [allDay, setAllDay] = useState(false);
   const [notes, setNotes] = useState('');
   const [quoteId, setQuoteId] = useState<string | null>(null);
-  const [quoteSearch, setQuoteSearch] = useState('');
-  const [showQuoteList, setShowQuoteList] = useState(false);
+  const [clientId, setClientId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
+  // Client/quote search
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [linkedName, setLinkedName] = useState('');
+  const [linkedType, setLinkedType] = useState<'client' | 'quote' | null>(null);
+
+  // Clients fetched from API
+  const [clients, setClients] = useState<ClientOption[]>([]);
+  const [clientsLoaded, setClientsLoaded] = useState(false);
+
+  // Inline client creation
+  const [showNewClient, setShowNewClient] = useState(false);
+  const [newClientName, setNewClientName] = useState('');
+  const [newClientPhone, setNewClientPhone] = useState('');
+  const [newClientAddress, setNewClientAddress] = useState('');
+  const [creatingClient, setCreatingClient] = useState(false);
+
   const sheetRef = useRef<HTMLDivElement>(null);
-  const pillsRef = useRef<HTMLDivElement>(null);
+  const searchRef = useRef<HTMLInputElement>(null);
+
+  // Fetch clients when sheet opens
+  const fetchClients = useCallback(async () => {
+    if (clientsLoaded) return;
+    try {
+      const res = await fetch('/api/clients');
+      if (res.ok) {
+        const data = await res.json();
+        setClients(data);
+      }
+    } catch { /* silent */ }
+    setClientsLoaded(true);
+  }, [clientsLoaded]);
 
   // Reset form when opening
   useEffect(() => {
     if (isOpen) {
+      fetchClients();
       if (editingEvent) {
         setTitle(editingEvent.title || '');
         setEventType(editingEvent.event_type);
@@ -67,7 +105,9 @@ export default function EventCreateSheet({
         setAllDay(editingEvent.all_day);
         setNotes(editingEvent.notes || '');
         setQuoteId(editingEvent.quote_id || null);
-        setQuoteSearch(editingEvent.customer_name || '');
+        setClientId((editingEvent as any).client_id || null);
+        setLinkedName(editingEvent.customer_name || editingEvent.title || '');
+        setLinkedType(editingEvent.quote_id ? 'quote' : (editingEvent as any).client_id ? 'client' : null);
       } else {
         setTitle('');
         setEventType('job_scheduled');
@@ -77,37 +117,98 @@ export default function EventCreateSheet({
         setAllDay(false);
         setNotes('');
         setQuoteId(null);
-        setQuoteSearch('');
+        setClientId(null);
+        setLinkedName('');
+        setLinkedType(null);
       }
-      setShowQuoteList(false);
+      setSearchQuery('');
+      setShowDropdown(false);
+      setShowNewClient(false);
       setSaving(false);
     }
-  }, [isOpen, editingEvent, defaultDate, defaultTime]);
+  }, [isOpen, editingEvent, defaultDate, defaultTime, fetchClients]);
 
-  // Filter quotes
-  const filteredQuotes = quotes.filter((q) =>
-    q.customer_name.toLowerCase().includes(quoteSearch.toLowerCase())
-  );
+  // Combined search results: clients + quotes
+  const searchResults = (() => {
+    const q = searchQuery.toLowerCase().trim();
+    if (!q) return { clients: clients.slice(0, 5), quotes: quotes.slice(0, 5) };
+    return {
+      clients: clients.filter(c => c.name.toLowerCase().includes(q)).slice(0, 5),
+      quotes: quotes.filter(qo => qo.customer_name.toLowerCase().includes(q)).slice(0, 5),
+    };
+  })();
 
-  const handleSelectQuote = (q: QuoteOption) => {
-    setQuoteId(q.id);
-    setQuoteSearch(q.customer_name);
-    setTitle(q.customer_name);
-    setShowQuoteList(false);
+  const hasResults = searchResults.clients.length > 0 || searchResults.quotes.length > 0;
+
+  const handleSelectClient = (client: ClientOption) => {
+    setClientId(client.id);
+    setQuoteId(null);
+    setLinkedName(client.name);
+    setLinkedType('client');
+    if (!title.trim()) setTitle(client.name);
+    setSearchQuery('');
+    setShowDropdown(false);
+    haptic('light');
   };
 
-  const handleClearQuote = () => {
+  const handleSelectQuote = (quote: QuoteOption) => {
+    setQuoteId(quote.id);
+    setClientId(null);
+    setLinkedName(quote.customer_name);
+    setLinkedType('quote');
+    if (!title.trim()) setTitle(quote.customer_name);
+    setSearchQuery('');
+    setShowDropdown(false);
+    haptic('light');
+  };
+
+  const handleClearLink = () => {
     setQuoteId(null);
-    setQuoteSearch('');
-    setShowQuoteList(false);
+    setClientId(null);
+    setLinkedName('');
+    setLinkedType(null);
+    setSearchQuery('');
+    setShowDropdown(false);
+  };
+
+  const handleCreateClient = async () => {
+    if (!newClientName.trim()) return;
+    setCreatingClient(true);
+    try {
+      const res = await fetch('/api/clients', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: newClientName.trim(),
+          phone: newClientPhone.trim() || null,
+          address: newClientAddress.trim() || null,
+        }),
+      });
+      if (res.ok) {
+        const newClient = await res.json();
+        // Add to local clients list
+        setClients(prev => [...prev, newClient]);
+        // Select the new client
+        handleSelectClient(newClient);
+        setShowNewClient(false);
+        setNewClientName('');
+        setNewClientPhone('');
+        setNewClientAddress('');
+        haptic('medium');
+      }
+    } catch (err) {
+      console.error('Failed to create client:', err);
+    } finally {
+      setCreatingClient(false);
+    }
   };
 
   const handleSave = async () => {
-    if (!title.trim() && !quoteId) return;
+    if (!title.trim() && !linkedName) return;
     setSaving(true);
 
-    const eventData: Partial<CalendarEvent> = {
-      title: title.trim() || quoteSearch.trim(),
+    const eventData: Partial<CalendarEvent> & { client_id?: string | null } = {
+      title: title.trim() || linkedName,
       event_type: eventType,
       event_date: eventDate,
       start_time: allDay ? null : startTime || null,
@@ -115,6 +216,7 @@ export default function EventCreateSheet({
       all_day: allDay,
       notes: notes.trim() || null,
       quote_id: quoteId,
+      client_id: clientId,
     };
 
     await onSave(eventData);
@@ -128,7 +230,6 @@ export default function EventCreateSheet({
     try {
       const res = await fetch(`/api/events/${editingEvent.id}`, { method: 'DELETE' });
       if (res.ok) {
-        // Trigger parent refresh
         window.location.reload();
       }
     } catch (err) {
@@ -149,15 +250,15 @@ export default function EventCreateSheet({
       {/* Sheet */}
       <div
         ref={sheetRef}
-        className="fixed inset-x-0 bottom-0 z-50 bg-white rounded-t-2xl animate-sheet-up max-h-[92dvh] overflow-y-auto"
+        className="fixed inset-x-0 bottom-0 lg:inset-y-0 lg:left-auto lg:right-0 lg:bottom-auto lg:w-[420px] z-50 bg-white lg:rounded-none rounded-t-2xl animate-sheet-up lg:animate-none max-h-[92dvh] lg:max-h-none lg:h-full overflow-y-auto"
       >
         {/* Handle */}
-        <div className="flex justify-center pt-3 pb-1">
+        <div className="flex justify-center pt-3 pb-1 lg:hidden">
           <div className="h-1 w-10 rounded-full bg-gray-300" />
         </div>
 
         {/* Header */}
-        <div className="flex items-center justify-between px-5 pb-3 border-b border-gray-100">
+        <div className="flex items-center justify-between px-5 pb-3 pt-1 lg:pt-4 border-b border-gray-100">
           <button
             onClick={onClose}
             className="text-[15px] font-medium text-gray-500 press-scale"
@@ -169,7 +270,7 @@ export default function EventCreateSheet({
           </h2>
           <button
             onClick={handleSave}
-            disabled={saving || (!title.trim() && !quoteId)}
+            disabled={saving || (!title.trim() && !linkedName)}
             className="text-[15px] font-semibold text-brand-600 disabled:text-gray-300 press-scale"
           >
             {saving ? 'Saving...' : editingEvent ? 'Update' : 'Create'}
@@ -177,6 +278,178 @@ export default function EventCreateSheet({
         </div>
 
         <div className="px-5 py-4 space-y-5">
+          {/* Client / Job Link */}
+          <div>
+            <label className="block text-[13px] font-medium text-gray-500 mb-1.5">Client</label>
+            {(linkedType && linkedName) ? (
+              <div className="flex items-center gap-2 rounded-xl bg-gray-50 border border-gray-200 px-4 py-3">
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-100 shrink-0">
+                  <span className="text-[13px] font-bold text-brand-700">
+                    {linkedName.charAt(0).toUpperCase()}
+                  </span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[14px] font-semibold text-gray-900 truncate">{linkedName}</p>
+                  <p className="text-[11px] text-gray-400">
+                    {linkedType === 'quote' ? 'Linked to quote' : 'Client'}
+                  </p>
+                </div>
+                <button
+                  onClick={handleClearLink}
+                  className="shrink-0 text-[13px] font-medium text-red-500 press-scale"
+                >
+                  Remove
+                </button>
+              </div>
+            ) : showNewClient ? (
+              /* Inline new client form */
+              <div className="rounded-xl border border-brand-200 bg-brand-50/30 p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <p className="text-[13px] font-semibold text-gray-700">New Client</p>
+                  <button
+                    onClick={() => setShowNewClient(false)}
+                    className="text-[12px] font-medium text-gray-400 press-scale"
+                  >
+                    Cancel
+                  </button>
+                </div>
+                <input
+                  type="text"
+                  value={newClientName}
+                  onChange={(e) => setNewClientName(e.target.value)}
+                  placeholder="Client name *"
+                  autoFocus
+                  className="w-full rounded-lg bg-white border border-gray-200 px-3 py-2.5 text-[14px] text-gray-900 placeholder-gray-400 outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400"
+                />
+                <input
+                  type="tel"
+                  value={newClientPhone}
+                  onChange={(e) => setNewClientPhone(e.target.value)}
+                  placeholder="Phone (optional)"
+                  className="w-full rounded-lg bg-white border border-gray-200 px-3 py-2.5 text-[14px] text-gray-900 placeholder-gray-400 outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400"
+                />
+                <input
+                  type="text"
+                  value={newClientAddress}
+                  onChange={(e) => setNewClientAddress(e.target.value)}
+                  placeholder="Address (optional)"
+                  className="w-full rounded-lg bg-white border border-gray-200 px-3 py-2.5 text-[14px] text-gray-900 placeholder-gray-400 outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400"
+                />
+                <button
+                  onClick={handleCreateClient}
+                  disabled={!newClientName.trim() || creatingClient}
+                  className="w-full rounded-lg bg-brand-600 py-2.5 text-[14px] font-semibold text-white disabled:opacity-40 press-scale"
+                >
+                  {creatingClient ? 'Creating...' : 'Create Client'}
+                </button>
+              </div>
+            ) : (
+              /* Search input */
+              <div className="relative">
+                <div className="relative">
+                  <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+                  </svg>
+                  <input
+                    ref={searchRef}
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => {
+                      setSearchQuery(e.target.value);
+                      setShowDropdown(true);
+                    }}
+                    onFocus={() => setShowDropdown(true)}
+                    placeholder="Search clients or jobs..."
+                    className="w-full rounded-xl bg-gray-100 pl-10 pr-4 py-3 text-[15px] text-gray-900 placeholder-gray-400 outline-none focus:ring-2 focus:ring-brand-500/20 transition-all"
+                  />
+                </div>
+
+                {showDropdown && (
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-xl ring-1 ring-black/[0.08] shadow-lg max-h-60 overflow-y-auto z-20">
+                    {/* Clients section */}
+                    {searchResults.clients.length > 0 && (
+                      <>
+                        <div className="px-3.5 py-2 border-b border-gray-100">
+                          <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Clients</p>
+                        </div>
+                        {searchResults.clients.map((c) => (
+                          <button
+                            key={`c-${c.id}`}
+                            onClick={() => handleSelectClient(c)}
+                            className="w-full text-left px-4 py-2.5 hover:bg-gray-50 active:bg-gray-100 transition-colors flex items-center gap-3"
+                          >
+                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 shrink-0">
+                              <span className="text-[12px] font-bold text-gray-600">{c.name.charAt(0).toUpperCase()}</span>
+                            </div>
+                            <div className="min-w-0">
+                              <p className="text-[14px] font-semibold text-gray-900 truncate">{c.name}</p>
+                              {c.phone && <p className="text-[12px] text-gray-400">{c.phone}</p>}
+                            </div>
+                          </button>
+                        ))}
+                      </>
+                    )}
+
+                    {/* Quotes section */}
+                    {searchResults.quotes.length > 0 && (
+                      <>
+                        <div className="px-3.5 py-2 border-b border-gray-100">
+                          <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Jobs</p>
+                        </div>
+                        {searchResults.quotes.map((q) => (
+                          <button
+                            key={`q-${q.id}`}
+                            onClick={() => handleSelectQuote(q)}
+                            className="w-full text-left px-4 py-2.5 hover:bg-gray-50 active:bg-gray-100 transition-colors flex items-center gap-3"
+                          >
+                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-100 shrink-0">
+                              <svg className="h-3.5 w-3.5 text-indigo-600" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                              </svg>
+                            </div>
+                            <div className="min-w-0">
+                              <p className="text-[14px] font-semibold text-gray-900 truncate">{q.customer_name}</p>
+                              {q.job_address && <p className="text-[12px] text-gray-400 truncate">{q.job_address}</p>}
+                            </div>
+                          </button>
+                        ))}
+                      </>
+                    )}
+
+                    {/* No results + create new */}
+                    {!hasResults && searchQuery.trim() && (
+                      <div className="px-4 py-3 text-center">
+                        <p className="text-[13px] text-gray-400">No matches found</p>
+                      </div>
+                    )}
+
+                    {/* Create new client option */}
+                    <button
+                      onClick={() => {
+                        setShowNewClient(true);
+                        setNewClientName(searchQuery.trim());
+                        setShowDropdown(false);
+                      }}
+                      className="w-full text-left px-4 py-3 hover:bg-brand-50 active:bg-brand-100 transition-colors flex items-center gap-3 border-t border-gray-100"
+                    >
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-100 shrink-0">
+                        <svg className="h-4 w-4 text-brand-600" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                        </svg>
+                      </div>
+                      <div>
+                        <p className="text-[14px] font-semibold text-brand-600">
+                          {searchQuery.trim() ? `Create "${searchQuery.trim()}"` : 'Create new client'}
+                        </p>
+                        <p className="text-[11px] text-gray-400">Add a new client to your list</p>
+                      </div>
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
           {/* Title */}
           <div>
             <label className="block text-[13px] font-medium text-gray-500 mb-1.5">Title</label>
@@ -192,10 +465,7 @@ export default function EventCreateSheet({
           {/* Event Type Pills */}
           <div>
             <label className="block text-[13px] font-medium text-gray-500 mb-2">Type</label>
-            <div
-              ref={pillsRef}
-              className="flex gap-2 overflow-x-auto scrollbar-none pb-1 -mx-5 px-5"
-            >
+            <div className="flex gap-2 overflow-x-auto scrollbar-none pb-1 -mx-5 px-5">
               {EVENT_TYPES.map((type) => (
                 <button
                   key={type.value}
@@ -264,56 +534,6 @@ export default function EventCreateSheet({
               </div>
             </div>
           )}
-
-          {/* Link to Job */}
-          <div>
-            <label className="block text-[13px] font-medium text-gray-500 mb-1.5">
-              Link to job <span className="text-gray-400 font-normal">(optional)</span>
-            </label>
-            {quoteId ? (
-              <div className="flex items-center gap-2 rounded-xl bg-gray-100 px-4 py-3">
-                <div className="flex-1 min-w-0">
-                  <p className="text-[14px] font-semibold text-gray-900 truncate">{quoteSearch}</p>
-                </div>
-                <button
-                  onClick={handleClearQuote}
-                  className="shrink-0 text-[13px] font-medium text-red-500 press-scale"
-                >
-                  Remove
-                </button>
-              </div>
-            ) : (
-              <div className="relative">
-                <input
-                  type="text"
-                  value={quoteSearch}
-                  onChange={(e) => {
-                    setQuoteSearch(e.target.value);
-                    setShowQuoteList(true);
-                  }}
-                  onFocus={() => setShowQuoteList(true)}
-                  placeholder="Search customer name..."
-                  className="w-full rounded-xl bg-gray-100 px-4 py-3 text-[15px] text-gray-900 placeholder-gray-400 outline-none focus:ring-2 focus:ring-brand-500/20 transition-all"
-                />
-                {showQuoteList && filteredQuotes.length > 0 && (
-                  <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-xl ring-1 ring-black/[0.08] shadow-lg max-h-40 overflow-y-auto z-10">
-                    {filteredQuotes.map((q) => (
-                      <button
-                        key={q.id}
-                        onClick={() => handleSelectQuote(q)}
-                        className="w-full text-left px-4 py-2.5 hover:bg-gray-50 active:bg-gray-100 transition-colors border-b border-gray-50 last:border-0"
-                      >
-                        <p className="text-[14px] font-semibold text-gray-900">{q.customer_name}</p>
-                        {q.job_address && (
-                          <p className="text-[12px] text-gray-400 truncate">{q.job_address}</p>
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
 
           {/* Notes */}
           <div>

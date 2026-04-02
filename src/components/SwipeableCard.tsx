@@ -17,168 +17,173 @@ type SwipeableCardProps = {
   onSwipeOpen?: () => void;
 };
 
-const ACTION_BUTTON_WIDTH = 72; // px per action button
-const SNAP_THRESHOLD = 0.4; // snap open if swiped > 40% of action width
-
-function isTouchDevice(): boolean {
-  if (typeof window === 'undefined') return false;
-  return 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-}
+const ACTION_WIDTH = 72;
+const SNAP_THRESHOLD = 0.3;
+const VELOCITY_THRESHOLD = 0.3; // px/ms — fast flick snaps open regardless of distance
 
 export default function SwipeableCard({ id, children, actions, onSwipeOpen }: SwipeableCardProps) {
   const { openCardId, setOpenCardId } = useSwipeContext();
-  const [translateX, setTranslateX] = useState(0);
-  const [isAnimating, setIsAnimating] = useState(false);
-  const [hasTouchSupport, setHasTouchSupport] = useState(false);
-
-  const touchStartX = useRef(0);
-  const touchStartY = useRef(0);
-  const currentX = useRef(0);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const startX = useRef(0);
+  const startY = useRef(0);
+  const startTranslate = useRef(0);
+  const currentTranslate = useRef(0);
   const isDragging = useRef(false);
-  const directionLocked = useRef<'horizontal' | 'vertical' | null>(null);
-  const cardRef = useRef<HTMLDivElement>(null);
+  const direction = useRef<'h' | 'v' | null>(null);
+  const startTime = useRef(0);
+  const rafId = useRef<number>(0);
 
-  const maxSwipe = actions.length * ACTION_BUTTON_WIDTH;
+  const maxSwipe = actions.length * ACTION_WIDTH;
   const isOpen = openCardId === id;
 
-  // Check for touch support on mount
-  useEffect(() => {
-    setHasTouchSupport(isTouchDevice());
+  // Animate to target position
+  const animateTo = useCallback((target: number) => {
+    if (!contentRef.current) return;
+    contentRef.current.style.transition = 'transform 0.28s cubic-bezier(0.25, 1, 0.5, 1)';
+    contentRef.current.style.transform = `translateX(${target}px)`;
+    currentTranslate.current = target;
   }, []);
 
-  // When another card opens, close this one
-  useEffect(() => {
-    if (openCardId !== id && translateX !== 0) {
-      setIsAnimating(true);
-      setTranslateX(0);
-    }
-  }, [openCardId, id, translateX]);
+  // Set position without animation (during drag)
+  const setPosition = useCallback((x: number) => {
+    if (!contentRef.current) return;
+    contentRef.current.style.transition = 'none';
+    contentRef.current.style.transform = `translateX(${x}px)`;
+    currentTranslate.current = x;
+  }, []);
 
   const snapOpen = useCallback(() => {
-    setIsAnimating(true);
-    setTranslateX(-maxSwipe);
+    animateTo(-maxSwipe);
     setOpenCardId(id);
     onSwipeOpen?.();
-  }, [maxSwipe, setOpenCardId, id, onSwipeOpen]);
+  }, [maxSwipe, setOpenCardId, id, onSwipeOpen, animateTo]);
 
   const snapClosed = useCallback(() => {
-    setIsAnimating(true);
-    setTranslateX(0);
-    if (openCardId === id) {
-      setOpenCardId(null);
+    animateTo(0);
+    if (openCardId === id) setOpenCardId(null);
+  }, [openCardId, id, setOpenCardId, animateTo]);
+
+  // Close when another card opens
+  useEffect(() => {
+    if (openCardId !== id && currentTranslate.current !== 0) {
+      animateTo(0);
     }
-  }, [openCardId, id, setOpenCardId]);
+  }, [openCardId, id, animateTo]);
 
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     const touch = e.touches[0];
-    touchStartX.current = touch.clientX;
-    touchStartY.current = touch.clientY;
-    currentX.current = translateX;
+    startX.current = touch.clientX;
+    startY.current = touch.clientY;
+    startTranslate.current = currentTranslate.current;
     isDragging.current = false;
-    directionLocked.current = null;
-    setIsAnimating(false);
-  }, [translateX]);
+    direction.current = null;
+    startTime.current = Date.now();
+
+    // Kill any existing transition
+    if (contentRef.current) {
+      const computed = getComputedStyle(contentRef.current);
+      const matrix = new DOMMatrix(computed.transform);
+      currentTranslate.current = matrix.m41;
+      startTranslate.current = matrix.m41;
+      contentRef.current.style.transition = 'none';
+    }
+  }, []);
 
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
     const touch = e.touches[0];
-    const deltaX = touch.clientX - touchStartX.current;
-    const deltaY = touch.clientY - touchStartY.current;
+    const dx = touch.clientX - startX.current;
+    const dy = touch.clientY - startY.current;
 
-    // Determine direction if not yet locked
-    if (!directionLocked.current) {
-      const absDx = Math.abs(deltaX);
-      const absDy = Math.abs(deltaY);
-      if (absDx < 5 && absDy < 5) return; // Dead zone
-      directionLocked.current = absDx > absDy ? 'horizontal' : 'vertical';
+    if (!direction.current) {
+      if (Math.abs(dx) < 6 && Math.abs(dy) < 6) return;
+      direction.current = Math.abs(dx) > Math.abs(dy) ? 'h' : 'v';
     }
 
-    // If vertical scroll, bail out
-    if (directionLocked.current === 'vertical') return;
+    if (direction.current === 'v') return;
 
-    // Prevent vertical scroll while swiping horizontally
-    e.preventDefault();
     isDragging.current = true;
 
-    let newX = currentX.current + deltaX;
-    // Clamp: no swiping right past 0, no swiping left past maxSwipe
-    newX = Math.min(0, Math.max(-maxSwipe, newX));
-    setTranslateX(newX);
-  }, [maxSwipe]);
+    let newX = startTranslate.current + dx;
+
+    // Rubber-band effect past bounds
+    if (newX > 0) {
+      newX = newX * 0.2; // resist swiping right past origin
+    } else if (newX < -maxSwipe) {
+      const over = newX + maxSwipe;
+      newX = -maxSwipe + over * 0.2; // resist swiping too far left
+    }
+
+    cancelAnimationFrame(rafId.current);
+    rafId.current = requestAnimationFrame(() => setPosition(newX));
+  }, [maxSwipe, setPosition]);
 
   const handleTouchEnd = useCallback(() => {
+    cancelAnimationFrame(rafId.current);
+
     if (!isDragging.current) {
-      // It was a tap, not a swipe
-      if (isOpen) {
-        // Tapping on an open card closes it
+      if (isOpen) snapClosed();
+      return;
+    }
+
+    const elapsed = Date.now() - startTime.current;
+    const distance = currentTranslate.current - startTranslate.current;
+    const velocity = Math.abs(distance) / Math.max(elapsed, 1);
+
+    // Fast flick in the right direction
+    if (velocity > VELOCITY_THRESHOLD) {
+      if (distance < 0) {
+        snapOpen();
+      } else {
         snapClosed();
       }
       return;
     }
 
-    const swipedDistance = Math.abs(translateX);
-    const threshold = maxSwipe * SNAP_THRESHOLD;
-
-    if (swipedDistance > threshold) {
+    // Slow drag — snap based on position
+    if (Math.abs(currentTranslate.current) > maxSwipe * SNAP_THRESHOLD) {
       snapOpen();
     } else {
       snapClosed();
     }
-  }, [translateX, maxSwipe, isOpen, snapOpen, snapClosed]);
-
-  // If no touch support, just render children without swipe
-  if (!hasTouchSupport) {
-    return <>{children}</>;
-  }
+  }, [isOpen, maxSwipe, snapOpen, snapClosed]);
 
   return (
-    <div
-      className="relative overflow-hidden rounded-2xl"
-      data-swipe-card={id}
-      ref={cardRef}
-    >
-      {/* Action buttons revealed behind the card */}
+    <div ref={containerRef} className="relative overflow-hidden rounded-2xl" data-swipe-card={id}>
+      {/* Action buttons behind */}
       <div
         className="absolute inset-y-0 right-0 flex"
         data-swipe-actions
         style={{ width: maxSwipe }}
       >
-        {actions.map((action, i) => {
-          const isLast = i === actions.length - 1;
-          return (
-            <button
-              key={action.label}
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                action.onClick();
-                snapClosed();
-              }}
-              className={`flex flex-col items-center justify-center gap-1 text-white font-semibold text-[11px] ${
-                isLast ? 'rounded-r-2xl' : ''
-              }`}
-              style={{
-                width: ACTION_BUTTON_WIDTH,
-                backgroundColor: action.color,
-              }}
-            >
-              {action.icon}
-              {action.label}
-            </button>
-          );
-        })}
+        {actions.map((action, i) => (
+          <button
+            key={action.label}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              action.onClick();
+              snapClosed();
+            }}
+            className={`flex flex-col items-center justify-center gap-1 text-white font-semibold text-[11px] active:brightness-90 transition-[filter] ${
+              i === actions.length - 1 ? 'rounded-r-2xl' : ''
+            }`}
+            style={{ width: ACTION_WIDTH, backgroundColor: action.color }}
+          >
+            {action.icon}
+            {action.label}
+          </button>
+        ))}
       </div>
 
-      {/* Sliding card content */}
+      {/* Sliding content */}
       <div
+        ref={contentRef}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
-        className={`relative z-10 ${isOpen ? 'shadow-md' : ''}`}
-        style={{
-          transform: `translateX(${translateX}px)`,
-          transition: isAnimating ? 'transform 0.3s cubic-bezier(0.25, 1, 0.5, 1)' : 'none',
-        }}
-        onTransitionEnd={() => setIsAnimating(false)}
+        className="relative z-10 will-change-transform"
+        style={{ transform: 'translateX(0px)' }}
       >
         {children}
       </div>

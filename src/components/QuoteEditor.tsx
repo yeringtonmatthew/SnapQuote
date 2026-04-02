@@ -34,7 +34,7 @@ export function QuoteEditor({ quote }: QuoteEditorProps) {
   const [jobAddress, setJobAddress] = useState(quote.job_address || '');
   const [scopeOfWork, setScopeOfWork] = useState(quote.scope_of_work || '');
   const [lineItems, setLineItems] = useState<LineItem[]>(quote.line_items || []);
-  const [depositPercent, setDepositPercent] = useState(quote.deposit_percent || 33);
+  const [depositPercent, setDepositPercent] = useState(quote.deposit_percent ?? 0);
   const [taxRate, setTaxRate] = useState(String(quote.tax_rate ?? ''));
   const [discountType, setDiscountType] = useState<'none' | 'amount' | 'percent'>(
     quote.discount_amount != null && Number(quote.discount_amount) > 0
@@ -102,7 +102,7 @@ export function QuoteEditor({ quote }: QuoteEditorProps) {
     setJobAddress(quote.job_address || '');
     setScopeOfWork(quote.scope_of_work || '');
     setLineItems(quote.line_items || []);
-    setDepositPercent(quote.deposit_percent || 33);
+    setDepositPercent(quote.deposit_percent ?? 0);
     setTaxRate(String(quote.tax_rate ?? ''));
     setDiscountType(
       quote.discount_amount != null && Number(quote.discount_amount) > 0
@@ -480,7 +480,7 @@ export function QuoteEditor({ quote }: QuoteEditorProps) {
             <div className="flex items-center gap-3">
               <input
                 type="range"
-                min="10"
+                min="0"
                 max="100"
                 step="5"
                 value={depositPercent}

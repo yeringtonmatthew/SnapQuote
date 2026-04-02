@@ -39,7 +39,7 @@ export async function POST(
     .eq('id', user.id)
     .single();
 
-  const businessName = profile?.business_name || profile?.full_name || 'Your contractor';
+  const businessName = profile?.business_name || profile?.full_name || 'Licensed Professional';
   const brandColor = profile?.brand_color || '#4f46e5';
   const amount = Number(quote.subtotal).toLocaleString('en-US', { minimumFractionDigits: 2 });
 

@@ -12,6 +12,13 @@ import DashboardStats from '@/components/DashboardStats';
 import PageTransition from '@/components/PageTransition';
 import BottomNav from '@/components/BottomNav';
 import DesktopSidebar from '@/components/DesktopSidebar';
+import RevenueIntelligenceCard from '@/components/RevenueIntelligenceCard';
+import DoThisNow from '@/components/DoThisNow';
+import { getTopActions } from '@/lib/smart-actions';
+import { calculateRevenueIntelligence } from '@/lib/revenue-intelligence';
+import { getLeadScore, temperatureStyles } from '@/lib/lead-temperature';
+import { getSchedulingInsights } from '@/lib/scheduling-intelligence';
+import type { Quote } from '@/types/database';
 
 // ── Event type color mapping ──────────────────────────
 const EVENT_TYPE_COLORS: Record<string, { dot: string; border: string }> = {
@@ -52,7 +59,7 @@ export default async function DashboardPage() {
 
   const { data: quotes } = await supabase
     .from('quotes')
-    .select('id, customer_name, customer_phone, customer_email, job_address, status, subtotal, total, deposit_amount, photos, scope_of_work, ai_description, quote_number, created_at, sent_at, approved_at, paid_at, archived, internal_notes, pipeline_stage, scheduled_date, scheduled_time, reminder_sent_at, job_tasks')
+    .select('id, customer_name, customer_phone, customer_email, job_address, status, subtotal, total, deposit_amount, deposit_percent, photos, scope_of_work, ai_description, quote_number, created_at, sent_at, approved_at, paid_at, archived, internal_notes, pipeline_stage, scheduled_date, scheduled_time, reminder_sent_at, job_tasks, inspection_findings, started_at, completed_at, expires_at')
     .eq('contractor_id', user.id)
     .order('created_at', { ascending: false })
     .limit(100);
@@ -64,9 +71,9 @@ export default async function DashboardPage() {
   // ── Fetch today's calendar events (gracefully handle if table doesn't exist) ──
   let todayEvents: Record<string, unknown>[] = [];
   try {
-    // Try 'calendar_events' first (used by schedule page)
+    // Fetch today's events with quote and client joins
     const { data, error } = await supabase
-      .from('calendar_events')
+      .from('events')
       .select(`
         *,
         quotes:quote_id (
@@ -74,6 +81,11 @@ export default async function DashboardPage() {
           job_address,
           customer_phone,
           quote_number
+        ),
+        clients:client_id (
+          name,
+          phone,
+          address
         )
       `)
       .eq('contractor_id', user.id)
@@ -83,12 +95,14 @@ export default async function DashboardPage() {
     if (!error && data) {
       todayEvents = data.map((e: Record<string, unknown>) => {
         const quote = e.quotes as Record<string, unknown> | null;
+        const client = e.clients as Record<string, unknown> | null;
         return {
           ...e,
           quotes: undefined,
-          customer_name: quote?.customer_name ?? e.title,
-          job_address: quote?.job_address ?? null,
-          customer_phone: quote?.customer_phone ?? null,
+          clients: undefined,
+          customer_name: client?.name ?? quote?.customer_name ?? e.title,
+          job_address: client?.address ?? quote?.job_address ?? null,
+          customer_phone: client?.phone ?? quote?.customer_phone ?? null,
           quote_number: quote?.quote_number ?? null,
         };
       });
@@ -139,7 +153,7 @@ export default async function DashboardPage() {
     .map(q => ({
       id: `quote-${q.id}`,
       title: q.customer_name,
-      event_type: q.pipeline_stage === 'in_progress' ? 'job_scheduled' : 'job_scheduled',
+      event_type: 'job_scheduled',
       event_date: q.scheduled_date,
       start_time: q.scheduled_time || null,
       end_time: null,
@@ -205,7 +219,7 @@ export default async function DashboardPage() {
   const approvalRate = totalSent > 0 ? Math.round((totalApproved / totalSent) * 100) : 0;
 
   const pendingQuotes = activeQuotes.filter(q => q.status === 'sent' || q.status === 'approved');
-  const pendingValue = pendingQuotes.reduce((sum, q) => sum + Number(q.subtotal), 0);
+  const pendingValue = pendingQuotes.reduce((sum, q) => sum + Number(q.total ?? q.subtotal), 0);
 
   // ── Trend calculations: this month vs last month ──
   const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString();
@@ -247,100 +261,31 @@ export default async function DashboardPage() {
   const hasActionableQuotes = activeQuotes.some(q => q.status === 'sent' || q.status === 'approved');
   const defaultFilter = hasActionableQuotes ? 'Sent' : 'All';
 
-  // ── Today's Focus: smart priority items ──────────────────────────
-  type FocusItem = {
-    priority: 'urgent' | 'important' | 'action';
-    icon: string;
-    title: string;
-    subtitle: string;
-    href: string;
-    color: 'amber' | 'blue' | 'gray';
-  };
+  // ── Smart Action Engine ──────────────────────────
+  const smartActions = getTopActions(activeQuotes as unknown as Quote[], 5, now);
 
-  const focusItems: FocusItem[] = [];
+  // ── Revenue Intelligence ─────────────────────────
+  const revenueIntel = calculateRevenueIntelligence(activeQuotes as unknown as Quote[], now);
 
-  const threeDaysFromNow = new Date(now);
-  threeDaysFromNow.setDate(threeDaysFromNow.getDate() + 3);
-  const threeDaysFromNowStr = threeDaysFromNow.toISOString();
-
-  // Priority 1 — Time-sensitive: Jobs scheduled today that haven't started
-  const todayNotStarted = activeQuotes.filter(
-    q => q.scheduled_date === todayStr && q.pipeline_stage !== 'in_progress' && q.pipeline_stage !== 'completed'
-  );
-  for (const q of todayNotStarted) {
-    focusItems.push({
-      priority: 'urgent',
-      icon: 'calendar',
-      title: `Start job — ${q.customer_name}`,
-      subtitle: q.scheduled_time ? `Scheduled at ${formatTime(q.scheduled_time)}` : 'Scheduled today',
-      href: `/jobs/${q.id}`,
-      color: 'amber',
-    });
+  // ── Lead Scores for each action ─────────────────
+  const leadScoreMap: Record<string, { temperature: 'hot' | 'warm' | 'cold' | 'at_risk'; score: number; icon: string }> = {};
+  for (const action of smartActions) {
+    const q = activeQuotes.find(q => q.id === action.quoteId);
+    if (q) {
+      const ls = getLeadScore(q as unknown as Quote, now);
+      leadScoreMap[action.quoteId] = {
+        temperature: ls.temperature,
+        score: ls.score,
+        icon: temperatureStyles[ls.temperature].icon,
+      };
+    }
   }
 
-  // Priority 2 — Revenue impact: Approved quotes with no deposit
-  for (const q of depositsToCollect) {
-    const formattedAmt = `$${Number(q.total).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
-    const approvedDate = q.approved_at
-      ? new Date(q.approved_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-      : 'recently';
-    focusItems.push({
-      priority: 'important',
-      icon: 'dollar',
-      title: `Collect deposit — ${formattedAmt}`,
-      subtitle: `${q.customer_name} approved ${approvedDate}`,
-      href: `/jobs/${q.id}`,
-      color: 'blue',
-    });
-  }
+  // ── Scheduling Intelligence ─────────────────────
+  const schedulingInsights = getSchedulingInsights(activeQuotes as unknown as Quote[], now);
 
-  // Priority 2 — Revenue impact: Quotes sent >3 days ago with no response
-  for (const q of awaitingResponse) {
-    const sentDate = q.sent_at ? new Date(q.sent_at) : new Date(q.created_at);
-    const daysSince = Math.floor((now.getTime() - sentDate.getTime()) / (1000 * 60 * 60 * 24));
-    focusItems.push({
-      priority: 'important',
-      icon: 'reply',
-      title: `Follow up with ${q.customer_name}`,
-      subtitle: `Sent ${daysSince} day${daysSince !== 1 ? 's' : ''} ago, no response`,
-      href: `/jobs/${q.id}`,
-      color: 'blue',
-    });
-  }
-
-  // Priority 3 — Overdue: Deposits collected but job not scheduled
-  for (const q of jobsToSchedule) {
-    focusItems.push({
-      priority: 'action',
-      icon: 'schedule',
-      title: `Schedule job — ${q.customer_name}`,
-      subtitle: 'Deposit collected, needs a date',
-      href: `/jobs/${q.id}`,
-      color: 'gray',
-    });
-  }
-
-  // Priority 3 — Jobs in progress with incomplete tasks
-  const inProgressIncomplete = activeQuotes.filter(q => {
-    if (q.pipeline_stage !== 'in_progress') return false;
-    const tasks = (q.job_tasks as { id: string; text: string; done: boolean; created_at: string }[]) || [];
-    return tasks.length > 0 && tasks.some(t => !t.done);
-  });
-  for (const q of inProgressIncomplete) {
-    const tasks = (q.job_tasks as { id: string; text: string; done: boolean; created_at: string }[]) || [];
-    const done = tasks.filter(t => t.done).length;
-    focusItems.push({
-      priority: 'action',
-      icon: 'tasks',
-      title: `Finish tasks — ${q.customer_name}`,
-      subtitle: `${done}/${tasks.length} tasks complete`,
-      href: `/jobs/${q.id}`,
-      color: 'gray',
-    });
-  }
-
-  // Slice to max 5
-  const topFocusItems = focusItems.slice(0, 5);
+  // ── Today's Focus — powered by Smart Action Engine ──────────
+  const topFocusItems = smartActions;
 
   // ── Stage badge helpers ──────────────────────────
   const stageBadge = (stage: string) => {
@@ -362,7 +307,7 @@ export default async function DashboardPage() {
 
       {/* ── Header ─────────────────────────────── */}
       <header className="sticky top-0 z-10 bg-[#f2f2f7]/90 dark:bg-gray-950/90 backdrop-blur-xl border-b border-black/5 dark:border-white/5 px-5 pt-14 lg:pt-6 pb-4">
-        <div className="mx-auto max-w-5xl flex items-center justify-between">
+        <div className="mx-auto max-w-7xl flex items-center justify-between">
           <div>
             <p className="text-[12px] text-gray-500 dark:text-gray-400 font-medium">{greeting}</p>
             <h1 className="text-[22px] font-bold tracking-tight text-gray-900 dark:text-gray-100">{firstName}</h1>
@@ -393,68 +338,24 @@ export default async function DashboardPage() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-5xl px-4 pt-5 space-y-5 lg:px-6">
+      <main className="mx-auto max-w-7xl px-4 pt-5 space-y-5 lg:px-8 lg:grid lg:grid-cols-[1fr_380px] lg:gap-8 lg:space-y-0 lg:auto-rows-min">
 
         {/* ══════════════════════════════════════════
-            0. TODAY'S FOCUS
+            0. SMART ACTIONS — "What to do right now"
             ══════════════════════════════════════════ */}
         {topFocusItems.length > 0 && (
-          <section>
-            <div className="flex items-center gap-2 mb-3 px-1">
-              <svg className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-              </svg>
-              <h2 className="text-[11px] font-semibold uppercase tracking-widest text-gray-400">
-                Today&apos;s Focus
-              </h2>
-            </div>
-            <div className="space-y-2">
-              {topFocusItems.map((item, idx) => {
-                const borderColor =
-                  item.color === 'amber' ? 'border-l-amber-500' :
-                  item.color === 'blue' ? 'border-l-blue-500' :
-                  'border-l-gray-400';
-                const badgeBg =
-                  item.color === 'amber' ? 'bg-amber-500 text-white' :
-                  item.color === 'blue' ? 'bg-blue-500 text-white' :
-                  'bg-gray-400 text-white';
-
-                return (
-                  <Link
-                    key={`focus-${idx}`}
-                    href={item.href}
-                    className={`flex items-center gap-3 rounded-2xl bg-white shadow-sm ring-1 ring-black/[0.04] border-l-[3px] ${borderColor} px-4 py-3 active:bg-gray-50 transition-colors`}
-                  >
-                    {/* Number badge */}
-                    <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold ${badgeBg}`}>
-                      {idx + 1}
-                    </span>
-
-                    {/* Text content */}
-                    <div className="min-w-0 flex-1">
-                      <p className="text-[14px] font-semibold text-gray-900 truncate leading-tight">
-                        {item.title}
-                      </p>
-                      <p className="text-[12px] text-gray-500 truncate mt-0.5">
-                        {item.subtitle}
-                      </p>
-                    </div>
-
-                    {/* Chevron */}
-                    <svg className="h-4 w-4 text-gray-300 flex-shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" aria-hidden="true">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-                    </svg>
-                  </Link>
-                );
-              })}
-            </div>
-          </section>
+          <div className="lg:col-start-1">
+            <DoThisNow
+              actions={topFocusItems}
+              leadScores={leadScoreMap}
+            />
+          </div>
         )}
 
         {/* ══════════════════════════════════════════
             1. TODAY'S SCHEDULE
             ══════════════════════════════════════════ */}
-        <section>
+        <section className="lg:col-start-2 lg:row-start-1">
           <div className="flex items-center justify-between mb-3 px-1">
             <div className="flex items-center gap-2">
               <h2 className="text-[11px] font-semibold uppercase tracking-widest text-gray-400">
@@ -534,11 +435,11 @@ export default async function DashboardPage() {
             2. NEEDS ATTENTION
             ══════════════════════════════════════════ */}
         {hasAttentionItems && (
-          <section>
+          <section className="lg:col-start-2">
             <h2 className="mb-3 px-1 text-[11px] font-semibold uppercase tracking-widest text-gray-400">
               Needs Attention
             </h2>
-            <div className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4 scrollbar-none">
+            <div className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4 scrollbar-none lg:flex-wrap lg:mx-0 lg:px-0 lg:gap-3">
               {awaitingResponse.length > 0 && (
                 <Link
                   href="/pipeline?stage=quote_sent"
@@ -614,7 +515,7 @@ export default async function DashboardPage() {
             3. ACTIVE JOBS
             ══════════════════════════════════════════ */}
         {activeJobs.length > 0 && (
-          <section>
+          <section className="lg:col-start-1">
             <div className="flex items-center justify-between mb-3 px-1">
               <h2 className="text-[11px] font-semibold uppercase tracking-widest text-gray-400">
                 Active Jobs
@@ -681,33 +582,111 @@ export default async function DashboardPage() {
         )}
 
         {/* ── Stats ──────────────────────────────── */}
-        <DashboardStats
-          monthlyRevenue={monthlyRevenue}
-          quotesSentCount={quotesSentCount}
-          approvalRate={approvalRate}
-          pendingValue={pendingValue}
-          pendingCount={pendingQuotes.length}
-          revenueTrend={revenueTrend}
-          sentTrend={sentTrend}
-        />
+        <div className="lg:col-start-2">
+          <DashboardStats
+            monthlyRevenue={monthlyRevenue}
+            quotesSentCount={quotesSentCount}
+            approvalRate={approvalRate}
+            pendingValue={pendingValue}
+            pendingCount={pendingQuotes.length}
+            revenueTrend={revenueTrend}
+            sentTrend={sentTrend}
+          />
+        </div>
 
-        {/* ── Revenue Chart (collapsible) ────────────────────────── */}
-        {hasPaidQuotes && (
-          <details className="rounded-2xl bg-white dark:bg-gray-900 shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden">
-            <summary className="flex cursor-pointer items-center justify-between px-5 py-4 [&::-webkit-details-marker]:hidden [&::marker]:hidden list-none">
-              <span className="text-[11px] font-semibold uppercase tracking-widest text-gray-500 dark:text-gray-400">Revenue Trend</span>
-              <svg className="h-4 w-4 text-gray-400 transition-transform [[open]>&]:rotate-180" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
-              </svg>
-            </summary>
-            <div className="px-4 pb-4">
-              <RevenueChart data={revenueData} />
+        {/* ── Revenue Intelligence ───────────────── */}
+        {activeQuotes.length > 0 && (
+          <div className="lg:col-start-2">
+            <RevenueIntelligenceCard
+              totalPipeline={revenueIntel.totalPipeline}
+              atRiskRevenue={revenueIntel.atRiskRevenue}
+              atRiskCount={revenueIntel.atRiskCount}
+              atRiskQuotes={revenueIntel.atRiskQuotes}
+              likelyToClose={revenueIntel.likelyToClose}
+              likelyToCloseCount={revenueIntel.likelyToCloseCount}
+              weeklyRevenue={revenueIntel.weeklyRevenue}
+              weeklyRevenueChange={revenueIntel.weeklyRevenueChange}
+              monthlyProjection={revenueIntel.monthlyProjection}
+              closeRate={revenueIntel.closeRate}
+              dealsNeedingAttention={revenueIntel.dealsNeedingAttention}
+            />
+          </div>
+        )}
+
+        {/* ── Scheduling Intelligence ───────────────── */}
+        {schedulingInsights.length > 0 && (
+          <section className="lg:col-start-2">
+            <h2 className="mb-3 px-1 text-[11px] font-semibold uppercase tracking-widest text-gray-400">
+              Scheduling
+            </h2>
+            <div className="space-y-2">
+              {schedulingInsights.slice(0, 3).map((insight, idx) => {
+                const iconMap: Record<string, { bg: string; text: string; icon: React.ReactNode }> = {
+                  unscheduled_paid: {
+                    bg: 'bg-amber-50 dark:bg-amber-900/20',
+                    text: 'text-amber-600 dark:text-amber-400',
+                    icon: <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" /></svg>,
+                  },
+                  same_day_cluster: {
+                    bg: 'bg-blue-50 dark:bg-blue-900/20',
+                    text: 'text-blue-600 dark:text-blue-400',
+                    icon: <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" /></svg>,
+                  },
+                  gap_day: {
+                    bg: 'bg-emerald-50 dark:bg-emerald-900/20',
+                    text: 'text-emerald-600 dark:text-emerald-400',
+                    icon: <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>,
+                  },
+                };
+                const style = iconMap[insight.type] || iconMap.gap_day;
+                return (
+                  <div
+                    key={`sched-${idx}`}
+                    className="flex items-start gap-3 rounded-2xl bg-white dark:bg-gray-900 shadow-sm ring-1 ring-black/[0.04] dark:ring-white/[0.06] px-4 py-3"
+                  >
+                    <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl ${style.bg} ${style.text}`}>
+                      {style.icon}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[13px] font-semibold text-gray-900 dark:text-gray-100">{insight.headline}</p>
+                      <p className="text-[12px] text-gray-500 dark:text-gray-400 mt-0.5">{insight.description}</p>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-          </details>
+          </section>
+        )}
+
+        {/* ── Revenue Chart ────────────────────────── */}
+        {hasPaidQuotes && (
+          <div className="lg:col-start-2">
+            {/* Mobile: collapsible */}
+            <details className="lg:hidden rounded-2xl bg-white dark:bg-gray-900 shadow-sm ring-1 ring-black/[0.04] dark:ring-white/[0.06] overflow-hidden">
+              <summary className="flex cursor-pointer items-center justify-between px-5 py-4 [&::-webkit-details-marker]:hidden [&::marker]:hidden list-none">
+                <span className="text-[11px] font-semibold uppercase tracking-widest text-gray-500 dark:text-gray-400">Revenue Trend</span>
+                <svg className="h-4 w-4 text-gray-400 transition-transform [[open]>&]:rotate-180" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                </svg>
+              </summary>
+              <div className="px-4 pb-4">
+                <RevenueChart data={revenueData} />
+              </div>
+            </details>
+            {/* Desktop: always visible */}
+            <div className="hidden lg:block rounded-2xl bg-white dark:bg-gray-900 shadow-sm ring-1 ring-black/[0.04] dark:ring-white/[0.06] overflow-hidden">
+              <div className="px-5 py-4">
+                <span className="text-[11px] font-semibold uppercase tracking-widest text-gray-500 dark:text-gray-400">Revenue Trend</span>
+              </div>
+              <div className="px-4 pb-4">
+                <RevenueChart data={revenueData} />
+              </div>
+            </div>
+          </div>
         )}
 
         {/* ── Quotes ─────────────────────────────── */}
-        <div>
+        <div className="lg:col-start-1 min-w-0">
           <h2 className="mb-3 px-1 text-[11px] font-semibold uppercase tracking-widest text-gray-500 dark:text-gray-400">
             Recent Quotes
           </h2>
