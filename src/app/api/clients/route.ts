@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { generatePropertyReportForClient } from '@/lib/property-intel';
 
 // GET /api/clients — list all clients for the logged-in user
 export async function GET() {
@@ -50,5 +51,11 @@ export async function POST(req: NextRequest) {
     .single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  // Fire-and-forget property intelligence (don't await — don't block the response)
+  if (data.address && data.id) {
+    generatePropertyReportForClient(supabase, data.id, data.address, user.id).catch(() => {});
+  }
+
   return NextResponse.json(data, { status: 201 });
 }

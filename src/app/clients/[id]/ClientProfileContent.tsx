@@ -155,6 +155,7 @@ export default function ClientProfileContent({ client, quotes, totalRevenue, tot
   const [showAddressActions, setShowAddressActions] = useState(false);
   const [noteText, setNoteText] = useState('');
   const [savingNote, setSavingNote] = useState(false);
+  const [generatingReport, setGeneratingReport] = useState(false);
 
   const handleSave = async () => {
     setSaving(true);
@@ -191,6 +192,28 @@ export default function ClientProfileContent({ client, quotes, totalRevenue, tot
       // Silent
     } finally {
       setSavingNote(false);
+    }
+  };
+
+  const handleGenerateReport = async () => {
+    if (!client.address) return;
+    setGeneratingReport(true);
+    try {
+      const res = await fetch('/api/property/report', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ client_id: client.id, address: client.address }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        alert(err.error || 'Failed to generate report');
+      } else {
+        router.refresh();
+      }
+    } catch {
+      alert('Failed to generate property report');
+    } finally {
+      setGeneratingReport(false);
     }
   };
 
@@ -383,8 +406,21 @@ export default function ClientProfileContent({ client, quotes, totalRevenue, tot
 
           {/* Inline notes */}
           <div className="rounded-2xl bg-white dark:bg-gray-900 ring-1 ring-black/[0.04] dark:ring-white/[0.06] overflow-hidden">
-            <div className="px-4 pt-3 pb-2">
+            <div className="px-4 pt-3 pb-2 flex items-center justify-between">
               <h3 className="text-[12px] font-semibold text-gray-400 uppercase tracking-wider">Notes</h3>
+              {client.address && (
+                <button
+                  onClick={handleGenerateReport}
+                  disabled={generatingReport}
+                  className="flex items-center gap-1.5 rounded-xl bg-brand-50 dark:bg-brand-900/20 px-3 py-1.5 text-[11px] font-medium text-brand-700 dark:text-brand-300 hover:bg-brand-100 dark:hover:bg-brand-900/30 transition-colors disabled:opacity-50"
+                >
+                  {generatingReport ? (
+                    <><svg className="h-3.5 w-3.5 animate-spin" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg> Analyzing...</>
+                  ) : (
+                    <><svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m5.231 13.481L15 17.25m-4.5-15H5.625c-.621 0-1.125.504-1.125 1.125v16.5c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9zm3.75 11.625a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" /></svg> Property Report</>
+                  )}
+                </button>
+              )}
             </div>
             <div className="px-4 pb-3">
               <div className="flex gap-2">

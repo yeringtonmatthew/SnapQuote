@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { rateLimit } from '@/lib/rate-limit';
+import { generatePropertyReportForClient } from '@/lib/property-intel';
 
 const fieldPatterns: Record<string, string[]> = {
   name: ['name', 'customer_name', 'full_name', 'contact_name', 'first_name', 'lead_name', 'customerName', 'fullName'],
@@ -217,6 +218,11 @@ export async function POST(request: NextRequest) {
       { error: 'Failed to create lead.' },
       { status: 500 },
     );
+  }
+
+  // Fire-and-forget property intelligence
+  if (address && clientId) {
+    generatePropertyReportForClient(supabase, clientId, address.trim(), contractorId).catch(() => {});
   }
 
   // Update lead source stats
