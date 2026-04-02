@@ -121,15 +121,15 @@ export default function QuickAddMenu() {
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
 
           {/* Menu */}
-          <div className="fixed bottom-[88px] left-1/2 -translate-x-1/2 z-50 animate-sheet-up">
-            <div className="grid grid-cols-4 gap-1 rounded-2xl bg-white dark:bg-gray-900 p-3 shadow-2xl ring-1 ring-black/[0.06] dark:ring-white/[0.08] min-w-[260px]">
+          <div className="fixed bottom-[88px] left-1/2 -translate-x-1/2 z-50 animate-sheet-up w-[calc(100%-32px)] max-w-xs">
+            <div className="grid grid-cols-4 gap-2 rounded-2xl bg-white dark:bg-gray-900 p-4 shadow-2xl ring-1 ring-black/[0.06] dark:ring-white/[0.08]">
               {options.map((opt) => (
                 <button
                   key={opt.key}
                   onClick={() => handleOption(opt.key)}
-                  className="flex flex-col items-center gap-1.5 rounded-xl px-2 py-3 text-center transition-colors hover:bg-gray-50 dark:hover:bg-gray-800 press-scale"
+                  className="flex flex-col items-center gap-1.5 rounded-xl px-1 py-3 text-center transition-colors hover:bg-gray-50 dark:hover:bg-gray-800 press-scale"
                 >
-                  <div className={`flex h-11 w-11 items-center justify-center rounded-xl ${opt.color}`}>
+                  <div className={`flex h-12 w-12 items-center justify-center rounded-xl ${opt.color}`}>
                     {opt.icon}
                   </div>
                   <span className="text-[11px] font-semibold text-gray-700 dark:text-gray-300">
