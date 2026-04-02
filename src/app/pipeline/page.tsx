@@ -50,7 +50,7 @@ export default async function PipelinePage() {
   const { data: quotes } = await supabase
     .from('quotes')
     .select(
-      'id, customer_name, customer_phone, job_address, total, status, pipeline_stage, quote_number, photos, scheduled_date, job_tasks, created_at, paid_at, sent_at, reminder_sent_at',
+      'id, customer_name, customer_phone, job_address, total, status, pipeline_stage, quote_number, photos, scheduled_date, job_tasks, created_at, paid_at, sent_at, reminder_sent_at, notes',
     )
     .eq('contractor_id', user.id)
     .neq('status', 'cancelled')

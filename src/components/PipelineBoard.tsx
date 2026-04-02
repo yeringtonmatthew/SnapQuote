@@ -64,6 +64,9 @@ export default function PipelineBoard({ columns: initialColumns }: PipelineBoard
   // Add Lead sheet
   const [showLeadSheet, setShowLeadSheet] = useState(false);
 
+  // Scheduled column sub-filter
+  const [scheduledFilter, setScheduledFilter] = useState<'all' | 'shingle' | 'metal'>('all');
+
   const dragQuoteId = useRef<string | null>(null);
 
   /** Find a quote by ID across all columns. */
@@ -307,7 +310,18 @@ export default function PipelineBoard({ columns: initialColumns }: PipelineBoard
       >
         <div ref={scrollRef} className="flex gap-3 px-4 pb-4" style={{ width: 'max-content' }}>
           {columns.map((col) => {
-            const colTotal = col.quotes.reduce((s, q) => s + Number(q.total), 0);
+            // Apply sub-filter for Scheduled column
+            const isScheduled = col.stage === 'job_scheduled';
+            const filteredQuotes = isScheduled && scheduledFilter !== 'all'
+              ? col.quotes.filter((q) => {
+                  const notes = (q.notes || '').toLowerCase();
+                  if (scheduledFilter === 'shingle') return notes.includes('shingle');
+                  if (scheduledFilter === 'metal') return notes.includes('metal');
+                  return true;
+                })
+              : col.quotes;
+
+            const colTotal = filteredQuotes.reduce((s, q) => s + Number(q.total), 0);
             const formattedTotal = abbrevDollars(colTotal);
             const isDragOver = dragOverStage === col.stage;
 
@@ -324,28 +338,53 @@ export default function PipelineBoard({ columns: initialColumns }: PipelineBoard
                 onDrop={(e) => handleDrop(e, col.stage)}
               >
                 {/* Column header -- sticky within scroll */}
-                <div className="sticky top-0 z-[5] flex items-center gap-2 px-1 pb-3 bg-[#f2f2f7] dark:bg-gray-950">
-                  <span
-                    className={`h-2 w-2 rounded-full shrink-0 ${dotColorMap[col.color] || 'bg-gray-400'}`}
-                  />
-                  <span className="text-[14px] font-semibold text-gray-800 dark:text-gray-200 tracking-tight">
-                    {col.label}
-                  </span>
-                  <span className="rounded-full bg-gray-200/60 dark:bg-gray-800 px-1.5 py-0.5 text-[11px] font-medium text-gray-500 dark:text-gray-400 tabular-nums leading-none">
-                    {col.quotes.length}
-                  </span>
-                  <span className="ml-auto text-[12px] text-gray-400 dark:text-gray-500 tabular-nums font-medium">
-                    {formattedTotal}
-                  </span>
+                <div className="sticky top-0 z-[5] px-1 pb-3 bg-[#f2f2f7] dark:bg-gray-950">
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`h-2 w-2 rounded-full shrink-0 ${dotColorMap[col.color] || 'bg-gray-400'}`}
+                    />
+                    <span className="text-[14px] font-semibold text-gray-800 dark:text-gray-200 tracking-tight">
+                      {col.label}
+                    </span>
+                    <span className="rounded-full bg-gray-200/60 dark:bg-gray-800 px-1.5 py-0.5 text-[11px] font-medium text-gray-500 dark:text-gray-400 tabular-nums leading-none">
+                      {filteredQuotes.length}
+                    </span>
+                    <span className="ml-auto text-[12px] text-gray-400 dark:text-gray-500 tabular-nums font-medium">
+                      {formattedTotal}
+                    </span>
+                  </div>
+
+                  {/* Sub-filter tabs for Scheduled column */}
+                  {isScheduled && (
+                    <div className="flex gap-1 mt-2">
+                      {([
+                        { key: 'all', label: 'All' },
+                        { key: 'shingle', label: 'Shingle' },
+                        { key: 'metal', label: 'Metal' },
+                      ] as const).map((tab) => (
+                        <button
+                          key={tab.key}
+                          onClick={() => setScheduledFilter(tab.key)}
+                          className={`rounded-full px-2.5 py-1 text-[11px] font-semibold transition-all press-scale ${
+                            scheduledFilter === tab.key
+                              ? 'bg-amber-500 text-white shadow-sm'
+                              : 'bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 ring-1 ring-black/[0.04] dark:ring-white/[0.06]'
+                          }`}
+                        >
+                          {tab.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 {/* Cards */}
                 <div className="flex-1 space-y-2 overflow-y-auto max-h-[calc(100dvh-280px)] pr-0.5 pb-2">
-                  {col.quotes.length === 0 && col.stage !== 'lead' ? (
+                  {filteredQuotes.length === 0 && col.stage !== 'lead' ? (
                     <div className="flex items-center justify-center py-10">
                       <span className="text-[14px] text-gray-300 dark:text-gray-700 select-none">&mdash;</span>
                     </div>
-                  ) : col.quotes.length === 0 && col.stage === 'lead' ? (
+                  ) : filteredQuotes.length === 0 && col.stage === 'lead' ? (
                     <button
                       onClick={() => setShowLeadSheet(true)}
                       className="flex w-full flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-gray-200 dark:border-gray-700 py-8 text-gray-400 dark:text-gray-500 hover:border-brand-300 hover:text-brand-500 dark:hover:border-brand-700 dark:hover:text-brand-400 transition-colors press-scale"
@@ -356,7 +395,7 @@ export default function PipelineBoard({ columns: initialColumns }: PipelineBoard
                       <span className="text-[13px] font-medium">Add your first lead</span>
                     </button>
                   ) : (
-                    col.quotes.map((quote) => (
+                    filteredQuotes.map((quote) => (
                       <div
                         key={quote.id}
                         draggable
@@ -372,7 +411,7 @@ export default function PipelineBoard({ columns: initialColumns }: PipelineBoard
                   )}
 
                   {/* Add Lead button at bottom of Lead column when it has items */}
-                  {col.stage === 'lead' && col.quotes.length > 0 && (
+                  {col.stage === 'lead' && filteredQuotes.length > 0 && (
                     <button
                       onClick={() => setShowLeadSheet(true)}
                       className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-gray-200 dark:border-gray-700 py-2.5 text-[13px] font-medium text-gray-400 dark:text-gray-500 hover:border-brand-300 hover:text-brand-500 dark:hover:border-brand-700 dark:hover:text-brand-400 transition-colors press-scale"

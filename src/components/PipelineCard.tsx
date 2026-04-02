@@ -23,6 +23,7 @@ export interface PipelineCardProps {
     created_at: string;
     paid_at: string | null;
     reminder_sent_at: string | null;
+    notes: string | null;
   };
   onStageChange?: (quoteId: string, stage: string) => void;
   onQuickActions?: (quoteId: string, stage: string) => void;
