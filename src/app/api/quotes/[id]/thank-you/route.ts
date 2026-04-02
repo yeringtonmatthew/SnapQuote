@@ -3,9 +3,16 @@ import { createClient } from '@supabase/supabase-js';
 import { Resend } from 'resend';
 
 export async function POST(
-  _request: Request,
+  request: Request,
   { params }: { params: { id: string } }
 ) {
+  // Only allow internal calls — require a shared secret header
+  const internalSecret = process.env.INTERNAL_API_SECRET;
+  const authHeader = request.headers.get('x-internal-secret');
+  if (!internalSecret || authHeader !== internalSecret) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) {
     return NextResponse.json({

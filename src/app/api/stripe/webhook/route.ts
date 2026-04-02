@@ -102,6 +102,9 @@ export async function POST(request: NextRequest) {
           const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
           fetch(`${appUrl}/api/quotes/${quoteId}/thank-you`, {
             method: 'POST',
+            headers: {
+              'x-internal-secret': process.env.INTERNAL_API_SECRET || '',
+            },
           }).catch((err) => {
             console.error('[webhook] Thank-you email fire-and-forget failed:', err);
           });

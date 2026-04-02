@@ -1,6 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
 
 export async function GET(request: NextRequest) {
+  // Require authentication — don't expose Google Maps API as public proxy
+  const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    return NextResponse.json({ predictions: [] });
+  }
+
   const input = request.nextUrl.searchParams.get('input');
 
   if (!input || input.length < 3) {

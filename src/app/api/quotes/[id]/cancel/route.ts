@@ -32,7 +32,8 @@ export async function POST(
   const { error: updateError } = await supabase
     .from('quotes')
     .update({ status: 'cancelled' })
-    .eq('id', params.id);
+    .eq('id', params.id)
+    .eq('contractor_id', user.id);
 
   if (updateError) {
     return NextResponse.json({ error: updateError.message }, { status: 500 });
