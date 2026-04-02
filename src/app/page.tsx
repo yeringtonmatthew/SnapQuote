@@ -19,6 +19,34 @@ export default function Home() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
+      {/* ===== NAV ===== */}
+      <nav className="bg-white border-b border-gray-100">
+        <div className="mx-auto max-w-4xl flex items-center justify-between px-6 py-4">
+          <Link href="/" className="flex items-center gap-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-600">
+              <svg className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
+              </svg>
+            </div>
+            <span className="text-[17px] font-bold text-gray-900 tracking-tight">SnapQuote</span>
+          </Link>
+          <div className="flex items-center gap-3">
+            <Link
+              href="/auth/login"
+              className="rounded-lg px-4 py-2 text-[14px] font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-colors"
+            >
+              Log In
+            </Link>
+            <Link
+              href="/auth/signup"
+              className="rounded-lg bg-brand-600 px-4 py-2 text-[14px] font-semibold text-white hover:bg-brand-700 transition-colors"
+            >
+              Sign Up
+            </Link>
+          </div>
+        </div>
+      </nav>
+
       {/* ===== HERO ===== */}
       <section className="bg-white pb-20 pt-16">
         <div className="mx-auto max-w-4xl px-6">
