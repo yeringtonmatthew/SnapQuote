@@ -9,6 +9,7 @@ import PhoneInput from '@/components/ui/PhoneInput';
 import FormField from '@/components/ui/FormField';
 import { Spinner } from '@/components/ui/Spinner';
 import { TeamSection } from './TeamSection';
+import { LeadIntegrationsSection } from './LeadIntegrationsSection';
 
 interface Props {
   profile: any;
@@ -18,7 +19,7 @@ interface Props {
   stripeStatus?: string | null;
 }
 
-const TABS = ['Account', 'Profile', 'Team', 'Pricing', 'Branding', 'Payments', 'Automation', 'Advanced'] as const;
+const TABS = ['Account', 'Profile', 'Team', 'Pricing', 'Branding', 'Payments', 'Automation', 'Integrations', 'Advanced'] as const;
 type Tab = typeof TABS[number];
 
 export function SettingsForm({ profile, userId, email, stripeConnected, stripeStatus }: Props) {
@@ -804,6 +805,9 @@ export function SettingsForm({ profile, userId, email, stripeConnected, stripeSt
           </div>
         </div>
       )}
+
+      {/* Integrations Tab */}
+      {activeTab === 'Integrations' && <LeadIntegrationsSection />}
 
       {/* Advanced Tab */}
       {activeTab === 'Advanced' && (

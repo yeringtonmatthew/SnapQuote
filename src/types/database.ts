@@ -232,6 +232,19 @@ export interface TeamMember {
   joined_at: string | null;
 }
 
+export interface LeadSource {
+  id: string;
+  contractor_id: string;
+  name: string;
+  slug: string;
+  api_key: string;
+  is_active: boolean;
+  lead_count: number;
+  last_lead_at: string | null;
+  field_mapping: Record<string, string>;
+  created_at: string;
+}
+
 export interface AIQuoteResponse {
   job_summary: string;
   scope_of_work: string;
