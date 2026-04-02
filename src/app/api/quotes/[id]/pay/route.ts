@@ -35,6 +35,7 @@ export async function POST(
       paid_at: new Date().toISOString(),
       payment_method,
       payment_note: payment_note || null,
+      pipeline_stage: 'deposit_collected',
     })
     .eq('id', params.id)
     .select()

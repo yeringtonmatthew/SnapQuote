@@ -1,13 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getStripe } from '@/lib/stripe';
 import { createClient } from '@/lib/supabase/server';
+import { rateLimit } from '@/lib/rate-limit';
 
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  const ip = request.headers.get('x-forwarded-for') || 'unknown';
+  if (!rateLimit(ip, 10, 60_000)) {
+    return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+  }
+
   const supabase = createClient();
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL!;
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://snapquote.dev';
 
   const { data: quote } = await supabase
     .from('quotes')
@@ -34,6 +40,9 @@ export async function GET(
   }
 
   const depositCents = Math.round(Number(quote.deposit_amount) * 100);
+  if (!depositCents || depositCents <= 0) {
+    return NextResponse.json({ error: 'No deposit amount to collect' }, { status: 400 });
+  }
   const businessName = profile.business_name || profile.full_name || 'Licensed Professional';
 
   try {

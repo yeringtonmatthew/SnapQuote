@@ -21,7 +21,7 @@ export async function POST(
   // Public endpoint — no auth required (customer is accepting)
   const { data: quote, error: fetchError } = await supabase
     .from('quotes')
-    .select('id, status, customer_name, customer_email, contractor_id, quote_number, total, deposit_amount')
+    .select('id, status, pipeline_stage, customer_name, customer_email, contractor_id, quote_number, total, deposit_amount')
     .eq('id', params.id)
     .single();
 
@@ -33,6 +33,11 @@ export async function POST(
     return NextResponse.json({ error: 'Quote has already been accepted' }, { status: 400 });
   }
 
+  // Advance pipeline past quote_sent on approval
+  const advanceStages = ['lead', 'follow_up', 'quote_created', 'quote_sent'];
+  const currentStage = quote.pipeline_stage || 'quote_sent';
+  const shouldAdvance = advanceStages.includes(currentStage);
+
   const { error } = await supabase
     .from('quotes')
     .update({
@@ -40,6 +45,7 @@ export async function POST(
       approved_at: new Date().toISOString(),
       customer_signed_name: customer_name || null,
       customer_signature: customer_signature || null,
+      ...(shouldAdvance ? { pipeline_stage: 'deposit_collected' } : {}),
     })
     .eq('id', params.id);
 

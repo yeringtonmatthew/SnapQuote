@@ -34,11 +34,16 @@ export async function PATCH(
   const body = await request.json();
   const { scheduled_date, scheduled_time } = body;
 
+  // Only advance pipeline to job_scheduled if we're setting a date and currently at an earlier stage
+  const earlyStages = ['lead', 'follow_up', 'quote_created', 'quote_sent', 'deposit_collected'];
+  const shouldAdvance = scheduled_date && earlyStages.includes(existing.pipeline_stage || '');
+
   const { data: quote, error } = await supabase
     .from('quotes')
     .update({
       scheduled_date: scheduled_date || null,
       scheduled_time: scheduled_time || null,
+      ...(shouldAdvance ? { pipeline_stage: 'job_scheduled' } : {}),
     })
     .eq('id', params.id)
     .eq('contractor_id', user.id)

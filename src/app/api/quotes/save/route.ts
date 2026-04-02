@@ -48,6 +48,18 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Line items must be an array' }, { status: 400 });
   }
 
+  // Validate pipeline_stage if provided
+  const VALID_STAGES = ['lead', 'follow_up', 'quote_created', 'quote_sent', 'deposit_collected', 'job_scheduled', 'in_progress', 'completed'];
+  if (pipeline_stage && !VALID_STAGES.includes(pipeline_stage)) {
+    return NextResponse.json({ error: 'Invalid pipeline stage' }, { status: 400 });
+  }
+
+  // Validate status if provided
+  const VALID_STATUSES = ['draft', 'sent'];
+  if (status && !VALID_STATUSES.includes(status)) {
+    return NextResponse.json({ error: 'Invalid status for new quote' }, { status: 400 });
+  }
+
   // Get next quote number for this contractor
   const { data: maxRow } = await supabase
     .from('quotes')
