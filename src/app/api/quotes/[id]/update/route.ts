@@ -51,6 +51,7 @@ export async function PATCH(
   const {
     customer_name,
     customer_phone,
+    customer_email,
     job_address,
     scope_of_work,
     line_items,
@@ -110,6 +111,7 @@ export async function PATCH(
     .update({
       customer_name: customer_name.trim(),
       customer_phone: customer_phone || null,
+      ...(customer_email !== undefined ? { customer_email: customer_email || null } : {}),
       ...(job_address !== undefined ? { job_address: job_address || null } : {}),
       scope_of_work: scope_of_work || null,
       line_items: items,

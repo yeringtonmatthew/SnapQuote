@@ -1,16 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-
-const VALID_STAGES = [
-  'lead',
-  'follow_up',
-  'quote_created',
-  'quote_sent',
-  'deposit_collected',
-  'job_scheduled',
-  'in_progress',
-  'completed',
-] as const;
+import { VALID_STAGES } from '@/lib/constants';
 
 export async function PATCH(
   request: Request,

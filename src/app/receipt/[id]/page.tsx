@@ -24,7 +24,7 @@ export default async function ReceiptPage({ params }: { params: { id: string } }
 
   const { data: quote } = await supabase
     .from('quotes')
-    .select('*')
+    .select('id, contractor_id, customer_name, scope_of_work, ai_description, subtotal, total, deposit_amount, paid_at, payment_method, payment_note, customer_signature, customer_signed_name, approved_at')
     .eq('id', params.id)
     .single();
 
@@ -37,8 +37,9 @@ export default async function ReceiptPage({ params }: { params: { id: string } }
     .single();
 
   const subtotal = Number(quote.subtotal);
+  const total = Number(quote.total ?? quote.subtotal);
   const deposit = Number(quote.deposit_amount);
-  const balance = subtotal - deposit;
+  const balance = total - deposit;
   const businessName = profile?.business_name || profile?.full_name || 'Contractor';
   const receiptNumber = quote.id.slice(-8).toUpperCase();
 

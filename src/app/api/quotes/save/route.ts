@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { VALID_STAGES } from '@/lib/constants';
 
 export async function POST(request: Request) {
   const supabase = createClient();
@@ -49,7 +50,6 @@ export async function POST(request: Request) {
   }
 
   // Validate pipeline_stage if provided
-  const VALID_STAGES = ['lead', 'follow_up', 'quote_created', 'quote_sent', 'deposit_collected', 'job_scheduled', 'in_progress', 'completed'];
   if (pipeline_stage && !VALID_STAGES.includes(pipeline_stage)) {
     return NextResponse.json({ error: 'Invalid pipeline stage' }, { status: 400 });
   }
