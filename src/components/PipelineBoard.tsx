@@ -20,6 +20,7 @@ interface PipelineBoardProps {
 
 const STAGE_OPTIONS = [
   { stage: 'lead', label: 'Lead', color: 'gray-400' },
+  { stage: 'follow_up', label: 'Follow Up', color: 'orange-500' },
   { stage: 'quote_created', label: 'Quote Created', color: 'slate-500' },
   { stage: 'quote_sent', label: 'Quote Sent', color: 'blue-500' },
   { stage: 'deposit_collected', label: 'Deposit Collected', color: 'green-500' },
@@ -31,6 +32,7 @@ const STAGE_OPTIONS = [
 // Map color strings to Tailwind bg classes for the dot
 const dotColorMap: Record<string, string> = {
   'gray-400': 'bg-gray-400',
+  'orange-500': 'bg-orange-500',
   'slate-500': 'bg-slate-500',
   'blue-500': 'bg-blue-500',
   'green-500': 'bg-green-500',
@@ -63,7 +65,6 @@ export default function PipelineBoard({ columns: initialColumns }: PipelineBoard
   const [showLeadSheet, setShowLeadSheet] = useState(false);
 
   // Column sub-filters
-  const [leadFilter, setLeadFilter] = useState<'all' | 'follow_up'>('all');
   const [scheduledFilter, setScheduledFilter] = useState<'all' | 'shingle' | 'metal'>('all');
 
   const dragQuoteId = useRef<string | null>(null);
@@ -310,15 +311,8 @@ export default function PipelineBoard({ columns: initialColumns }: PipelineBoard
         <div ref={scrollRef} className="flex gap-3 px-4 pb-4" style={{ width: 'max-content' }}>
           {columns.map((col) => {
             // Apply sub-filters
-            const isLead = col.stage === 'lead';
             const isScheduled = col.stage === 'job_scheduled';
             let filteredQuotes = col.quotes;
-
-            if (isLead && leadFilter === 'follow_up') {
-              filteredQuotes = col.quotes.filter((q) =>
-                (q.notes || '').toLowerCase().includes('follow up')
-              );
-            }
 
             if (isScheduled && scheduledFilter !== 'all') {
               filteredQuotes = col.quotes.filter((q) => {
@@ -361,28 +355,6 @@ export default function PipelineBoard({ columns: initialColumns }: PipelineBoard
                       {formattedTotal}
                     </span>
                   </div>
-
-                  {/* Sub-filter tabs for Lead column */}
-                  {isLead && col.quotes.length > 0 && (
-                    <div className="flex gap-1 mt-2">
-                      {([
-                        { key: 'all', label: 'All' },
-                        { key: 'follow_up', label: 'Follow Up' },
-                      ] as const).map((tab) => (
-                        <button
-                          key={tab.key}
-                          onClick={() => setLeadFilter(tab.key)}
-                          className={`rounded-full px-2.5 py-1 text-[11px] font-semibold transition-all press-scale ${
-                            leadFilter === tab.key
-                              ? 'bg-gray-700 dark:bg-gray-200 text-white dark:text-gray-900 shadow-sm'
-                              : 'bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 ring-1 ring-black/[0.04] dark:ring-white/[0.06]'
-                          }`}
-                        >
-                          {tab.label}
-                        </button>
-                      ))}
-                    </div>
-                  )}
 
                   {/* Sub-filter tabs for Scheduled column */}
                   {isScheduled && (
