@@ -1,4 +1,4 @@
-export type TradeType = 'plumber' | 'hvac' | 'electrician' | 'general' | 'other';
+export type TradeType = 'plumber' | 'hvac' | 'electrician' | 'general' | 'roofing' | 'painter' | 'landscaper' | 'other';
 export type PlanType = 'starter' | 'pro' | 'team';
 export type QuoteStatus = 'draft' | 'sent' | 'approved' | 'deposit_paid' | 'cancelled';
 
@@ -46,6 +46,7 @@ export interface User {
   email: string;
   full_name: string | null;
   business_name: string | null;
+  phone: string | null;
   trade_type: TradeType | null;
   logo_url: string | null;
   hourly_rate: number | null;
@@ -92,6 +93,10 @@ export interface Quote {
   stripe_payment_intent_id: string | null;
   sent_at: string | null;
   approved_at: string | null;
+  payment_method: string | null;
+  payment_note: string | null;
+  customer_signature: string | null;
+  customer_signed_name: string | null;
   paid_at: string | null;
   expires_at: string | null;
   quote_number: number | null;

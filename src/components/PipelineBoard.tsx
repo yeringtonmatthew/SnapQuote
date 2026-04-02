@@ -51,6 +51,7 @@ function abbrevDollars(cents: number): string {
 export default function PipelineBoard({ columns: initialColumns }: PipelineBoardProps) {
   const router = useRouter();
   const [columns, setColumns] = useState<PipelineColumn[]>(initialColumns);
+  const lastGoodColumns = useRef<PipelineColumn[]>(initialColumns);
   const [dragOverStage, setDragOverStage] = useState<string | null>(null);
 
   // Stage picker state
@@ -119,13 +120,18 @@ export default function PipelineBoard({ columns: initialColumns }: PipelineBoard
           body: JSON.stringify({ pipeline_stage: newStage }),
         });
         if (!res.ok) throw new Error('Failed to update');
+        // Persist succeeded — update last-known-good state
+        setColumns((current) => {
+          lastGoodColumns.current = current;
+          return current;
+        });
         router.refresh();
       } catch {
-        // Revert on error
-        setColumns(initialColumns);
+        // Revert to last successfully persisted state (not stale initialColumns)
+        setColumns(lastGoodColumns.current);
       }
     },
-    [initialColumns, router],
+    [router],
   );
 
   // Desktop drag handlers

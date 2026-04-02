@@ -20,6 +20,7 @@ const fmt = (n: number) =>
 
 const stageLabels: Record<string, string> = {
   lead: 'Lead',
+  follow_up: 'Follow Up',
   quote_created: 'Quote Created',
   quote_sent: 'Quote Sent',
   deposit_collected: 'Deposit Collected',
@@ -30,6 +31,7 @@ const stageLabels: Record<string, string> = {
 
 const stageDotColors: Record<string, string> = {
   lead: 'bg-gray-400',
+  follow_up: 'bg-orange-500',
   quote_created: 'bg-slate-400',
   quote_sent: 'bg-blue-500',
   deposit_collected: 'bg-green-500',
@@ -40,6 +42,7 @@ const stageDotColors: Record<string, string> = {
 
 const stageTextColors: Record<string, string> = {
   lead: 'text-gray-600',
+  follow_up: 'text-orange-600',
   quote_created: 'text-slate-600',
   quote_sent: 'text-blue-600',
   deposit_collected: 'text-green-600',
@@ -50,6 +53,7 @@ const stageTextColors: Record<string, string> = {
 
 const stageTrackColors: Record<string, string> = {
   lead: 'bg-gray-400',
+  follow_up: 'bg-orange-500',
   quote_created: 'bg-slate-400',
   quote_sent: 'bg-blue-500',
   deposit_collected: 'bg-green-500',

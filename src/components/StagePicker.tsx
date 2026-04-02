@@ -10,6 +10,7 @@ interface StagePickerProps {
 
 const STAGES: { value: PipelineStage; label: string; color: string }[] = [
   { value: 'lead', label: 'Lead', color: 'bg-gray-400' },
+  { value: 'follow_up', label: 'Follow Up', color: 'bg-orange-500' },
   { value: 'quote_created', label: 'Quote Created', color: 'bg-slate-500' },
   { value: 'quote_sent', label: 'Quote Sent', color: 'bg-blue-500' },
   { value: 'deposit_collected', label: 'Deposit Collected', color: 'bg-green-500' },

@@ -35,6 +35,7 @@ interface QuoteItem {
 
 const stageLabels: Record<string, string> = {
   lead: 'Lead',
+  follow_up: 'Follow Up',
   quote_created: 'Quote Created',
   quote_sent: 'Quote Sent',
   deposit_collected: 'Deposit Collected',
@@ -45,6 +46,7 @@ const stageLabels: Record<string, string> = {
 
 const stageDotColors: Record<string, string> = {
   lead: 'bg-gray-400',
+  follow_up: 'bg-orange-500',
   quote_created: 'bg-slate-400',
   quote_sent: 'bg-blue-500',
   deposit_collected: 'bg-green-500',
