@@ -93,7 +93,7 @@ export default async function CustomerProposalPage({
 
   const { data: profile } = await serviceClient
     .from('users')
-    .select('business_name, full_name, email, trade_type, logo_url, stripe_account_id, brand_color, show_reviews_on_quotes')
+    .select('business_name, full_name, email, phone, trade_type, logo_url, stripe_account_id, brand_color, show_reviews_on_quotes')
     .eq('id', quote.contractor_id)
     .single();
 
@@ -163,7 +163,7 @@ export default async function CustomerProposalPage({
     general: 'Licensed General Contractor',
   };
   const tradeLabel = (profile?.trade_type && tradeMap[profile.trade_type]) || profile?.trade_type || 'Licensed Contractor';
-  const contractorPhone = null; // TODO: add phone column to users table
+  const contractorPhone = profile?.phone || null;
 
   if (isCancelled) {
     return (

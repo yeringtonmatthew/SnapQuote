@@ -345,6 +345,7 @@ export default async function QuoteDetailPage({
                 quoteId={quote.id}
                 currentStatus={quote.status}
                 hasPhone={!!quote.customer_phone}
+                hasEmail={!!quote.customer_email}
               />
             </div>
             <div className="flex justify-center">

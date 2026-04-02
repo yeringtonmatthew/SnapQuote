@@ -131,7 +131,7 @@ export default async function ReceiptPage({ params }: { params: { id: string } }
         <div className="rounded-2xl bg-white shadow-sm overflow-hidden">
           <div className="flex justify-between px-5 py-4 border-b border-gray-100">
             <span className="text-[14px] text-gray-500">Total Job Value</span>
-            <span className="text-[14px] font-semibold text-gray-900">{fmt(subtotal)}</span>
+            <span className="text-[14px] font-semibold text-gray-900">{fmt(total)}</span>
           </div>
           <div className="flex justify-between px-5 py-4 bg-green-50 border-b border-gray-100">
             <span className="text-[14px] font-semibold text-green-800">Deposit Paid</span>

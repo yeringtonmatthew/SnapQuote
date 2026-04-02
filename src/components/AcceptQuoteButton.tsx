@@ -24,18 +24,25 @@ export function AcceptQuoteButton({ quoteId, depositAmount, currentStatus, strip
   const [showModal, setShowModal] = useState(false);
   const [name, setName] = useState('');
   const [signature, setSignature] = useState<string | null>(null);
+  const [typedSignature, setTypedSignature] = useState('');
   const [agreed, setAgreed] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const hasSignature = !!signature || !!typedSignature.trim();
+
   async function handleAccept() {
-    if (!name.trim() || !signature || !agreed) return;
+    if (!name.trim() || !hasSignature || !agreed) return;
     setAccepting(true);
     setError(null);
     try {
       const res = await fetch(`/api/quotes/${quoteId}/accept`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ customer_name: name, customer_signature: signature }),
+        body: JSON.stringify({
+          customer_name: name,
+          customer_signature: signature || null,
+          customer_signed_name: typedSignature.trim() || name.trim(),
+        }),
       });
       if (res.ok) {
         haptic('heavy');
@@ -187,7 +194,7 @@ export function AcceptQuoteButton({ quoteId, depositAmount, currentStatus, strip
               </div>
 
               {/* Signature */}
-              <SignaturePad onChange={setSignature} />
+              <SignaturePad onChange={setSignature} onTypedName={setTypedSignature} />
 
               {/* Agreement */}
               <label className="flex items-start gap-3 cursor-pointer">
@@ -214,7 +221,7 @@ export function AcceptQuoteButton({ quoteId, depositAmount, currentStatus, strip
               {/* Submit */}
               <button
                 onClick={handleAccept}
-                disabled={!name.trim() || !signature || !agreed || accepting}
+                disabled={!name.trim() || !hasSignature || !agreed || accepting}
                 className="w-full rounded-2xl py-4 text-[16px] font-bold text-white disabled:opacity-40 transition-all press-scale focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
                 style={{ backgroundColor: brandColor }}
               >
