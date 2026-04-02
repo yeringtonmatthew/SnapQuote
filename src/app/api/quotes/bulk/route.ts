@@ -9,8 +9,8 @@ export async function PATCH(request: Request) {
   const body = await request.json();
   const { ids, action } = body;
 
-  if (!Array.isArray(ids) || ids.length === 0) {
-    return NextResponse.json({ error: 'ids must be a non-empty array' }, { status: 400 });
+  if (!Array.isArray(ids) || ids.length === 0 || ids.length > 500) {
+    return NextResponse.json({ error: 'Invalid request — max 500 items' }, { status: 400 });
   }
 
   if (action !== 'archive' && action !== 'unarchive' && action !== 'delete') {

@@ -72,6 +72,10 @@ export async function PATCH(
     return NextResponse.json({ error: 'Line items must be an array' }, { status: 400 });
   }
 
+  if (discount_percent !== undefined && (discount_percent < 0 || discount_percent > 100)) {
+    return NextResponse.json({ error: 'Discount percent must be between 0 and 100' }, { status: 400 });
+  }
+
   const validDepositPercent = typeof deposit_percent === 'number' && deposit_percent >= 0 && deposit_percent <= 100
     ? deposit_percent
     : 33;

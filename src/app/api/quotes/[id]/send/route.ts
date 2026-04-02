@@ -78,7 +78,7 @@ export async function POST(
       const message = `Hi ${quote.customer_name}, ${businessName} sent you a quote for $${Number(quote.total ?? quote.subtotal).toLocaleString('en-US', { minimumFractionDigits: 2 })}. View and approve here: ${proposalUrl}`;
 
       // Normalize to E.164 format (+1XXXXXXXXXX for US numbers)
-      const digits = quote.customer_phone.replace(/\D/g, '');
+      const digits = quote.customer_phone?.replace(/\D/g, '') ?? '';
       const toNumber = digits.startsWith('1') ? `+${digits}` : `+1${digits}`;
 
       // Prefer Messaging Service (required for A2P 10DLC), fall back to direct number

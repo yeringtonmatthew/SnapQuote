@@ -98,8 +98,8 @@ export function TeamSection() {
       {/* Header */}
       <div className="card space-y-4">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">Team</p>
-          <p className="mt-1 text-xs text-gray-500">
+          <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">Team</p>
+          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
             Manage who has access to your SnapQuote account.
           </p>
         </div>
@@ -244,7 +244,7 @@ export function TeamSection() {
       )}
 
       {/* Footer Note */}
-      <p className="px-1 text-[11px] text-gray-400">
+      <p className="px-1 text-[11px] text-gray-400 dark:text-gray-500">
         Team members will be able to log in and manage quotes. Full team permissions coming soon.
       </p>
     </div>

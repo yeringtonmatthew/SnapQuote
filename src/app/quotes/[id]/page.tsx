@@ -241,11 +241,11 @@ export default async function QuoteDetailPage({
         <div>
           <h2 className="mb-2 text-sm font-semibold text-gray-700">Line Items</h2>
           <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
-            {quote.line_items.map((item: any, i: number) => (
+            {(quote.line_items || []).map((item: any, i: number) => (
               <div
                 key={i}
                 className={`flex items-start justify-between px-4 py-3 ${
-                  i < quote.line_items.length - 1 ? 'border-b border-gray-100' : ''
+                  i < (quote.line_items || []).length - 1 ? 'border-b border-gray-100' : ''
                 }`}
               >
                 <div className="min-w-0 flex-1 pr-4">

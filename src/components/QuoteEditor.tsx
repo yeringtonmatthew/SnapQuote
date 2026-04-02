@@ -55,7 +55,7 @@ export function QuoteEditor({ quote }: QuoteEditorProps) {
   const canEdit = quote.status === 'draft' || quote.status === 'sent';
   const wasSent = quote.status === 'sent';
 
-  const subtotal = lineItems.reduce((sum, item) => sum + Number(item.total), 0);
+  const subtotal = (lineItems || []).reduce((sum, item) => sum + Number(item.total), 0);
 
   const parsedDiscountValue = parseFloat(discountValue) || 0;
   const discountAmount = discountType === 'amount'
@@ -187,7 +187,7 @@ export function QuoteEditor({ quote }: QuoteEditorProps) {
   if (showResendPrompt) {
     return (
       <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 sm:items-center animate-modal-backdrop">
-        <div className="w-full max-w-sm rounded-t-2xl bg-white p-6 shadow-xl sm:rounded-2xl animate-modal-content">
+        <div className="w-full max-w-sm rounded-t-2xl bg-white dark:bg-gray-900 p-6 shadow-xl sm:rounded-2xl animate-modal-content">
           <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-brand-50">
             <svg className="h-6 w-6 text-brand-600" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
@@ -248,9 +248,9 @@ export function QuoteEditor({ quote }: QuoteEditorProps) {
 
   // ── EDIT MODE ───────────────────────────────────────────────────────────────
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-gray-50">
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-gray-50 dark:bg-gray-950">
       {/* Sticky header */}
-      <div className="sticky top-0 z-10 border-b border-gray-200 bg-white px-4 py-3">
+      <div className="sticky top-0 z-10 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 py-3">
         <div className="mx-auto flex max-w-lg items-center justify-between">
           <button onClick={cancelEdit} className="text-sm font-medium text-gray-500">
             Cancel

@@ -29,7 +29,12 @@ export async function PATCH(
 
   if (body.name !== undefined) updates.name = body.name.trim();
   if (body.is_active !== undefined) updates.is_active = body.is_active;
-  if (body.field_mapping !== undefined) updates.field_mapping = body.field_mapping;
+  if (body.field_mapping !== undefined) {
+    if (typeof body.field_mapping !== 'object' || Array.isArray(body.field_mapping) || body.field_mapping === null) {
+      return NextResponse.json({ error: 'field_mapping must be an object' }, { status: 400 });
+    }
+    updates.field_mapping = body.field_mapping;
+  }
 
   if (Object.keys(updates).length === 0) {
     return NextResponse.json({ error: 'No valid fields to update' }, { status: 400 });

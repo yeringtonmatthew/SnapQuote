@@ -190,8 +190,8 @@ export function LeadIntegrationsSection() {
       {/* Header */}
       <div className="card space-y-4">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">Lead Integrations</p>
-          <p className="mt-1 text-xs text-gray-500">
+          <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">Lead Integrations</p>
+          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
             Connect your lead services to automatically add new leads to your pipeline.
           </p>
         </div>
@@ -280,7 +280,7 @@ export function LeadIntegrationsSection() {
       )}
 
       {error && (
-        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-[13px] font-medium text-red-700">
+        <div className="rounded-xl border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-[13px] font-medium text-red-700 dark:text-red-400">
           {error}
         </div>
       )}
@@ -288,7 +288,7 @@ export function LeadIntegrationsSection() {
       {/* Empty state */}
       {sources.length === 0 && !loading && (
         <div className="card py-8 text-center">
-          <p className="text-sm text-gray-400">
+          <p className="text-sm text-gray-400 dark:text-gray-500">
             No lead sources configured. Add one above to start receiving leads automatically.
           </p>
         </div>

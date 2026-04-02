@@ -62,7 +62,7 @@ export async function POST(
       const paidAmount = amount || quote.deposit_amount;
       const client = twilio(sid!, token!);
 
-      const digits = quote.customer_phone.replace(/\D/g, '');
+      const digits = quote.customer_phone?.replace(/\D/g, '') ?? '';
       const toNumber = digits.startsWith('1') ? `+${digits}` : `+1${digits}`;
 
       await client.messages.create({

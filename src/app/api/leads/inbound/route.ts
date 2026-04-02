@@ -125,22 +125,32 @@ export async function POST(request: NextRequest) {
   let clientId: string | null = null;
 
   if (phone || email) {
-    let query = supabase
-      .from('clients')
-      .select('id')
-      .eq('user_id', contractorId);
+    let existingClient: { id: string } | null = null;
 
-    if (phone && email) {
-      query = query.or(`phone.eq.${phone.trim()},email.eq.${email.trim()}`);
-    } else if (phone) {
-      query = query.eq('phone', phone.trim());
-    } else if (email) {
-      query = query.eq('email', email.trim());
+    if (phone) {
+      const { data } = await supabase
+        .from('clients')
+        .select('id')
+        .eq('user_id', contractorId)
+        .eq('phone', phone.trim())
+        .limit(1)
+        .maybeSingle();
+      existingClient = data;
     }
 
-    const { data: existingClients } = await query.limit(1);
-    if (existingClients && existingClients.length > 0) {
-      clientId = existingClients[0].id;
+    if (!existingClient && email) {
+      const { data } = await supabase
+        .from('clients')
+        .select('id')
+        .eq('user_id', contractorId)
+        .eq('email', email.trim())
+        .limit(1)
+        .maybeSingle();
+      existingClient = data;
+    }
+
+    if (existingClient) {
+      clientId = existingClient.id;
     }
   }
 
