@@ -105,7 +105,7 @@ export default async function CustomerProposalPage({
       .from('reviews')
       .select('customer_name, rating, comment, source, reviewer_photo_url, created_at')
       .eq('contractor_id', quote.contractor_id)
-      .gte('rating', 4) // Only show 4+ star reviews on proposals
+      .gte('rating', 4)
       .order('rating', { ascending: false })
       .order('created_at', { ascending: false })
       .limit(5);
@@ -145,12 +145,10 @@ export default async function CustomerProposalPage({
     : false;
   const expiresAt = quote.expires_at ? new Date(quote.expires_at) : null;
 
-  // Calculate days remaining for urgency
   const daysRemaining = expiresAt
     ? Math.max(0, Math.ceil((expiresAt.getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
     : null;
 
-  // Count critical/moderate findings for urgency
   const criticalCount = inspectionFindings.filter(f => f.severity === 'critical').length;
   const moderateCount = inspectionFindings.filter(f => f.severity === 'moderate').length;
   const totalIssueCount = inspectionFindings.length;
@@ -192,7 +190,9 @@ export default async function CustomerProposalPage({
     <div className="force-light min-h-dvh bg-[#f7f7f8]">
       <ViewTracker quoteId={quote.id} />
 
-      {/* ── Hero — #1 premium visual weight ────────── */}
+      {/* ══════════════════════════════════════════════
+          HERO — Cinematic, trust-forward
+          ══════════════════════════════════════════════ */}
       <div className="relative overflow-hidden" style={{ height: '62vh', minHeight: 340 }}>
         {heroPhoto ? (
           <img
@@ -205,11 +205,11 @@ export default async function CustomerProposalPage({
           <div className="absolute inset-0 bg-gradient-to-br from-[#0f0f10] to-[#1a2332]" />
         )}
 
-        {/* Richer gradient overlay — deeper, more cinematic */}
+        {/* Cinematic gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-black/5" />
         <div className="absolute inset-0 bg-gradient-to-r from-black/20 to-transparent" />
 
-        {/* Top bar */}
+        {/* Top bar — logo + actions */}
         <div className="absolute left-0 right-0 top-0 flex items-center justify-between px-5 pt-12">
           <div className="flex items-center gap-2.5">
             {profile?.logo_url ? (
@@ -236,8 +236,27 @@ export default async function CustomerProposalPage({
           </div>
         </div>
 
-        {/* Hero content — #1 stronger hierarchy */}
+        {/* Hero content */}
         <div className="absolute bottom-0 left-0 right-0 px-6 pb-8">
+          {/* Social proof badge in hero */}
+          {reviews.length > 0 && (
+            <div className="inline-flex items-center gap-1.5 rounded-full bg-white/15 backdrop-blur-md px-3 py-1.5 mb-4">
+              <div className="flex items-center">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <svg
+                    key={star}
+                    className={`h-3 w-3 ${star <= Math.round(avgRating) ? 'text-amber-400' : 'text-white/20'}`}
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                  </svg>
+                ))}
+              </div>
+              <span className="text-[11px] font-semibold text-white/80">{avgRating.toFixed(1)} from {reviews.length} review{reviews.length !== 1 ? 's' : ''}</span>
+            </div>
+          )}
+
           <p className="text-[13px] font-semibold uppercase tracking-widest mb-2 opacity-90" style={{ color: brandColor }}>
             Prepared for {quote.customer_name}
           </p>
@@ -256,14 +275,16 @@ export default async function CustomerProposalPage({
             </div>
             <div className="mb-2 h-px flex-1 bg-white/10" />
             <div className="mb-2 text-right">
-              <p className="text-[10px] font-semibold text-white/35 uppercase tracking-[0.2em] mb-1">Deposit Due</p>
+              <p className="text-[10px] font-semibold text-white/35 uppercase tracking-[0.2em] mb-1">Deposit to Start</p>
               <p className="text-[24px] font-bold" style={{ color: brandColor }}>{fmtShort(deposit)}</p>
             </div>
           </div>
         </div>
       </div>
 
-      {/* ── Sticky CTA — #4 upgraded wording + #6 microcopy ── */}
+      {/* ══════════════════════════════════════════════
+          STICKY CTA — Always visible, trust microcopy
+          ══════════════════════════════════════════════ */}
       <div className="sticky top-0 z-20 px-4 py-3 bg-[#f7f7f8]/80 backdrop-blur-xl border-b border-black/5" data-no-print>
         <div className="mx-auto max-w-lg">
           {isExpired ? (
@@ -276,7 +297,6 @@ export default async function CustomerProposalPage({
           ) : (
             <>
               <AcceptQuoteButton quoteId={quote.id} depositAmount={deposit} currentStatus={quote.status} stripeEnabled={stripeEnabled} brandColor={brandColor} />
-              {/* #6 friction-reducing microcopy */}
               <div className="mt-2 flex items-center justify-center gap-4 text-[11px] text-gray-400">
                 <span className="flex items-center gap-1">
                   <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
@@ -296,52 +316,26 @@ export default async function CustomerProposalPage({
                   </svg>
                   Receipt emailed
                 </span>
-                <span className="flex items-center gap-1">
-                  <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
-                  </svg>
-                  We&apos;ll schedule
-                </span>
+                {daysRemaining !== null && daysRemaining <= 7 && (
+                  <span className="flex items-center gap-1 text-amber-500 font-medium">
+                    <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    {daysRemaining}d left
+                  </span>
+                )}
               </div>
             </>
           )}
         </div>
       </div>
 
-      {/* ── Urgency Banner — stronger ──────────────── */}
-      {expiresAt && !isExpired && (
-        <div className="mx-auto max-w-lg px-4 pt-4">
-          <div className="rounded-2xl bg-amber-50 border border-amber-200/80 px-5 py-3.5">
-            <div className="flex items-center gap-3">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-amber-100">
-                <svg className="h-4 w-4 text-amber-600" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <div>
-                <p className="text-[14px] font-semibold text-amber-900">
-                  {daysRemaining !== null && daysRemaining <= 7
-                    ? `${daysRemaining} day${daysRemaining !== 1 ? 's' : ''} remaining`
-                    : `Valid until ${expiresAt.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}`
-                  }
-                </p>
-                <p className="text-[12px] text-amber-700/70 mt-0.5">
-                  {criticalCount > 0
-                    ? 'Delaying repairs may lead to additional damage and higher costs.'
-                    : 'Pricing and availability are reserved until the expiration date.'
-                  }
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
       <main className="mx-auto max-w-lg px-4 pt-5 pb-12 space-y-4">
 
-        {/* ── Contractor Identity Card ──────── */}
+        {/* ══════════════════════════════════════════════
+            1. CONTRACTOR IDENTITY — Who you're working with
+            ══════════════════════════════════════════════ */}
         <div className="rounded-2xl bg-white shadow-sm ring-1 ring-black/[0.04] overflow-hidden animate-fade-up" style={{ animationDelay: '0.05s' }}>
-          {/* Brand accent bar */}
           <div className="h-1" style={{ backgroundColor: brandColor }} />
           <div className="px-5 py-5">
             <div className="flex items-start gap-4">
@@ -375,6 +369,14 @@ export default async function CustomerProposalPage({
                     </svg>
                     Fully Insured
                   </span>
+                  {reviews.length > 0 && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 border border-amber-200/60 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
+                      <svg className="h-2.5 w-2.5 text-amber-500" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                      </svg>
+                      {avgRating.toFixed(1)} Rating
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
@@ -400,9 +402,124 @@ export default async function CustomerProposalPage({
           </div>
         </div>
 
-        {/* ── Why This Work Is Needed ────────────── */}
+        {/* ══════════════════════════════════════════════
+            2. SOCIAL PROOF — Build trust before showing price
+               (Moved UP from below pricing)
+            ══════════════════════════════════════════════ */}
+        {reviews.length > 0 && (
+          <div className="rounded-2xl bg-white px-5 py-5 shadow-sm ring-1 ring-black/[0.04] animate-fade-up" style={{ animationDelay: '0.08s' }}>
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-widest text-gray-400">What Customers Say</p>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <div className="flex items-center">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <svg
+                      key={star}
+                      className={`h-3.5 w-3.5 ${star <= Math.round(avgRating) ? 'text-amber-400' : 'text-gray-200'}`}
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                    </svg>
+                  ))}
+                </div>
+                <span className="text-[11px] font-semibold text-gray-500">{avgRating.toFixed(1)}</span>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              {reviews.slice(0, 3).map((review, idx) => (
+                <div key={idx} className="rounded-xl bg-gray-50 px-4 py-3.5">
+                  <div className="flex items-center gap-2.5 mb-2">
+                    {review.reviewer_photo_url ? (
+                      <img
+                        src={review.reviewer_photo_url}
+                        alt=""
+                        className="h-7 w-7 rounded-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gray-200 text-[11px] font-bold text-gray-500">
+                        {review.customer_name.charAt(0).toUpperCase()}
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[13px] font-semibold text-gray-900 truncate">{review.customer_name}</span>
+                        {review.source === 'google' && (
+                          <svg className="h-3.5 w-3.5 shrink-0" viewBox="0 0 24 24">
+                            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
+                            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                          </svg>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <svg
+                            key={star}
+                            className={`h-3 w-3 ${star <= review.rating ? 'text-amber-400' : 'text-gray-200'}`}
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                          </svg>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                  {review.comment && (
+                    <p className="text-[13px] text-gray-600 leading-relaxed line-clamp-3">&ldquo;{review.comment}&rdquo;</p>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {/* Show remaining count if more than 3 */}
+            {reviews.length > 3 && (
+              <p className="text-center text-[12px] text-gray-400 mt-3">
+                + {reviews.length - 3} more happy customer{reviews.length - 3 !== 1 ? 's' : ''}
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* ══════════════════════════════════════════════
+            3. URGENCY BANNER — Time pressure near top
+            ══════════════════════════════════════════════ */}
+        {expiresAt && !isExpired && (
+          <div className="rounded-2xl bg-amber-50 border border-amber-200/80 px-5 py-3.5 animate-fade-up" style={{ animationDelay: '0.1s' }}>
+            <div className="flex items-center gap-3">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-amber-100">
+                <svg className="h-4 w-4 text-amber-600" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div>
+                <p className="text-[14px] font-semibold text-amber-900">
+                  {daysRemaining !== null && daysRemaining <= 7
+                    ? `${daysRemaining} day${daysRemaining !== 1 ? 's' : ''} remaining`
+                    : `Valid until ${expiresAt.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}`
+                  }
+                </p>
+                <p className="text-[12px] text-amber-700/70 mt-0.5">
+                  {criticalCount > 0
+                    ? 'Delaying repairs may lead to additional damage and higher costs.'
+                    : 'Pricing and availability are reserved until the expiration date.'
+                  }
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ══════════════════════════════════════════════
+            4. WHY THIS WORK IS NEEDED — Professional Assessment
+            ══════════════════════════════════════════════ */}
         {inspectionFindings.length > 0 && (criticalCount > 0 || moderateCount > 0) && (
-          <div className="rounded-2xl bg-gradient-to-br from-red-50 to-amber-50/50 border border-red-100/80 px-5 py-5 shadow-sm animate-fade-up" style={{ animationDelay: '0.1s' }}>
+          <div className="rounded-2xl bg-gradient-to-br from-red-50 to-amber-50/50 border border-red-100/80 px-5 py-5 shadow-sm animate-fade-up" style={{ animationDelay: '0.12s' }}>
             <div className="flex items-start gap-3">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-100">
                 <svg className="h-5 w-5 text-red-600" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
@@ -427,7 +544,9 @@ export default async function CustomerProposalPage({
           </div>
         )}
 
-        {/* ── Property Inspection Report — #2 upgraded moat ── */}
+        {/* ══════════════════════════════════════════════
+            5. INSPECTION REPORT — Photo evidence + findings
+            ══════════════════════════════════════════════ */}
         {inspectionFindings.length > 0 ? (
           <div>
             <div className="flex items-center justify-between mb-2 px-1">
@@ -448,7 +567,6 @@ export default async function CustomerProposalPage({
                 if (findings.length === 0) return null;
                 return (
                   <div key={photoIdx} className="rounded-2xl bg-white shadow-sm ring-1 ring-black/[0.04] overflow-hidden">
-                    {/* Photo with improved overlay — #2 */}
                     <div className="relative">
                       <img
                         src={photoUrl}
@@ -456,14 +574,12 @@ export default async function CustomerProposalPage({
                         loading="lazy"
                         className="w-full h-60 object-cover"
                       />
-                      {/* Subtle bottom fade for badge legibility */}
                       <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/50 to-transparent" />
                       <div className="absolute top-3 left-3">
                         <span className="rounded-full bg-black/50 backdrop-blur-md px-2.5 py-1 text-[10px] font-medium text-white/90 tabular-nums">
                           {photoIdx + 1} / {photos.length}
                         </span>
                       </div>
-                      {/* Clean annotation markers */}
                       <div className="absolute bottom-3 left-3 flex gap-1">
                         {findings.length === 1 ? (
                           <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-semibold text-white shadow-sm backdrop-blur-sm ${
@@ -491,7 +607,6 @@ export default async function CustomerProposalPage({
                         </div>
                       )}
                     </div>
-                    {/* Findings list — structured breakdown */}
                     <div className="px-5 py-4 space-y-2.5">
                       {findings.map((f, fIdx) => {
                         const severityStyles = {
@@ -539,7 +654,6 @@ export default async function CustomerProposalPage({
                   </div>
                 );
               }) : (
-                /* No photos available — render findings as text-only cards */
                 inspectionFindings.map((f, fIdx) => {
                   const severityStyles = {
                     critical: { bg: 'bg-red-50/60', border: 'border-red-100', text: 'text-red-900', dot: 'bg-red-500', label: 'Critical', labelBg: 'bg-red-100' },
@@ -564,7 +678,6 @@ export default async function CustomerProposalPage({
                 })
               )}
 
-              {/* #3 Fear-of-inaction line — after inspection findings */}
               {(criticalCount > 0 || moderateCount > 0) && (
                 <div className="flex items-center gap-2.5 px-2 py-1">
                   <div className="h-px flex-1 bg-gray-200" />
@@ -575,7 +688,7 @@ export default async function CustomerProposalPage({
                 </div>
               )}
 
-              {/* Orphaned findings (photo_index beyond array bounds) */}
+              {/* Orphaned findings */}
               {photos.length > 0 && inspectionFindings.filter(f => f.photo_index >= photos.length).map((f, fIdx) => {
                 const severityStyles = {
                   critical: { bg: 'bg-red-50/60', border: 'border-red-100', text: 'text-red-900', dot: 'bg-red-500', label: 'Critical', labelBg: 'bg-red-100' },
@@ -626,7 +739,9 @@ export default async function CustomerProposalPage({
           </div>
         ) : null}
 
-        {/* ── Scope ────────────────────────────── */}
+        {/* ══════════════════════════════════════════════
+            6. SCOPE OF WORK
+            ══════════════════════════════════════════════ */}
         {(quote.scope_of_work || quote.ai_description) && (
           <div className="rounded-2xl bg-white px-5 py-5 shadow-sm ring-1 ring-black/[0.04] animate-fade-up" style={{ animationDelay: '0.15s' }}>
             <p className="mb-2.5 text-[11px] font-semibold uppercase tracking-widest text-gray-400">Scope of Work</p>
@@ -636,7 +751,9 @@ export default async function CustomerProposalPage({
           </div>
         )}
 
-        {/* ── Job Address ────────────────────────── */}
+        {/* ══════════════════════════════════════════════
+            7. JOB LOCATION
+            ══════════════════════════════════════════════ */}
         {quote.job_address && (
           <div className="rounded-2xl bg-white px-5 py-4 shadow-sm ring-1 ring-black/[0.04]">
             <p className="mb-2 text-[11px] font-semibold uppercase tracking-widest text-gray-400">Job Location</p>
@@ -656,8 +773,131 @@ export default async function CustomerProposalPage({
           </div>
         )}
 
-        {/* ── Our Guarantee ──────── */}
-        <div className="rounded-2xl bg-gradient-to-b from-white to-gray-50/80 px-5 py-6 shadow-sm ring-1 ring-black/[0.04] animate-fade-up" style={{ animationDelay: '0.2s' }}>
+        {/* ══════════════════════════════════════════════
+            8. YOUR INVESTMENT — Line items
+            ══════════════════════════════════════════════ */}
+        <div className="animate-fade-up" style={{ animationDelay: '0.2s' }}>
+          <div className="flex items-center justify-between mb-3 px-1">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-widest text-gray-400">Your Investment</p>
+              <p className="text-[12px] text-gray-400 mt-0.5">
+                Itemized pricing — no markups, no surprises
+              </p>
+            </div>
+            <span className="text-[11px] font-medium text-gray-400">{lineItems.length} item{lineItems.length !== 1 ? 's' : ''}</span>
+          </div>
+          <div className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/[0.04]">
+            {lineItems.map((item: any, i: number) => (
+              <div
+                key={i}
+                className={`flex items-start justify-between px-5 py-4 ${
+                  i < lineItems.length - 1 ? 'border-b border-gray-100' : ''
+                }`}
+              >
+                <div className="min-w-0 flex-1 pr-4">
+                  <p className="text-[15px] font-medium text-gray-900 leading-snug">{item.description}</p>
+                  <p className="mt-1 text-[12px] text-gray-400">
+                    {item.quantity} {item.unit} × {fmt(Number(item.unit_price))}
+                  </p>
+                </div>
+                <p className="shrink-0 text-[15px] font-semibold text-gray-900 tabular-nums">
+                  {fmt(Number(item.total))}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* ══════════════════════════════════════════════
+            9. TOTALS — With enhanced deposit reassurance
+            ══════════════════════════════════════════════ */}
+        <div className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/[0.04]">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+            <span className="text-[14px] text-gray-500">Subtotal</span>
+            <span className="text-[14px] font-semibold text-gray-900 tabular-nums">{fmt(subtotal)}</span>
+          </div>
+          {hasDiscount && (
+            <div className="flex items-center justify-between px-5 py-3 border-b border-gray-100">
+              <span className="text-[14px] text-gray-500">
+                Discount{quote.discount_percent != null && quote.discount_percent > 0 ? ` (${quote.discount_percent}%)` : ''}
+              </span>
+              <span className="text-[14px] font-medium text-red-500 tabular-nums">-{fmt(discountDisplay)}</span>
+            </div>
+          )}
+          {hasTax && (
+            <div className="flex items-center justify-between px-5 py-3 border-b border-gray-100">
+              <span className="text-[14px] text-gray-500">Tax ({quote.tax_rate}%)</span>
+              <span className="text-[14px] font-medium text-gray-700 tabular-nums">{fmt(taxAmount)}</span>
+            </div>
+          )}
+          <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 bg-gray-50/50">
+            <span className="text-[15px] font-bold text-gray-900">Project Total</span>
+            <span className="text-[17px] font-extrabold text-gray-900 tabular-nums">{fmt(quoteTotal)}</span>
+          </div>
+          {/* Deposit with enhanced reassurance */}
+          {deposit > 0 && (
+            <>
+              <div className="px-5 py-5 border-b border-gray-100" style={{ backgroundColor: brandColor + '0a' }}>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-[15px] font-bold" style={{ color: brandColor }}>Deposit to Get Started ({quote.deposit_percent ?? 0}%)</p>
+                    <p className="text-[12px] mt-0.5 opacity-60" style={{ color: brandColor }}>Reserves your spot &amp; locks in this price</p>
+                  </div>
+                  <span className="text-[26px] font-extrabold tabular-nums" style={{ color: brandColor }}>{fmt(deposit)}</span>
+                </div>
+                {/* Risk-free reassurance */}
+                <div className="mt-4 rounded-xl bg-white/80 border border-black/[0.04] px-4 py-3 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <svg className="h-4 w-4 shrink-0 text-green-600" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+                    </svg>
+                    <p className="text-[12px] text-gray-600">
+                      <span className="font-semibold text-gray-800">Locks in today&apos;s pricing</span> — protected from any future increases
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <svg className="h-4 w-4 shrink-0 text-green-600" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
+                    </svg>
+                    <p className="text-[12px] text-gray-600">
+                      <span className="font-semibold text-gray-800">Secures your project date</span> — we reserve your slot on our calendar
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <svg className="h-4 w-4 shrink-0 text-green-600" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z" />
+                    </svg>
+                    <p className="text-[12px] text-gray-600">
+                      <span className="font-semibold text-gray-800">Balance of {fmt(balance)} due on completion</span> — only when you&apos;re satisfied
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center justify-between px-5 py-3.5">
+                <span className="text-[13px] text-gray-400">Balance due on completion</span>
+                <span className="text-[14px] font-medium text-gray-500 tabular-nums">{fmt(balance)}</span>
+              </div>
+            </>
+          )}
+          {expiresAt && (
+            <div className="flex items-center justify-center gap-1.5 border-t border-gray-100 px-5 py-3">
+              <svg className="h-3.5 w-3.5 text-gray-300" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span className={`text-[12px] ${isExpired ? 'text-red-400' : 'text-gray-400'}`}>
+                {isExpired
+                  ? `Expired ${expiresAt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`
+                  : `Valid until ${expiresAt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`
+                }
+              </span>
+            </div>
+          )}
+        </div>
+
+        {/* ══════════════════════════════════════════════
+            10. OUR GUARANTEE — Trust builder
+            ══════════════════════════════════════════════ */}
+        <div className="rounded-2xl bg-gradient-to-b from-white to-gray-50/80 px-5 py-6 shadow-sm ring-1 ring-black/[0.04] animate-fade-up" style={{ animationDelay: '0.22s' }}>
           <p className="mb-1 text-[11px] font-semibold uppercase tracking-widest text-gray-400">Our Guarantee</p>
           <p className="mb-5 text-[13px] text-gray-500">The {businessName} standard of service</p>
           <div className="space-y-4">
@@ -711,174 +951,9 @@ export default async function CustomerProposalPage({
           </div>
         </div>
 
-        {/* ── Line Items — #1 premium framing ────── */}
-        <div className="animate-fade-up" style={{ animationDelay: '0.2s' }}>
-          <div className="flex items-center justify-between mb-3 px-1">
-            <div>
-              <p className="text-[11px] font-semibold uppercase tracking-widest text-gray-400">Your Investment</p>
-              <p className="text-[12px] text-gray-400 mt-0.5">
-                Itemized pricing — no markups, no surprises
-              </p>
-            </div>
-            <span className="text-[11px] font-medium text-gray-400">{lineItems.length} item{lineItems.length !== 1 ? 's' : ''}</span>
-          </div>
-          <div className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/[0.04]">
-            {lineItems.map((item: any, i: number) => (
-              <div
-                key={i}
-                className={`flex items-start justify-between px-5 py-4 ${
-                  i < lineItems.length - 1 ? 'border-b border-gray-100' : ''
-                }`}
-              >
-                <div className="min-w-0 flex-1 pr-4">
-                  <p className="text-[15px] font-medium text-gray-900 leading-snug">{item.description}</p>
-                  <p className="mt-1 text-[12px] text-gray-400">
-                    {item.quantity} {item.unit} × {fmt(Number(item.unit_price))}
-                  </p>
-                </div>
-                <p className="shrink-0 text-[15px] font-semibold text-gray-900 tabular-nums">
-                  {fmt(Number(item.total))}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* ── Totals ───────────────────────────── */}
-        <div className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/[0.04]">
-          <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-            <span className="text-[14px] text-gray-500">Subtotal</span>
-            <span className="text-[14px] font-semibold text-gray-900 tabular-nums">{fmt(subtotal)}</span>
-          </div>
-          {hasDiscount && (
-            <div className="flex items-center justify-between px-5 py-3 border-b border-gray-100">
-              <span className="text-[14px] text-gray-500">
-                Discount{quote.discount_percent != null && quote.discount_percent > 0 ? ` (${quote.discount_percent}%)` : ''}
-              </span>
-              <span className="text-[14px] font-medium text-red-500 tabular-nums">-{fmt(discountDisplay)}</span>
-            </div>
-          )}
-          {hasTax && (
-            <div className="flex items-center justify-between px-5 py-3 border-b border-gray-100">
-              <span className="text-[14px] text-gray-500">Tax ({quote.tax_rate}%)</span>
-              <span className="text-[14px] font-medium text-gray-700 tabular-nums">{fmt(taxAmount)}</span>
-            </div>
-          )}
-          <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 bg-gray-50/50">
-            <span className="text-[15px] font-bold text-gray-900">Project Total</span>
-            <span className="text-[17px] font-extrabold text-gray-900 tabular-nums">{fmt(quoteTotal)}</span>
-          </div>
-          {/* Deposit with justification — hidden when 0% */}
-          {deposit > 0 && (
-            <>
-              <div className="px-5 py-5 border-b border-gray-100" style={{ backgroundColor: brandColor + '0a' }}>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-[15px] font-bold" style={{ color: brandColor }}>Deposit to Book ({quote.deposit_percent ?? 0}%)</p>
-                    <p className="text-[12px] mt-0.5 opacity-60" style={{ color: brandColor }}>Reserves your project date &amp; materials</p>
-                  </div>
-                  <span className="text-[26px] font-extrabold tabular-nums" style={{ color: brandColor }}>{fmt(deposit)}</span>
-                </div>
-                <p className="text-[11px] text-gray-400 mt-3 leading-relaxed">
-                  Your deposit locks in today&apos;s pricing and secures your spot on our schedule. The remaining balance of {fmt(balance)} is due only when the work is complete and you&apos;re satisfied.
-                </p>
-              </div>
-              <div className="flex items-center justify-between px-5 py-3.5">
-                <span className="text-[13px] text-gray-400">Balance due on completion</span>
-                <span className="text-[14px] font-medium text-gray-500 tabular-nums">{fmt(balance)}</span>
-              </div>
-            </>
-          )}
-          {expiresAt && (
-            <div className="flex items-center justify-center gap-1.5 border-t border-gray-100 px-5 py-3">
-              <svg className="h-3.5 w-3.5 text-gray-300" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <span className={`text-[12px] ${isExpired ? 'text-red-400' : 'text-gray-400'}`}>
-                {isExpired
-                  ? `Expired ${expiresAt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`
-                  : `Valid until ${expiresAt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`
-                }
-              </span>
-            </div>
-          )}
-        </div>
-
-        {/* ── Customer Reviews ──────────────────── */}
-        {reviews.length > 0 && (
-          <div className="rounded-2xl bg-white px-5 py-6 shadow-sm ring-1 ring-black/[0.04] animate-fade-up" style={{ animationDelay: '0.22s' }}>
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <p className="text-[11px] font-semibold uppercase tracking-widest text-gray-400">Customer Reviews</p>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <div className="flex items-center">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <svg
-                      key={star}
-                      className={`h-3.5 w-3.5 ${star <= Math.round(avgRating) ? 'text-amber-400' : 'text-gray-200'}`}
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
-                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                    </svg>
-                  ))}
-                </div>
-                <span className="text-[11px] font-semibold text-gray-500">{avgRating.toFixed(1)}</span>
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              {reviews.map((review, idx) => (
-                <div key={idx} className="rounded-xl bg-gray-50 px-4 py-3.5">
-                  <div className="flex items-center gap-2.5 mb-2">
-                    {review.reviewer_photo_url ? (
-                      <img
-                        src={review.reviewer_photo_url}
-                        alt=""
-                        className="h-7 w-7 rounded-full object-cover"
-                      />
-                    ) : (
-                      <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gray-200 text-[11px] font-bold text-gray-500">
-                        {review.customer_name.charAt(0).toUpperCase()}
-                      </div>
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="text-[13px] font-semibold text-gray-900 truncate">{review.customer_name}</span>
-                        {review.source === 'google' && (
-                          <svg className="h-3.5 w-3.5 shrink-0" viewBox="0 0 24 24">
-                            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
-                            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-                            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-                          </svg>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-1">
-                        {[1, 2, 3, 4, 5].map((star) => (
-                          <svg
-                            key={star}
-                            className={`h-3 w-3 ${star <= review.rating ? 'text-amber-400' : 'text-gray-200'}`}
-                            fill="currentColor"
-                            viewBox="0 0 20 20"
-                          >
-                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                          </svg>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                  {review.comment && (
-                    <p className="text-[13px] text-gray-600 leading-relaxed line-clamp-3">&ldquo;{review.comment}&rdquo;</p>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* ── What Happens Next ──────────────────── */}
+        {/* ══════════════════════════════════════════════
+            11. WHAT HAPPENS NEXT — 3-step process
+            ══════════════════════════════════════════════ */}
         <div className="rounded-2xl bg-white px-5 py-6 shadow-sm ring-1 ring-black/[0.04] animate-fade-up" style={{ animationDelay: '0.25s' }}>
           <p className="mb-5 text-[11px] font-semibold uppercase tracking-widest text-gray-400">What Happens Next</p>
           <div className="space-y-5">
@@ -910,7 +985,9 @@ export default async function CustomerProposalPage({
           </div>
         </div>
 
-        {/* ── Terms (Collapsible) ────────────────── */}
+        {/* ══════════════════════════════════════════════
+            12. TERMS (Collapsible)
+            ══════════════════════════════════════════════ */}
         {quote.notes && (
           <div className="rounded-2xl bg-white shadow-sm ring-1 ring-black/[0.04] overflow-hidden">
             <details>
@@ -927,7 +1004,9 @@ export default async function CustomerProposalPage({
           </div>
         )}
 
-        {/* ── Bottom CTA — #1 premium, #4 upgraded wording ── */}
+        {/* ══════════════════════════════════════════════
+            13. BOTTOM CTA — Final close with urgency
+            ══════════════════════════════════════════════ */}
         <div className="overflow-hidden rounded-2xl bg-[#111113] shadow-xl ring-1 ring-white/[0.06]" data-no-print>
           {heroPhoto && (
             <div className="relative h-32 overflow-hidden">
@@ -952,16 +1031,15 @@ export default async function CustomerProposalPage({
               <>
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-[18px] font-bold text-white tracking-tight">Lock in your project</p>
+                    <p className="text-[18px] font-bold text-white tracking-tight">Ready to get started?</p>
                     <p className="text-[13px] text-white/40 mt-0.5">Secure your date, pricing, and peace of mind.</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-[28px] font-extrabold text-white tabular-nums tracking-tight">{fmt(deposit)}</p>
-                    <p className="text-[11px] text-white/25 uppercase tracking-widest">deposit</p>
+                    <p className="text-[28px] font-extrabold text-white tabular-nums tracking-tight">{fmt(deposit > 0 ? deposit : quoteTotal)}</p>
+                    <p className="text-[11px] text-white/25 uppercase tracking-widest">{deposit > 0 ? 'deposit' : 'total'}</p>
                   </div>
                 </div>
                 <AcceptQuoteButton quoteId={quote.id} depositAmount={deposit} currentStatus={quote.status} stripeEnabled={stripeEnabled} brandColor={brandColor} />
-                {/* #6 friction-reducing microcopy */}
                 <div className="flex items-center justify-center gap-4 pt-1">
                   <span className="flex items-center gap-1 text-[11px] text-white/25">
                     <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
@@ -972,7 +1050,7 @@ export default async function CustomerProposalPage({
                   <span className="flex items-center gap-1 text-[11px] text-white/25">
                     <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
-                  </svg>
+                    </svg>
                     No hidden fees
                   </span>
                   <span className="flex items-center gap-1 text-[11px] text-white/25">
@@ -982,15 +1060,19 @@ export default async function CustomerProposalPage({
                     Receipt emailed
                   </span>
                 </div>
-                <p className="text-center text-[11px] text-white/20">
-                  Balance of {fmt(balance)} due when the job is complete
-                </p>
+                {deposit > 0 && (
+                  <p className="text-center text-[11px] text-white/20">
+                    Balance of {fmt(balance)} due when the job is complete
+                  </p>
+                )}
               </>
             )}
           </div>
         </div>
 
-        {/* ── Request Changes ──────────────────── */}
+        {/* ══════════════════════════════════════════════
+            14. REQUEST CHANGES
+            ══════════════════════════════════════════════ */}
         {!isExpired && profile?.email && (
           <div className="rounded-2xl bg-white px-5 py-4 shadow-sm ring-1 ring-black/[0.04] text-center" data-no-print>
             <p className="text-[13px] text-gray-400 mb-2.5">Have questions or need adjustments?</p>
@@ -1006,7 +1088,9 @@ export default async function CustomerProposalPage({
           </div>
         )}
 
-        {/* ── #7 Final Reassurance Block ────────── */}
+        {/* ══════════════════════════════════════════════
+            15. FINAL REASSURANCE — Zero pressure close
+            ══════════════════════════════════════════════ */}
         {!isExpired && (
           <div className="rounded-2xl bg-gray-50 border border-gray-200/60 px-5 py-5 text-center" data-no-print>
             <p className="text-[15px] font-semibold text-gray-800">We&apos;re here when you&apos;re ready</p>
@@ -1041,7 +1125,9 @@ export default async function CustomerProposalPage({
           </div>
         )}
 
-        {/* ── Download Invoice (paid quotes) ──── */}
+        {/* ══════════════════════════════════════════════
+            16. DOWNLOAD INVOICE (paid quotes)
+            ══════════════════════════════════════════════ */}
         {quote.status === 'deposit_paid' && (
           <div className="flex justify-center" data-no-print>
             <a
@@ -1058,7 +1144,9 @@ export default async function CustomerProposalPage({
           </div>
         )}
 
-        {/* ── Footer ───────────────────────────── */}
+        {/* ══════════════════════════════════════════════
+            FOOTER
+            ══════════════════════════════════════════════ */}
         <div className="space-y-2 px-1 pt-2" data-no-print>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">

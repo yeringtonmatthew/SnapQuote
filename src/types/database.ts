@@ -4,6 +4,7 @@ export type QuoteStatus = 'draft' | 'sent' | 'approved' | 'deposit_paid' | 'canc
 
 export type PipelineStage =
   | 'lead'
+  | 'follow_up'
   | 'quote_created'
   | 'quote_sent'
   | 'deposit_collected'

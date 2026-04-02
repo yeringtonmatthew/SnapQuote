@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 
 const VALID_STAGES = [
   'lead',
+  'follow_up',
   'quote_created',
   'quote_sent',
   'deposit_collected',
