@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import FormField from '@/components/ui/FormField';
+import SocialAuthButtons from '@/components/SocialAuthButtons';
 
 interface FieldErrors {
   fullName?: string;
@@ -113,8 +114,23 @@ export default function SignupPage() {
           </p>
         </div>
 
+        {/* Social Auth */}
+        <div className="mt-8">
+          <SocialAuthButtons redirectTo="/onboarding" />
+        </div>
+
+        {/* Divider */}
+        <div className="relative mt-6">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-gray-200" />
+          </div>
+          <div className="relative flex justify-center text-sm">
+            <span className="bg-white px-4 text-gray-400">or</span>
+          </div>
+        </div>
+
         {/* Form */}
-        <form onSubmit={handleSignup} className="mt-8 space-y-5" noValidate>
+        <form onSubmit={handleSignup} className="mt-6 space-y-5" noValidate>
           {error && (
             <div role="alert" className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600">
               {error}
