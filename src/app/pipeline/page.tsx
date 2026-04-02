@@ -10,7 +10,6 @@ import PageTransition from '@/components/PageTransition';
 
 const COLUMN_DEFS: { stage: string; label: string; color: string }[] = [
   { stage: 'lead', label: 'Lead', color: 'gray-400' },
-  { stage: 'follow_up', label: 'Follow Up', color: 'orange-500' },
   { stage: 'quote_created', label: 'Quote Created', color: 'slate-500' },
   { stage: 'quote_sent', label: 'Quote Sent', color: 'blue-500' },
   { stage: 'deposit_collected', label: 'Deposit Collected', color: 'green-500' },
