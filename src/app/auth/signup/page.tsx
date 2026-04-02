@@ -108,7 +108,7 @@ export default function SignupPage() {
           <h1 className="mt-4 text-2xl font-bold text-gray-900">
             Create your account
           </h1>
-          <p className="mt-1 text-sm text-gray-500">
+          <p className="mt-1 text-[15px] text-gray-500">
             Start sending AI-powered quotes in minutes
           </p>
         </div>

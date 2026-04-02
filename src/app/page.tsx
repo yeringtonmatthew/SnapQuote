@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { SnapQuoteLogo } from '@/components/SnapQuoteLogo';
 
 export default function Home() {
   const jsonLd = {
@@ -23,12 +24,7 @@ export default function Home() {
       <nav className="bg-white border-b border-gray-100">
         <div className="mx-auto max-w-4xl flex items-center justify-between px-6 py-4">
           <Link href="/" className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-600">
-              <svg className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
-              </svg>
-            </div>
-            <span className="text-[17px] font-bold text-gray-900 tracking-tight">SnapQuote</span>
+            <SnapQuoteLogo size="sm" />
           </Link>
           <div className="flex items-center gap-3">
             <Link
@@ -187,7 +183,7 @@ export default function Home() {
             <h2 className="text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">
               How It Works
             </h2>
-            <p className="mt-3 text-gray-500">
+            <p className="mt-3 text-[15px] font-normal text-gray-500">
               Three steps. No learning curve. Start closing deals today.
             </p>
           </div>
@@ -233,7 +229,7 @@ export default function Home() {
                   </div>
                 </div>
                 <h3 className="text-lg font-bold text-gray-900">{step.title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-gray-500">{step.desc}</p>
+                <p className="mt-2 text-[15px] font-normal leading-relaxed text-gray-500">{step.desc}</p>
               </div>
             ))}
           </div>
@@ -247,7 +243,7 @@ export default function Home() {
             <h2 className="text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">
               Everything You Need to Win More Jobs
             </h2>
-            <p className="mt-3 text-gray-500">
+            <p className="mt-3 text-[15px] font-normal text-gray-500">
               Built for contractors who want to look professional and get paid faster.
             </p>
           </div>
@@ -307,7 +303,7 @@ export default function Home() {
                 </div>
                 <div>
                   <h3 className="text-sm font-semibold text-gray-900">{feature.title}</h3>
-                  <p className="mt-0.5 text-sm leading-relaxed text-gray-500">{feature.desc}</p>
+                  <p className="mt-0.5 text-[15px] font-normal leading-relaxed text-gray-500">{feature.desc}</p>
                 </div>
               </div>
             ))}
@@ -377,7 +373,7 @@ export default function Home() {
           <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
             Ready to close more deals?
           </h2>
-          <p className="mt-4 text-lg text-gray-500">
+          <p className="mt-4 text-lg font-normal text-gray-500">
             Join 500+ contractors using AI to win more jobs.
           </p>
           <div className="mt-8">
@@ -398,15 +394,7 @@ export default function Home() {
       <footer className="border-t border-gray-200 bg-[#f2f2f7] py-8">
         <div className="mx-auto max-w-4xl px-6">
           <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-between">
-            <div className="flex items-center gap-2">
-              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-brand-600">
-                <svg className="h-3.5 w-3.5 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" aria-hidden="true">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0z" />
-                </svg>
-              </div>
-              <span className="text-sm font-bold text-gray-900">SnapQuote</span>
-            </div>
+            <SnapQuoteLogo size="xs" />
             <nav aria-label="Footer" className="flex items-center gap-6">
               <Link href="/privacy" className="text-sm text-gray-500 hover:text-gray-700">
                 Privacy

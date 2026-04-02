@@ -79,6 +79,7 @@ html {
     @apply antialiased dark:bg-gray-950 dark:text-gray-100 bg-gray-50;
     font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text',
       'Helvetica Neue', Arial, sans-serif;
+    font-weight: 400;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }

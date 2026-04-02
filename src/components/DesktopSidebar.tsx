@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { SnapQuoteLogo } from '@/components/SnapQuoteLogo';
 
 interface DesktopSidebarProps {
   active: 'home' | 'pipeline' | 'schedule' | 'clients' | 'profile';
@@ -64,15 +65,8 @@ export default function DesktopSidebar({ active }: DesktopSidebarProps) {
   return (
     <aside className="hidden lg:flex lg:flex-col lg:fixed lg:inset-y-0 lg:left-0 lg:w-[220px] lg:border-r border-gray-200/60 dark:border-gray-800/60 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl z-30">
       {/* Logo */}
-      <div className="flex items-center gap-2 px-5 pt-6 pb-6">
-        <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-brand-600">
-          <svg className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
-          </svg>
-        </div>
-        <span className="text-[16px] font-bold text-gray-900 dark:text-gray-100 tracking-tight">
-          SnapQuote
-        </span>
+      <div className="px-5 pt-6 pb-6">
+        <SnapQuoteLogo size="sm" />
       </div>
 
       {/* Quick add */}
