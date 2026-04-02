@@ -93,7 +93,7 @@ export default async function CustomerProposalPage({
 
   const { data: profile } = await serviceClient
     .from('users')
-    .select('business_name, full_name, email, phone, trade_type, logo_url, stripe_account_id, brand_color, show_reviews_on_quotes')
+    .select('business_name, full_name, email, phone, trade_type, logo_url, stripe_account_id, brand_color, show_reviews_on_quotes, google_rating, google_review_count')
     .eq('id', quote.contractor_id)
     .single();
 
@@ -111,9 +111,15 @@ export default async function CustomerProposalPage({
       .limit(5);
     reviews = reviewData || [];
   }
-  const avgRating = reviews.length > 0
-    ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
-    : 0;
+  // Prefer Google's overall rating and total count when available
+  const googleRating = profile?.google_rating ? Number(profile.google_rating) : null;
+  const googleReviewCount = profile?.google_review_count ? Number(profile.google_review_count) : null;
+  const avgRating = googleRating
+    ? googleRating
+    : reviews.length > 0
+      ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
+      : 0;
+  const totalReviewCount = googleReviewCount || reviews.length;
 
   const brandColor = profile?.brand_color || '#4f46e5';
   const subtotal = Number(quote.subtotal);
@@ -239,7 +245,7 @@ export default async function CustomerProposalPage({
         {/* Hero content */}
         <div className="absolute bottom-0 left-0 right-0 px-6 pb-8">
           {/* Social proof badge in hero */}
-          {reviews.length > 0 && (
+          {(totalReviewCount > 0) && (
             <div className="inline-flex items-center gap-1.5 rounded-full bg-white/15 backdrop-blur-md px-3 py-1.5 mb-4">
               <div className="flex items-center">
                 {[1, 2, 3, 4, 5].map((star) => (
@@ -253,7 +259,7 @@ export default async function CustomerProposalPage({
                   </svg>
                 ))}
               </div>
-              <span className="text-[11px] font-semibold text-white/80">{avgRating.toFixed(1)} from {reviews.length} review{reviews.length !== 1 ? 's' : ''}</span>
+              <span className="text-[11px] font-semibold text-white/80">{avgRating.toFixed(1)} from {totalReviewCount} review{totalReviewCount !== 1 ? 's' : ''}</span>
             </div>
           )}
 
@@ -369,7 +375,7 @@ export default async function CustomerProposalPage({
                     </svg>
                     Fully Insured
                   </span>
-                  {reviews.length > 0 && (
+                  {totalReviewCount > 0 && (
                     <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 border border-amber-200/60 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
                       <svg className="h-2.5 w-2.5 text-amber-500" fill="currentColor" viewBox="0 0 20 20">
                         <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
@@ -406,7 +412,7 @@ export default async function CustomerProposalPage({
             2. SOCIAL PROOF — Build trust before showing price
                (Moved UP from below pricing)
             ══════════════════════════════════════════════ */}
-        {reviews.length > 0 && (
+        {(reviews.length > 0 || totalReviewCount > 0) && (
           <div className="rounded-2xl bg-white px-5 py-5 shadow-sm ring-1 ring-black/[0.04] animate-fade-up" style={{ animationDelay: '0.08s' }}>
             <div className="flex items-center justify-between mb-4">
               <div>
@@ -425,7 +431,7 @@ export default async function CustomerProposalPage({
                     </svg>
                   ))}
                 </div>
-                <span className="text-[11px] font-semibold text-gray-500">{avgRating.toFixed(1)}</span>
+                <span className="text-[11px] font-semibold text-gray-500">{avgRating.toFixed(1)} ({totalReviewCount})</span>
               </div>
             </div>
 
@@ -478,9 +484,9 @@ export default async function CustomerProposalPage({
             </div>
 
             {/* Show remaining count if more than 3 */}
-            {reviews.length > 3 && (
+            {totalReviewCount > 3 && (
               <p className="text-center text-[12px] text-gray-400 mt-3">
-                + {reviews.length - 3} more happy customer{reviews.length - 3 !== 1 ? 's' : ''}
+                + {totalReviewCount - Math.min(reviews.length, 3)} more happy customer{(totalReviewCount - Math.min(reviews.length, 3)) !== 1 ? 's' : ''}
               </p>
             )}
           </div>

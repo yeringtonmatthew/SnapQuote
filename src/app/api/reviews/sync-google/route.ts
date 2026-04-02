@@ -74,10 +74,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Failed to save reviews' }, { status: 500 });
     }
 
-    // Update last fetched timestamp
+    // Update last fetched timestamp + store Google overall rating/count
     await supabase
       .from('users')
-      .update({ reviews_last_fetched_at: new Date().toISOString() })
+      .update({
+        reviews_last_fetched_at: new Date().toISOString(),
+        google_rating: overallRating,
+        google_review_count: totalRatings,
+      })
       .eq('id', user.id);
 
     return NextResponse.json({
