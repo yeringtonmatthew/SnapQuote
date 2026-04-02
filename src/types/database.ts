@@ -60,6 +60,7 @@ export interface User {
   brand_color: string | null;
   auto_follow_up: boolean;
   follow_up_templates: string[];
+  show_reviews_on_quotes: boolean;
   onboarded: boolean;
   created_at: string;
 }

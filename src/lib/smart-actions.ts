@@ -60,6 +60,29 @@ export function getSmartAction(quote: Quote, now: Date = new Date()): SmartActio
   const stage = quote.pipeline_stage;
   const status = quote.status;
 
+  // ─── FOLLOW UP → Nurture the lead ──────────────
+  if (stage === 'follow_up') {
+    const daysSinceCreated = daysBetween(quote.created_at, now);
+    const daysSinceReminder = quote.reminder_sent_at ? daysBetween(quote.reminder_sent_at, now) : 999;
+    const isStale = daysSinceCreated > 7;
+    const needsReminder = daysSinceReminder > 3;
+
+    return {
+      type: 'follow_up',
+      priority: isStale ? 'high' : 'medium',
+      headline: needsReminder ? `Follow up with ${quote.customer_name}` : 'Waiting on follow-up',
+      description: isStale
+        ? `In follow-up for ${daysSinceCreated} days — send a quote or reach out before they go cold`
+        : `Follow-up lead — ${total > 0 ? fmt(total) + ' potential' : 'reach out to qualify'}`,
+      value: total,
+      score: isStale ? 75 : needsReminder ? 60 : 30,
+      cta: { label: needsReminder ? 'Call Now' : 'Send Quote', variant: needsReminder ? 'call' : 'send' },
+      badge: isStale
+        ? { label: 'Going Cold', color: 'amber' }
+        : { label: 'Follow Up', color: 'blue' },
+    };
+  }
+
   // ─── DRAFT / LEAD → Send Quote ─────────────────
   if (stage === 'lead' || stage === 'quote_created') {
     const daysSinceCreated = daysBetween(quote.created_at, now);

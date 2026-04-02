@@ -94,6 +94,16 @@ export function getLeadScore(quote: Quote, now: Date = new Date()): LeadScore {
     return { temperature: 'at_risk', score, label: 'At Risk', reason: atRiskReason(daysSent) };
   }
 
+  // ─── Follow Up — actively being nurtured ──────
+  if (stage === 'follow_up') {
+    const days = daysSince(quote.created_at, now);
+    const lastFollowUp = daysSince(quote.reminder_sent_at, now);
+    if (lastFollowUp < 999 && lastFollowUp <= 2) return { temperature: 'warm', score: 60, label: 'Warm', reason: 'Recently followed up' };
+    if (days <= 3) return { temperature: 'warm', score: 55, label: 'Warm', reason: 'In follow-up pipeline' };
+    if (days <= 7) return { temperature: 'warm', score: 45, label: 'Warm', reason: `Follow-up for ${days}d — send reminder` };
+    return { temperature: 'cold', score: 30, label: 'Cold', reason: `In follow-up ${days}d — going stale` };
+  }
+
   // ─── Draft / Lead — not yet scored ────────────
   if (stage === 'lead' || stage === 'quote_created') {
     const days = daysSince(quote.created_at, now);

@@ -119,7 +119,7 @@ export function calculateRevenueIntelligence(
     : 0;
 
   // Close rate
-  const totalSent = active.filter(q => q.status !== 'draft' && q.pipeline_stage !== 'lead' && q.pipeline_stage !== 'quote_created').length;
+  const totalSent = active.filter(q => q.status !== 'draft' && q.pipeline_stage !== 'lead' && q.pipeline_stage !== 'follow_up' && q.pipeline_stage !== 'quote_created').length;
   const totalClosed = active.filter(q => q.status === 'approved' || q.status === 'deposit_paid').length;
   const closeRate = totalSent > 0 ? Math.round((totalClosed / totalSent) * 100) : 0;
 

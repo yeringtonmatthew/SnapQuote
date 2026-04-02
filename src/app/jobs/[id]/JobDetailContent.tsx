@@ -355,7 +355,7 @@ export function JobDetailContent({ quote, profile, brandColor }: Props) {
 
   const nextAction = getNextAction();
 
-  const allStages: PipelineStage[] = ['lead', 'quote_created', 'quote_sent', 'deposit_collected', 'job_scheduled', 'in_progress', 'completed'];
+  const allStages: PipelineStage[] = ['lead', 'follow_up', 'quote_created', 'quote_sent', 'deposit_collected', 'job_scheduled', 'in_progress', 'completed'];
   const currentIdx = allStages.indexOf(currentStage);
 
   return (

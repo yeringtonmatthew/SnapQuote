@@ -36,34 +36,43 @@ export async function GET(
   const depositCents = Math.round(Number(quote.deposit_amount) * 100);
   const businessName = profile.business_name || profile.full_name || 'Licensed Professional';
 
-  const session = await getStripe().checkout.sessions.create(
-    {
-      payment_method_types: ['card'],
-      mode: 'payment',
-      customer_email: undefined,
-      line_items: [
-        {
-          price_data: {
-            currency: 'usd',
-            product_data: {
-              name: `Deposit — ${businessName}`,
-              description: `Project deposit for ${quote.customer_name}`,
+  try {
+    const session = await getStripe().checkout.sessions.create(
+      {
+        payment_method_types: ['card'],
+        mode: 'payment',
+        customer_email: undefined,
+        line_items: [
+          {
+            price_data: {
+              currency: 'usd',
+              product_data: {
+                name: `Deposit — ${businessName}`,
+                description: `Project deposit for ${quote.customer_name}`,
+              },
+              unit_amount: depositCents,
             },
-            unit_amount: depositCents,
+            quantity: 1,
           },
-          quantity: 1,
+        ],
+        metadata: {
+          quote_id: quote.id,
         },
-      ],
-      metadata: {
-        quote_id: quote.id,
+        success_url: `${appUrl}/receipt/${quote.id}?paid=true`,
+        cancel_url: `${appUrl}/q/${quote.id}?cancelled=true`,
       },
-      success_url: `${appUrl}/receipt/${quote.id}?paid=true`,
-      cancel_url: `${appUrl}/q/${quote.id}?cancelled=true`,
-    },
-    {
-      stripeAccount: profile.stripe_account_id,
-    }
-  );
+      {
+        stripeAccount: profile.stripe_account_id,
+      }
+    );
 
-  return NextResponse.redirect(session.url!);
+    if (!session.url) {
+      return NextResponse.json({ error: 'Failed to create checkout session' }, { status: 500 });
+    }
+
+    return NextResponse.redirect(session.url);
+  } catch (err) {
+    console.error('[checkout] Stripe error:', err);
+    return NextResponse.json({ error: 'Payment processing error' }, { status: 500 });
+  }
 }

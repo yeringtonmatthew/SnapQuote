@@ -33,7 +33,7 @@ export async function POST(
     expires_at: expiresAt.toISOString(),
   };
   const currentStage = quote.pipeline_stage || 'quote_created';
-  if (['lead', 'quote_created'].includes(currentStage)) {
+  if (['lead', 'follow_up', 'quote_created'].includes(currentStage)) {
     updateData.pipeline_stage = 'quote_sent';
   }
   const { error: updateError } = await supabase
