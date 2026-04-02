@@ -109,5 +109,23 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
+  // Copy photos to client record so they persist even if quote is deleted
+  if (quote.client_id && photos && photos.length > 0) {
+    const { data: client } = await supabase
+      .from('clients')
+      .select('photos')
+      .eq('id', quote.client_id)
+      .single();
+
+    const existingPhotos: string[] = (client as any)?.photos || [];
+    const newPhotos = photos.filter((p: string) => !existingPhotos.includes(p));
+    if (newPhotos.length > 0) {
+      await supabase
+        .from('clients')
+        .update({ photos: [...existingPhotos, ...newPhotos] })
+        .eq('id', quote.client_id);
+    }
+  }
+
   return NextResponse.json(quote);
 }

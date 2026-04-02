@@ -21,6 +21,33 @@ export async function PATCH(request: Request) {
   }
 
   if (action === 'delete') {
+    // Before deleting, preserve photos on client records
+    const { data: quotesToDelete } = await supabase
+      .from('quotes')
+      .select('id, client_id, photos')
+      .in('id', ids)
+      .eq('contractor_id', user.id);
+
+    if (quotesToDelete) {
+      for (const q of quotesToDelete) {
+        if (q.client_id && q.photos && q.photos.length > 0) {
+          const { data: client } = await supabase
+            .from('clients')
+            .select('photos')
+            .eq('id', q.client_id)
+            .single();
+          const existingPhotos: string[] = (client as any)?.photos || [];
+          const newPhotos = q.photos.filter((p: string) => !existingPhotos.includes(p));
+          if (newPhotos.length > 0) {
+            await supabase
+              .from('clients')
+              .update({ photos: [...existingPhotos, ...newPhotos] })
+              .eq('id', q.client_id);
+          }
+        }
+      }
+    }
+
     const { data, error } = await supabase
       .from('quotes')
       .delete()

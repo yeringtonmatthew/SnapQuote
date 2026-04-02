@@ -74,6 +74,13 @@ export default function NewQuotePage() {
   const [jobAddress, setJobAddress] = useState('');
   const [jobDescription, setJobDescription] = useState('');
 
+  // Client picker
+  const [clients, setClients] = useState<any[]>([]);
+  const [clientId, setClientId] = useState<string | null>(null);
+  const [clientSearch, setClientSearch] = useState('');
+  const [showClientDropdown, setShowClientDropdown] = useState(false);
+  const clientPickerRef = useRef<HTMLDivElement>(null);
+
   // AI result
   const [aiDescription, setAiDescription] = useState('');
   const [scopeOfWork, setScopeOfWork] = useState('');
@@ -135,9 +142,64 @@ export default function NewQuotePage() {
         setLoadingTemplates(false);
       }
     }
+    async function loadClients() {
+      try {
+        const res = await fetch('/api/clients');
+        if (res.ok) {
+          const data = await res.json();
+          setClients(data);
+        }
+      } catch {
+        // Clients are optional — fail silently
+      }
+    }
     loadProfile();
     loadTemplates();
+    loadClients();
   }, []);
+
+  // Close client dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (clientPickerRef.current && !clientPickerRef.current.contains(e.target as Node)) {
+        setShowClientDropdown(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Filter clients based on search input
+  const filteredClients = clientSearch.trim()
+    ? clients.filter(c => {
+        const q = clientSearch.toLowerCase();
+        return (
+          (c.name && c.name.toLowerCase().includes(q)) ||
+          (c.email && c.email.toLowerCase().includes(q)) ||
+          (c.phone && c.phone.includes(q))
+        );
+      })
+    : clients;
+
+  function selectClient(client: any) {
+    setClientId(client.id);
+    setCustomerName(client.name || '');
+    setCustomerPhone(client.phone || '');
+    setCustomerEmail(client.email || '');
+    setJobAddress(client.address || '');
+    setClientSearch('');
+    setShowClientDropdown(false);
+    clearFieldError('customerName');
+    clearFieldError('customerContact');
+  }
+
+  function deselectClient() {
+    setClientId(null);
+    setCustomerName('');
+    setCustomerPhone('');
+    setCustomerEmail('');
+    setJobAddress('');
+  }
 
   // --- Upload photos to Supabase immediately when files are added ---
   async function uploadPhotosToStorage(newFiles: File[]) {
@@ -412,6 +474,7 @@ export default function NewQuotePage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          client_id: clientId,
           customer_name: customerName,
           customer_phone: customerPhone,
           customer_email: customerEmail,
@@ -575,6 +638,76 @@ export default function NewQuotePage() {
 
             <div className="space-y-4">
               <h2 className="text-sm font-semibold text-gray-700">Customer Info</h2>
+
+              {/* Client search / picker */}
+              {clients.length > 0 && (
+                <>
+                  {clientId ? (
+                    <div className="flex items-center gap-2 rounded-xl bg-brand-50 border border-brand-200 px-3 py-2.5">
+                      <svg className="h-4 w-4 text-brand-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+                      </svg>
+                      <span className="text-[15px] font-medium text-brand-700 flex-1 truncate">{customerName}</span>
+                      <button
+                        type="button"
+                        onClick={deselectClient}
+                        className="flex h-6 w-6 items-center justify-center rounded-full text-brand-400 hover:bg-brand-100 hover:text-brand-600"
+                        aria-label="Deselect client"
+                      >
+                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="relative" ref={clientPickerRef}>
+                      <div className="relative">
+                        <svg className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+                        </svg>
+                        <input
+                          type="text"
+                          value={clientSearch}
+                          onChange={(e) => { setClientSearch(e.target.value); setShowClientDropdown(true); }}
+                          onFocus={() => setShowClientDropdown(true)}
+                          placeholder="Search existing clients..."
+                          className="input-field pl-9"
+                        />
+                      </div>
+                      {showClientDropdown && filteredClients.length > 0 && (
+                        <ul className="absolute z-20 mt-1 max-h-52 w-full overflow-y-auto rounded-xl border border-gray-200 bg-white shadow-lg">
+                          {filteredClients.slice(0, 20).map((c) => (
+                            <li key={c.id}>
+                              <button
+                                type="button"
+                                onClick={() => selectClient(c)}
+                                className="flex w-full flex-col gap-0.5 px-3 py-2.5 text-left hover:bg-gray-50 active:bg-gray-100"
+                              >
+                                <span className="text-[15px] font-medium text-gray-900">{c.name}</span>
+                                <span className="text-[13px] text-gray-500">
+                                  {[c.phone, c.email].filter(Boolean).join(' · ')}
+                                </span>
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                      {showClientDropdown && clientSearch.trim() && filteredClients.length === 0 && (
+                        <div className="absolute z-20 mt-1 w-full rounded-xl border border-gray-200 bg-white px-3 py-3 shadow-lg">
+                          <p className="text-[13px] text-gray-500">No clients found</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  <div className="flex items-center gap-3">
+                    <div className="h-px flex-1 bg-gray-200" />
+                    <span className="text-xs text-gray-400">or enter manually</span>
+                    <div className="h-px flex-1 bg-gray-200" />
+                  </div>
+                </>
+              )}
+
               <FormField label="Customer Name" required error={fieldErrors.customerName} htmlFor="customerName">
                 <input
                   id="customerName"

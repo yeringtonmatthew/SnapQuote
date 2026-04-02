@@ -11,6 +11,8 @@ import { formatQuoteNumber } from '@/lib/format-quote-number';
 import PageTransition from '@/components/PageTransition';
 import CustomerPhotoGallery from '@/components/CustomerPhotoGallery';
 import { CustomerShareButton } from '@/components/CustomerShareButton';
+import { createClient } from '@/lib/supabase/server';
+import { QuoteEditor } from '@/components/QuoteEditor';
 
 function getServiceClient() {
   return createServiceClient(
@@ -157,6 +159,11 @@ export default async function CustomerProposalPage({
     ? Math.max(0, Math.ceil((expiresAt.getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
     : null;
 
+  // Check if the current viewer is the contractor who owns this quote
+  const authClient = createClient();
+  const { data: { user } } = await authClient.auth.getUser();
+  const isContractor = user?.id === quote.contractor_id;
+
   const criticalCount = inspectionFindings.filter(f => f.severity === 'critical').length;
   const moderateCount = inspectionFindings.filter(f => f.severity === 'moderate').length;
   const totalIssueCount = inspectionFindings.length;
@@ -198,6 +205,13 @@ export default async function CustomerProposalPage({
     <PageTransition>
     <div className="force-light min-h-dvh bg-[#f7f7f8]">
       <ViewTracker quoteId={quote.id} />
+
+      {/* Floating edit button for the contractor viewing their own quote */}
+      {isContractor && (
+        <div className="fixed bottom-6 right-6 z-50">
+          <QuoteEditor quote={quote} />
+        </div>
+      )}
 
       {/* ══════════════════════════════════════════════
           HERO — Cinematic, trust-forward
