@@ -159,10 +159,10 @@ export function AcceptQuoteButton({ quoteId, depositAmount, currentStatus, strip
       </button>
 
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 backdrop-blur-sm animate-modal-backdrop" role="dialog" aria-modal="true" aria-label="Sign and accept quote">
-          <div className="w-full max-w-lg rounded-t-3xl bg-white pb-8 overflow-y-auto max-h-[92dvh] animate-modal-content">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm animate-modal-backdrop p-4" role="dialog" aria-modal="true" aria-label="Sign and accept quote">
+          <div className="w-full max-w-lg rounded-3xl bg-white overflow-y-auto max-h-[90dvh] animate-modal-content shadow-2xl">
             {/* Handle */}
-            <div className="flex justify-center pt-3 pb-1">
+            <div className="flex justify-center pt-3 pb-1 sticky top-0 bg-white rounded-t-3xl z-10">
               <div className="h-1 w-10 rounded-full bg-gray-200" />
             </div>
 
