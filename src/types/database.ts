@@ -118,6 +118,8 @@ export interface Quote {
   completed_at: string | null;
   started_at: string | null;
   review_requested_at: string | null;
+  quote_options: QuoteOption[] | null;
+  selected_option: number | null;
   created_at: string;
 }
 
@@ -260,6 +262,13 @@ export interface LeadSource {
   last_lead_at: string | null;
   field_mapping: Record<string, string>;
   created_at: string;
+}
+
+export interface QuoteOption {
+  name: string;          // e.g. "Good", "Better", "Best"
+  description: string;   // e.g. "Essential coverage"
+  line_items: LineItem[];
+  recommended?: boolean; // highlight this tier
 }
 
 export interface AIQuoteResponse {

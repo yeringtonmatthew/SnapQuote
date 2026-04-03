@@ -13,7 +13,8 @@ import { formatPhoneNumber } from '@/lib/format-phone';
 import PageTransition from '@/components/PageTransition';
 import AddressAutocomplete from '@/components/ui/AddressAutocomplete';
 import FormField from '@/components/ui/FormField';
-import type { LineItem, InspectionFinding, AIQuoteResponse, User, QuoteTemplate, LeadSourceValue } from '@/types/database';
+import type { LineItem, InspectionFinding, AIQuoteResponse, User, QuoteTemplate, LeadSourceValue, QuoteOption } from '@/types/database';
+import { TierEditor } from '@/components/TierEditor';
 import { DEFAULT_TERMS } from '@/lib/defaultTerms';
 import { Spinner } from '@/components/ui/Spinner';
 import { LEAD_SOURCES } from '@/lib/constants';
@@ -96,6 +97,7 @@ export default function NewQuotePage() {
   const [taxRate, setTaxRate] = useState<string>('');
   const [discountType, setDiscountType] = useState<'none' | 'amount' | 'percent'>('none');
   const [discountValue, setDiscountValue] = useState<string>('');
+  const [quoteOptions, setQuoteOptions] = useState<QuoteOption[] | null>(null);
 
   // UI state
   const [generating, setGenerating] = useState(false);
@@ -495,6 +497,7 @@ export default function NewQuotePage() {
           deposit_amount: depositAmount,
           deposit_percent: depositPercent,
           notes,
+          quote_options: quoteOptions,
           status: 'draft', // Always save as draft first
         }),
       });
@@ -887,6 +890,13 @@ export default function NewQuotePage() {
                 </p>
               )}
             </div>
+
+            {/* Good / Better / Best Tiers */}
+            <TierEditor
+              baseLineItems={lineItems}
+              existingOptions={quoteOptions}
+              onChange={setQuoteOptions}
+            />
 
             <div>
               <label htmlFor="notes" className="label">Notes</label>

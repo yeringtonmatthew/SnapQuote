@@ -16,12 +16,12 @@ export async function POST(
 
   const supabase = createClient();
   const body = await request.json();
-  const { customer_name, customer_signature } = body;
+  const { customer_name, customer_signature, customer_signed_name, selected_option } = body;
 
   // Public endpoint — no auth required (customer is accepting)
   const { data: quote, error: fetchError } = await supabase
     .from('quotes')
-    .select('id, status, pipeline_stage, customer_name, customer_email, contractor_id, quote_number, total, deposit_amount, expires_at')
+    .select('id, status, pipeline_stage, customer_name, customer_email, contractor_id, quote_number, total, deposit_amount, deposit_percent, tax_rate, discount_amount, discount_percent, expires_at, quote_options')
     .eq('id', params.id)
     .single();
 
@@ -42,14 +42,51 @@ export async function POST(
   const currentStage = quote.pipeline_stage || 'quote_sent';
   const shouldAdvance = advanceStages.includes(currentStage);
 
+  // If tiered quote and customer selected an option, apply that tier's line items
+  let tierUpdate: Record<string, any> = {};
+  if (quote.quote_options && Array.isArray(quote.quote_options) && typeof selected_option === 'number') {
+    const option = quote.quote_options[selected_option];
+    if (!option) {
+      return NextResponse.json({ error: 'Invalid option selected' }, { status: 400 });
+    }
+    const items = option.line_items || [];
+    const subtotal = items.reduce((sum: number, item: any) => sum + (Number(item.total) || 0), 0);
+    const roundedSubtotal = Math.round(subtotal * 100) / 100;
+
+    // Apply same discount/tax logic as update route
+    const taxRate = quote.tax_rate != null ? Number(quote.tax_rate) : null;
+    const discAmt = quote.discount_amount != null ? Number(quote.discount_amount) : null;
+    const discPct = quote.discount_percent != null ? Number(quote.discount_percent) : null;
+    let discountValue = 0;
+    if (discAmt != null && discAmt > 0) {
+      discountValue = Math.round(Math.min(discAmt, roundedSubtotal) * 100) / 100;
+    } else if (discPct != null && discPct > 0) {
+      discountValue = Math.round(roundedSubtotal * (discPct / 100) * 100) / 100;
+    }
+    const afterDiscount = Math.round((roundedSubtotal - discountValue) * 100) / 100;
+    const taxAmount = taxRate != null && taxRate > 0 ? Math.round(afterDiscount * (taxRate / 100) * 100) / 100 : 0;
+    const total = Math.round((afterDiscount + taxAmount) * 100) / 100;
+    const depPct = typeof quote.deposit_percent === 'number' ? quote.deposit_percent : 33;
+    const depositAmount = Math.round((total * depPct) / 100 * 100) / 100;
+
+    tierUpdate = {
+      line_items: items,
+      subtotal: roundedSubtotal,
+      total,
+      deposit_amount: depositAmount,
+      selected_option,
+    };
+  }
+
   const { error } = await supabase
     .from('quotes')
     .update({
       status: 'approved',
       approved_at: new Date().toISOString(),
-      customer_signed_name: customer_name || null,
+      customer_signed_name: customer_signed_name || customer_name || null,
       customer_signature: customer_signature || null,
       ...(shouldAdvance ? { pipeline_stage: 'deposit_collected' } : {}),
+      ...tierUpdate,
     })
     .eq('id', params.id);
 

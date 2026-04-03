@@ -13,12 +13,13 @@ interface AcceptQuoteButtonProps {
   currentStatus: string;
   stripeEnabled?: boolean;
   brandColor?: string;
+  selectedOption?: number | null;
 }
 
 const fmt = (n: number) =>
   '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-export function AcceptQuoteButton({ quoteId, depositAmount, currentStatus, stripeEnabled, brandColor = '#4f46e5' }: AcceptQuoteButtonProps) {
+export function AcceptQuoteButton({ quoteId, depositAmount, currentStatus, stripeEnabled, brandColor = '#4f46e5', selectedOption }: AcceptQuoteButtonProps) {
   const [accepted, setAccepted] = useState(currentStatus === 'approved' || currentStatus === 'deposit_paid');
   const [accepting, setAccepting] = useState(false);
   const [showModal, setShowModal] = useState(false);
@@ -42,6 +43,7 @@ export function AcceptQuoteButton({ quoteId, depositAmount, currentStatus, strip
           customer_name: name,
           customer_signature: signature || null,
           customer_signed_name: typedSignature.trim() || name.trim(),
+          ...(selectedOption != null ? { selected_option: selectedOption } : {}),
         }),
       });
       if (res.ok) {

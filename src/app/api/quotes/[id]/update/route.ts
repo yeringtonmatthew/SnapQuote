@@ -61,6 +61,7 @@ export async function PATCH(
     discount_percent,
     notes,
     internal_notes,
+    quote_options,
   } = body;
 
   // Validate required fields
@@ -128,6 +129,7 @@ export async function PATCH(
       deposit_percent: validDepositPercent,
       notes: notes || null,
       ...(internal_notes !== undefined ? { internal_notes: internal_notes || null } : {}),
+      ...(quote_options !== undefined ? { quote_options: Array.isArray(quote_options) && quote_options.length > 0 ? quote_options : null, selected_option: null } : {}),
     })
     .eq('id', params.id)
     .eq('contractor_id', user.id)

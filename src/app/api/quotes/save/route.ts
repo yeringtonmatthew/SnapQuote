@@ -32,6 +32,7 @@ export async function POST(request: Request) {
     pipeline_stage,
     client_id,
     lead_source,
+    quote_options,
   } = body;
 
   if (customer_name === undefined || customer_name === null || typeof customer_name !== 'string') {
@@ -87,6 +88,8 @@ export async function POST(request: Request) {
       deposit_amount: deposit_amount ?? 0,
       deposit_percent: deposit_percent ?? 0,
       notes: notes || null,
+      quote_options: Array.isArray(quote_options) && quote_options.length > 0 ? quote_options : null,
+      selected_option: null,
       status: status || 'draft',
       pipeline_stage: pipeline_stage || undefined,
       client_id: client_id || null,

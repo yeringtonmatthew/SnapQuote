@@ -13,6 +13,7 @@ import CustomerPhotoGallery from '@/components/CustomerPhotoGallery';
 import { CustomerShareButton } from '@/components/CustomerShareButton';
 import { createClient } from '@/lib/supabase/server';
 import { QuoteEditor } from '@/components/QuoteEditor';
+import { TieredQuoteView } from '@/components/TieredQuoteView';
 
 function getServiceClient() {
   return createServiceClient(
@@ -146,6 +147,8 @@ export default async function CustomerProposalPage({
     || 'Licensed Professional';
   const stripeEnabled = !!profile?.stripe_account_id;
   const lineItems: any[] = quote.line_items || [];
+  const quoteOptions: any[] | null = quote.quote_options && Array.isArray(quote.quote_options) && quote.quote_options.length > 0 ? quote.quote_options : null;
+  const hasTiers = !!quoteOptions;
   const photos: string[] = quote.photos || [];
   const inspectionFindings: { photo_index: number; finding: string; severity: string; urgency_message: string }[] = quote.inspection_findings || [];
   const heroPhoto = photos[0] || null;
@@ -291,67 +294,79 @@ export default async function CustomerProposalPage({
                 : <>Your proposal is<br />ready for review.</>
             }
           </h1>
-          <div className="mt-6 flex items-end gap-3">
-            <div>
-              <p className="text-[10px] font-semibold text-white/35 uppercase tracking-[0.2em] mb-1">Project Total</p>
-              <p className="text-[48px] font-extrabold tracking-tight text-white leading-none">{fmtShort(quoteTotal)}</p>
+          {hasTiers ? (
+            <div className="mt-6">
+              <p className="text-[10px] font-semibold text-white/35 uppercase tracking-[0.2em] mb-1">Starting From</p>
+              <p className="text-[48px] font-extrabold tracking-tight text-white leading-none">
+                {fmtShort(Math.min(...quoteOptions!.map((o: any) => (o.line_items || []).reduce((s: number, i: any) => s + (Number(i.total) || 0), 0))))}
+              </p>
+              <p className="text-[13px] font-medium text-white/50 mt-1">{quoteOptions!.length} package options available</p>
             </div>
-            <div className="mb-2 h-px flex-1 bg-white/10" />
-            <div className="mb-2 text-right">
-              <p className="text-[10px] font-semibold text-white/35 uppercase tracking-[0.2em] mb-1">Deposit to Start</p>
-              <p className="text-[24px] font-bold" style={{ color: brandColor }}>{fmtShort(deposit)}</p>
+          ) : (
+            <div className="mt-6 flex items-end gap-3">
+              <div>
+                <p className="text-[10px] font-semibold text-white/35 uppercase tracking-[0.2em] mb-1">Project Total</p>
+                <p className="text-[48px] font-extrabold tracking-tight text-white leading-none">{fmtShort(quoteTotal)}</p>
+              </div>
+              <div className="mb-2 h-px flex-1 bg-white/10" />
+              <div className="mb-2 text-right">
+                <p className="text-[10px] font-semibold text-white/35 uppercase tracking-[0.2em] mb-1">Deposit to Start</p>
+                <p className="text-[24px] font-bold" style={{ color: brandColor }}>{fmtShort(deposit)}</p>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
 
       {/* ══════════════════════════════════════════════
-          STICKY CTA — Always visible, trust microcopy
+          STICKY CTA — Only for non-tiered quotes (tiered quotes have CTA in TieredQuoteView)
           ══════════════════════════════════════════════ */}
-      <div className="sticky top-0 z-20 px-4 py-3 bg-[#f7f7f8]/80 backdrop-blur-xl border-b border-black/5" data-no-print>
-        <div className="mx-auto max-w-lg">
-          {isExpired ? (
-            <div className="flex items-center justify-center gap-2 rounded-2xl bg-gray-100 px-4 py-3">
-              <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <span className="text-[14px] font-medium text-gray-500">This quote has expired</span>
-            </div>
-          ) : (
-            <>
-              <AcceptQuoteButton quoteId={quote.id} depositAmount={deposit} currentStatus={quote.status} stripeEnabled={stripeEnabled} brandColor={brandColor} />
-              <div className="mt-2 flex items-center justify-center gap-4 text-[11px] text-gray-400">
-                <span className="flex items-center gap-1">
-                  <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
-                  </svg>
-                  Secure
-                </span>
-                <span className="flex items-center gap-1">
-                  <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
-                  </svg>
-                  No hidden fees
-                </span>
-                <span className="flex items-center gap-1">
-                  <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
-                  </svg>
-                  Receipt emailed
-                </span>
-                {daysRemaining !== null && daysRemaining <= 7 && (
-                  <span className="flex items-center gap-1 text-amber-500 font-medium">
-                    <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    {daysRemaining}d left
-                  </span>
-                )}
+      {!hasTiers && (
+        <div className="sticky top-0 z-20 px-4 py-3 bg-[#f7f7f8]/80 backdrop-blur-xl border-b border-black/5" data-no-print>
+          <div className="mx-auto max-w-lg">
+            {isExpired ? (
+              <div className="flex items-center justify-center gap-2 rounded-2xl bg-gray-100 px-4 py-3">
+                <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span className="text-[14px] font-medium text-gray-500">This quote has expired</span>
               </div>
-            </>
-          )}
+            ) : (
+              <>
+                <AcceptQuoteButton quoteId={quote.id} depositAmount={deposit} currentStatus={quote.status} stripeEnabled={stripeEnabled} brandColor={brandColor} />
+                <div className="mt-2 flex items-center justify-center gap-4 text-[11px] text-gray-400">
+                  <span className="flex items-center gap-1">
+                    <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                    </svg>
+                    Secure
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+                    </svg>
+                    No hidden fees
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                    </svg>
+                    Receipt emailed
+                  </span>
+                  {daysRemaining !== null && daysRemaining <= 7 && (
+                    <span className="flex items-center gap-1 text-amber-500 font-medium">
+                      <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      {daysRemaining}d left
+                    </span>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
       <main className="mx-auto max-w-lg px-4 pt-5 pb-12 space-y-4">
 
@@ -797,9 +812,29 @@ export default async function CustomerProposalPage({
         )}
 
         {/* ══════════════════════════════════════════════
-            8. YOUR INVESTMENT — Line items
+            TIERED QUOTE — Good / Better / Best selector
             ══════════════════════════════════════════════ */}
-        <div className="animate-fade-up" style={{ animationDelay: '0.2s' }}>
+        {hasTiers && (
+          <div className="animate-fade-up" style={{ animationDelay: '0.2s' }}>
+            <TieredQuoteView
+              quoteId={quote.id}
+              options={quoteOptions!}
+              taxRate={quote.tax_rate != null ? Number(quote.tax_rate) : null}
+              discountAmount={quote.discount_amount != null ? Number(quote.discount_amount) : null}
+              discountPercent={quote.discount_percent != null ? Number(quote.discount_percent) : null}
+              depositPercent={quote.deposit_percent ?? 33}
+              currentStatus={quote.status}
+              stripeEnabled={stripeEnabled}
+              brandColor={brandColor}
+              isExpired={isExpired}
+            />
+          </div>
+        )}
+
+        {/* ══════════════════════════════════════════════
+            8. YOUR INVESTMENT — Line items (non-tiered only)
+            ══════════════════════════════════════════════ */}
+        {!hasTiers && <div className="animate-fade-up" style={{ animationDelay: '0.2s' }}>
           <div className="flex items-center justify-between mb-3 px-1">
             <div>
               <p className="text-[11px] font-semibold uppercase tracking-widest text-gray-400">Your Investment</p>
@@ -831,8 +866,9 @@ export default async function CustomerProposalPage({
               </div>
             ))}
           </div>
-        </div>
+        </div>}
 
+        {!hasTiers && <>
         {/* ══════════════════════════════════════════════
             9. TOTALS — With enhanced deposit reassurance
             ══════════════════════════════════════════════ */}
@@ -918,6 +954,7 @@ export default async function CustomerProposalPage({
             </div>
           )}
         </div>
+        </>}
 
         {/* ══════════════════════════════════════════════
             10. OUR GUARANTEE — Trust builder

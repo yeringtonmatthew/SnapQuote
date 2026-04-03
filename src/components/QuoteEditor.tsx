@@ -7,6 +7,8 @@ import { useToast } from '@/components/ui/Toast';
 import { getUserMessage } from '@/lib/error-messages';
 import PhoneInput from '@/components/ui/PhoneInput';
 import AddressAutocomplete from '@/components/ui/AddressAutocomplete';
+import { TierEditor } from '@/components/TierEditor';
+import type { QuoteOption } from '@/types/database';
 
 interface LineItem {
   description: string;
@@ -51,6 +53,7 @@ export function QuoteEditor({ quote }: QuoteEditorProps) {
         : ''
   );
   const [notes, setNotes] = useState(quote.notes || DEFAULT_TERMS);
+  const [quoteOptions, setQuoteOptions] = useState<QuoteOption[] | null>(quote.quote_options || null);
 
   const canEdit = quote.status === 'draft' || quote.status === 'sent';
   const wasSent = quote.status === 'sent';
@@ -144,6 +147,7 @@ export function QuoteEditor({ quote }: QuoteEditorProps) {
           discount_amount: discountType === 'amount' ? discountAmount : null,
           discount_percent: discountType === 'percent' ? parsedDiscountValue : null,
           notes,
+          quote_options: quoteOptions,
         }),
       });
       if (!res.ok) {
@@ -499,6 +503,13 @@ export function QuoteEditor({ quote }: QuoteEditorProps) {
             <span className="text-sm font-medium text-gray-500">{fmt(balance)}</span>
           </div>
         </div>
+
+        {/* Good / Better / Best Tiers */}
+        <TierEditor
+          baseLineItems={lineItems}
+          existingOptions={quoteOptions}
+          onChange={setQuoteOptions}
+        />
 
         {/* Notes */}
         <div className="card">
