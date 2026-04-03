@@ -75,6 +75,7 @@ export default function OnboardingPage() {
   const [businessName, setBusinessName] = useState('');
   const [tradeType, setTradeType] = useState<TradeType | null>(null);
   const [hourlyRate, setHourlyRate] = useState('125');
+  const [rateType, setRateType] = useState('hourly');
 
   const goNext = useCallback(() => {
     const errors: FieldErrors = {};
@@ -133,6 +134,7 @@ export default function OnboardingPage() {
         business_name: businessName.trim() || null,
         trade_type: tradeType,
         hourly_rate: parseFloat(hourlyRate) || null,
+        rate_type: rateType,
         default_deposit_percent: 0,
         onboarded: true,
       })
@@ -259,10 +261,26 @@ export default function OnboardingPage() {
                     ))}
                   </div>
 
-                  {/* Hourly Rate */}
+                  {/* Rate Type */}
+                  <div>
+                    <label className="label">Rate Type</label>
+                    <select
+                      value={rateType}
+                      onChange={(e) => setRateType(e.target.value)}
+                      className="input-field"
+                    >
+                      <option value="hourly">Hourly ($/hr)</option>
+                      <option value="per_square">Per Square ($/sq — 100 sq ft)</option>
+                      <option value="per_sqft">Per Square Foot ($/sq ft)</option>
+                      <option value="per_linear_ft">Per Linear Foot ($/lin ft)</option>
+                      <option value="flat_rate">Flat Rate ($/job)</option>
+                    </select>
+                  </div>
+
+                  {/* Rate */}
                   <div>
                     <label htmlFor="hourlyRate" className="label">
-                      Hourly Labor Rate
+                      {rateType === 'hourly' ? 'Hourly Rate' : rateType === 'per_square' ? 'Rate per Square' : rateType === 'per_sqft' ? 'Rate per Sq Ft' : rateType === 'per_linear_ft' ? 'Rate per Linear Ft' : 'Flat Rate'}
                     </label>
                     <div className="relative">
                       <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 text-gray-400">
@@ -277,7 +295,7 @@ export default function OnboardingPage() {
                         className="input-field pl-8"
                       />
                       <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-4 text-gray-400 text-sm">
-                        /hr
+                        {rateType === 'hourly' ? '/hr' : rateType === 'per_square' ? '/sq' : rateType === 'per_sqft' ? '/sq ft' : rateType === 'per_linear_ft' ? '/lin ft' : '/job'}
                       </span>
                     </div>
                     <p className="mt-1.5 text-xs text-gray-500">

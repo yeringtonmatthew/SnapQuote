@@ -1,5 +1,6 @@
 export type TradeType = 'plumber' | 'hvac' | 'electrician' | 'general' | 'roofing' | 'painter' | 'landscaper' | 'other';
 export type PlanType = 'starter' | 'pro' | 'team';
+export type RateType = 'hourly' | 'per_square' | 'per_sqft' | 'per_linear_ft' | 'flat_rate';
 export type QuoteStatus = 'draft' | 'sent' | 'approved' | 'deposit_paid' | 'cancelled';
 
 export type PipelineStage =
@@ -50,6 +51,7 @@ export interface User {
   trade_type: TradeType | null;
   logo_url: string | null;
   hourly_rate: number | null;
+  rate_type: RateType;
   default_deposit_percent: number;
   default_tax_rate: number | null;
   stripe_account_id: string | null;

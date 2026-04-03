@@ -26,7 +26,7 @@ export async function POST(request: Request) {
 
     const { data: profile } = await supabase
       .from('users')
-      .select('hourly_rate, trade_type')
+      .select('hourly_rate, trade_type, rate_type')
       .eq('id', user.id)
       .single();
 
@@ -58,8 +58,17 @@ export async function POST(request: Request) {
     // Add text prompt
     const tradeLabel = profile?.trade_type || 'general contractor';
     const hourlyRate = profile?.hourly_rate || 125;
+    const rateType = profile?.rate_type || 'hourly';
+    const rateUnitMap: Record<string, string> = {
+      hourly: '/hr',
+      per_square: '/square (100 sq ft)',
+      per_sqft: '/sq ft',
+      per_linear_ft: '/linear ft',
+      flat_rate: ' flat rate per job',
+    };
+    const rateUnit = rateUnitMap[rateType] || '/hr';
 
-    let userText = `Trade type: ${tradeLabel}\nLabor rate: $${hourlyRate}/hr\n`;
+    let userText = `Trade type: ${tradeLabel}\nLabor rate: $${hourlyRate}${rateUnit}\n`;
     if (description) userText += `\nJob description from contractor: ${description}`;
     userText += '\n\nAnalyze the photos and generate an itemized quote.';
 
@@ -84,7 +93,7 @@ You have TWO jobs:
 CRITICAL PRICING RULES:
 - If the contractor states a per-unit price (e.g. "$400/square for shingles", "$600/square for metal"), that price is ALL-INCLUSIVE (labor + materials combined). Create ONE line item for that work at that rate. Do NOT add separate labor line items for work already covered by a per-unit price.
 - Only add separate labor line items (using $${hourlyRate}/hr) for tasks NOT covered by the contractor's stated per-unit pricing — e.g., chimney flashing, skylight work, specialty repairs.
-- If no rates are given at all, use the provided labor rate of $${hourlyRate}/hr and current regional market pricing for materials as separate line items.
+- If no rates are given at all, use the provided labor rate of $${hourlyRate}${rateUnit} and current regional market pricing for materials as separate line items.
 - NEVER double-charge: if contractor says $400/square installed, do not also add hours of installation labor.
 
 INSPECTION REPORT RULES:

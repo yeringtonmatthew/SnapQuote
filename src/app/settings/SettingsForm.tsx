@@ -83,6 +83,7 @@ export function SettingsForm({ profile, userId, email, stripeConnected, stripeSt
   const [phone, setPhone] = useState(profile?.phone || '');
   const [tradeType, setTradeType] = useState(profile?.trade_type || 'general');
   const [hourlyRate, setHourlyRate] = useState(String(profile?.hourly_rate || '125'));
+  const [rateType, setRateType] = useState(profile?.rate_type || 'hourly');
   const [depositPercent, setDepositPercent] = useState(String(profile?.default_deposit_percent ?? '0'));
   const [defaultTaxRate, setDefaultTaxRate] = useState(String(profile?.default_tax_rate ?? ''));
   const [profileSlug, setProfileSlug] = useState(profile?.profile_slug || '');
@@ -155,6 +156,7 @@ export function SettingsForm({ profile, userId, email, stripeConnected, stripeSt
         phone: phone.trim() || null,
         trade_type: tradeType,
         hourly_rate: parseFloat(hourlyRate) || 0,
+        rate_type: rateType,
         default_deposit_percent: parseInt(depositPercent) || 0,
         default_tax_rate: defaultTaxRate.trim() !== '' ? parseFloat(defaultTaxRate) || 0 : null,
         profile_slug: profileSlug.trim() || null,
@@ -476,7 +478,24 @@ export function SettingsForm({ profile, userId, email, stripeConnected, stripeSt
           <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">Pricing Defaults</p>
 
           <div>
-            <label className="label">Hourly Labor Rate</label>
+            <label className="label">Rate Type</label>
+            <select
+              value={rateType}
+              onChange={(e) => setRateType(e.target.value)}
+              className="input-field"
+            >
+              <option value="hourly">Hourly ($/hr)</option>
+              <option value="per_square">Per Square ($/sq — 100 sq ft)</option>
+              <option value="per_sqft">Per Square Foot ($/sq ft)</option>
+              <option value="per_linear_ft">Per Linear Foot ($/lin ft)</option>
+              <option value="flat_rate">Flat Rate ($/job)</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="label">
+              {rateType === 'hourly' ? 'Hourly Rate' : rateType === 'per_square' ? 'Rate per Square' : rateType === 'per_sqft' ? 'Rate per Sq Ft' : rateType === 'per_linear_ft' ? 'Rate per Linear Ft' : 'Flat Rate'}
+            </label>
             <div className="relative">
               <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 text-gray-400">$</span>
               <input
@@ -485,7 +504,9 @@ export function SettingsForm({ profile, userId, email, stripeConnected, stripeSt
                 onChange={(e) => setHourlyRate(e.target.value)}
                 className="input-field pl-8"
               />
-              <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-4 text-gray-400">/hr</span>
+              <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-4 text-gray-400">
+                {rateType === 'hourly' ? '/hr' : rateType === 'per_square' ? '/sq' : rateType === 'per_sqft' ? '/sq ft' : rateType === 'per_linear_ft' ? '/lin ft' : '/job'}
+              </span>
             </div>
           </div>
 
