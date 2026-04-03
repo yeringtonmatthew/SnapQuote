@@ -124,8 +124,8 @@ export default function QuickAddMenu() {
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
 
           {/* Menu */}
-          <div className="fixed bottom-[88px] left-1/2 -translate-x-1/2 z-50 animate-sheet-up w-[200px]">
-            <div className="flex flex-col rounded-2xl bg-white dark:bg-gray-900 py-2 shadow-2xl ring-1 ring-black/[0.08] dark:ring-white/[0.08]">
+          <div className="fixed inset-x-0 bottom-[88px] z-50 flex justify-center animate-sheet-up">
+            <div className="flex flex-col rounded-2xl bg-white dark:bg-gray-900 py-2 shadow-2xl ring-1 ring-black/[0.08] dark:ring-white/[0.08] min-w-[200px]">
               {options.map((opt) => (
                 <button
                   key={opt.key}
