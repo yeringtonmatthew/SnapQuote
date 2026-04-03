@@ -378,52 +378,67 @@ export default async function DashboardPage() {
                 const eventType = (event.event_type as string) || 'default';
                 const colors = getEventColor(eventType);
                 const quoteId = event.quote_id as string | null;
-                const cardClass = `block rounded-2xl bg-white dark:bg-gray-900 shadow-sm ring-1 ring-black/[0.04] dark:ring-white/[0.06] border-l-[3px] ${colors.border} px-4 py-3 transition-colors ${quoteId ? 'active:bg-gray-50 dark:active:bg-gray-800' : ''}`;
-                const cardContent = (
-                    <div className="flex items-start gap-3">
-                      <div className="flex flex-col items-center pt-0.5">
-                        <span className={`h-2 w-2 rounded-full ${colors.dot}`} />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <span className="text-[13px] font-semibold text-gray-900 dark:text-gray-100 truncate">
-                            {(event.customer_name as string) || (event.title as string)}
-                          </span>
-                          <span className="text-[11px] text-gray-400 dark:text-gray-500 whitespace-nowrap">
-                            {formatTime(event.start_time as string | null)}
-                          </span>
-                        </div>
-                        {typeof event.job_address === 'string' && event.job_address && (
-                          <a
-                            href={`https://maps.google.com/?q=${encodeURIComponent(event.job_address)}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            onClick={(e) => e.stopPropagation()}
-                            className="flex items-center gap-1 text-[12px] text-brand-600 dark:text-brand-400 truncate mt-0.5 active:text-brand-700"
-                          >
-                            <svg className="h-3 w-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
-                            </svg>
-                            <span className="truncate underline underline-offset-2">{event.job_address}</span>
-                          </a>
-                        )}
-                      </div>
-                      {quoteId && (
-                        <svg className="h-4 w-4 text-gray-300 dark:text-gray-600 flex-shrink-0 mt-1" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" aria-hidden="true">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-                        </svg>
-                      )}
-                    </div>
-                );
+                const address = typeof event.job_address === 'string' ? event.job_address : '';
+                const cardClass = `rounded-2xl bg-white dark:bg-gray-900 shadow-sm ring-1 ring-black/[0.04] dark:ring-white/[0.06] border-l-[3px] ${colors.border} overflow-hidden`;
 
-                return quoteId ? (
-                  <Link key={event.id as string} href={`/jobs/${quoteId}`} className={cardClass}>
-                    {cardContent}
-                  </Link>
-                ) : (
+                return (
                   <div key={event.id as string} className={cardClass}>
-                    {cardContent}
+                    {/* Main card — links to job detail */}
+                    {quoteId ? (
+                      <Link href={`/jobs/${quoteId}`} className="block px-4 pt-3 pb-2 active:bg-gray-50 dark:active:bg-gray-800 transition-colors">
+                        <div className="flex items-start gap-3">
+                          <div className="flex flex-col items-center pt-0.5">
+                            <span className={`h-2 w-2 rounded-full ${colors.dot}`} />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span className="text-[13px] font-semibold text-gray-900 dark:text-gray-100 truncate">
+                                {(event.customer_name as string) || (event.title as string)}
+                              </span>
+                              <span className="text-[11px] text-gray-400 dark:text-gray-500 whitespace-nowrap">
+                                {formatTime(event.start_time as string | null)}
+                              </span>
+                            </div>
+                          </div>
+                          <svg className="h-4 w-4 text-gray-300 dark:text-gray-600 flex-shrink-0 mt-1" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" aria-hidden="true">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                          </svg>
+                        </div>
+                      </Link>
+                    ) : (
+                      <div className="px-4 pt-3 pb-2">
+                        <div className="flex items-start gap-3">
+                          <div className="flex flex-col items-center pt-0.5">
+                            <span className={`h-2 w-2 rounded-full ${colors.dot}`} />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span className="text-[13px] font-semibold text-gray-900 dark:text-gray-100 truncate">
+                                {(event.customer_name as string) || (event.title as string)}
+                              </span>
+                              <span className="text-[11px] text-gray-400 dark:text-gray-500 whitespace-nowrap">
+                                {formatTime(event.start_time as string | null)}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    {/* Address — separate link to Google Maps */}
+                    {address && (
+                      <a
+                        href={`https://maps.google.com/?q=${encodeURIComponent(address)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-1.5 px-4 pb-3 pt-0 ml-[23px] text-[12px] text-brand-600 dark:text-brand-400 active:text-brand-700"
+                      >
+                        <svg className="h-3 w-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
+                        </svg>
+                        <span className="truncate underline underline-offset-2">{address}</span>
+                      </a>
+                    )}
                   </div>
                 );
               })}
