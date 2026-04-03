@@ -2,14 +2,20 @@ import React from 'react';
 import { renderToBuffer } from '@react-pdf/renderer';
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { rateLimit } from '@/lib/rate-limit';
 import { InvoicePDF } from '@/components/pdf/InvoicePDF';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(
-  _request: Request,
+  request: Request,
   { params }: { params: { id: string } }
 ) {
+  const ip = request.headers.get('x-forwarded-for') || 'unknown';
+  if (!rateLimit(ip + ':invoice-public', 20, 60_000)) {
+    return new Response('Too many requests', { status: 429 });
+  }
+
   try {
     const supabase = createClient();
 

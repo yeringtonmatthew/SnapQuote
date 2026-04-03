@@ -1,6 +1,7 @@
 import { SupabaseClient } from '@supabase/supabase-js';
 import { Resend } from 'resend';
 import { NotificationType } from '@/types/database';
+import { escapeHtml } from '@/lib/escape-html';
 
 interface CreateNotificationParams {
   user_id: string;
@@ -53,9 +54,9 @@ export async function sendNotificationEmail({
       subject,
       html: `
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 16px;">
-          <h2 style="margin: 0 0 16px; color: #111827; font-size: 20px;">${subject}</h2>
+          <h2 style="margin: 0 0 16px; color: #111827; font-size: 20px;">${escapeHtml(subject)}</h2>
           <p style="color: #374151; font-size: 15px; line-height: 1.6;">
-            ${message}
+            ${escapeHtml(message)}
           </p>
           <div style="text-align: center; margin: 28px 0;">
             <a href="${quoteUrl}" style="display: inline-block; background-color: #4f46e5; color: #ffffff; text-decoration: none; padding: 12px 32px; border-radius: 8px; font-weight: 600; font-size: 15px;">
@@ -63,7 +64,7 @@ export async function sendNotificationEmail({
             </a>
           </div>
           <p style="color: #6b7280; font-size: 13px; line-height: 1.5;">
-            This notification was sent by <a href="https://snapquote.dev" style="color: #4f46e5; text-decoration: none;">SnapQuote</a>${businessName ? ` on behalf of ${businessName}` : ''}.
+            This notification was sent by <a href="https://snapquote.dev" style="color: #4f46e5; text-decoration: none;">SnapQuote</a>${businessName ? ` on behalf of ${escapeHtml(businessName)}` : ''}.
           </p>
         </div>
       `,

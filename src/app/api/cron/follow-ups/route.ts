@@ -3,6 +3,7 @@ import { timingSafeEqual } from 'crypto';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import twilio from 'twilio';
 import { Resend } from 'resend';
+import { escapeHtml } from '@/lib/escape-html';
 
 // Follow-up schedule: [hours after sent_at]
 const FOLLOW_UP_SCHEDULE = [
@@ -121,9 +122,9 @@ async function sendFollowUp({
           subject: `Following up on your quote from ${businessName}`,
           html: `
             <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 16px;">
-              <h2 style="margin: 0 0 16px; color: #111827; font-size: 20px;">${businessName}</h2>
+              <h2 style="margin: 0 0 16px; color: #111827; font-size: 20px;">${escapeHtml(businessName)}</h2>
               <p style="color: #374151; font-size: 15px; line-height: 1.6;">
-                ${message}
+                ${escapeHtml(message)}
               </p>
               <p style="color: #374151; font-size: 15px; line-height: 1.6;">
                 Your quote for <strong>$${amount}</strong> is ready for review.
@@ -326,36 +327,58 @@ export async function GET(request: Request) {
 
     // 5. Quarterly check-ins (follow-up 8–12)
     // For quotes that have completed the 21-day sequence (follow-up 7 sent)
-    for (const quote of quotes) {
-      const contractor = contractorMap.get(quote.contractor_id);
-      if (!contractor) continue;
 
-      // Check if follow-up 7 was sent
+    // Pre-compute which quotes are eligible and their max follow-up number
+    const quarterlyQuoteIds: string[] = [];
+    const maxSentByQuote = new Map<string, number>();
+
+    for (const quote of quotes) {
+      if (!contractorMap.has(quote.contractor_id)) continue;
       if (!sentFollowUps.has(`${quote.id}:7`)) continue;
 
-      // Find the highest follow-up number sent for this quote
       const maxSent = Math.max(
         ...Array.from(sentFollowUps)
           .filter((k) => k.startsWith(`${quote.id}:`))
           .map((k) => parseInt(k.split(':')[1]))
       );
 
-      // Cap at 12
       if (maxSent >= 12) continue;
+
+      quarterlyQuoteIds.push(quote.id);
+      maxSentByQuote.set(quote.id, maxSent);
+    }
+
+    // Batch-fetch the created_at for each quote's max follow-up in a single query
+    const lastFollowUpByQuote = new Map<string, string>();
+
+    if (quarterlyQuoteIds.length > 0) {
+      const orFilter = quarterlyQuoteIds
+        .map((qId) => `and(quote_id.eq.${qId},follow_up_number.eq.${maxSentByQuote.get(qId)})`)
+        .join(',');
+
+      const { data: lastFollowUps } = await supabase
+        .from('follow_ups')
+        .select('quote_id, follow_up_number, created_at')
+        .or(orFilter);
+
+      for (const fu of lastFollowUps || []) {
+        lastFollowUpByQuote.set(fu.quote_id, fu.created_at);
+      }
+    }
+
+    for (const quote of quotes) {
+      const contractor = contractorMap.get(quote.contractor_id);
+      if (!contractor) continue;
+
+      const maxSent = maxSentByQuote.get(quote.id);
+      if (maxSent === undefined) continue;
 
       const nextNumber = maxSent + 1;
 
-      // Get the last follow-up's sent date
-      const { data: lastFollowUp } = await supabase
-        .from('follow_ups')
-        .select('created_at')
-        .eq('quote_id', quote.id)
-        .eq('follow_up_number', maxSent)
-        .single();
+      const lastCreatedAt = lastFollowUpByQuote.get(quote.id);
+      if (!lastCreatedAt) continue;
 
-      if (!lastFollowUp) continue;
-
-      const lastSentAt = new Date(lastFollowUp.created_at);
+      const lastSentAt = new Date(lastCreatedAt);
       const daysSinceLastFollowUp = (now.getTime() - lastSentAt.getTime()) / (1000 * 60 * 60 * 24);
 
       // Only send if 90+ days since last follow-up

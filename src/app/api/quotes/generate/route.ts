@@ -38,6 +38,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'At least one photo is required' }, { status: 400 });
     }
 
+    if (images.length > 10) {
+      return NextResponse.json({ error: 'Maximum 10 photos allowed' }, { status: 400 });
+    }
+
     // Re-process with sharp to guarantee size is within Claude's 5MB limit
     const content: Anthropic.MessageParam['content'] = [];
 

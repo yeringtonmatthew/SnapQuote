@@ -82,7 +82,7 @@ export async function POST(
       const toNumber = digits.startsWith('1') ? `+${digits}` : `+1${digits}`;
 
       // Prefer Messaging Service (required for A2P 10DLC), fall back to direct number
-      const msg = await client.messages.create({
+      const _msg = await client.messages.create({
         body: message,
         ...(messagingServiceSid ? { messagingServiceSid } : { from }),
         to: toNumber,

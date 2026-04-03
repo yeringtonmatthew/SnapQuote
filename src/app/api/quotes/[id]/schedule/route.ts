@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { Resend } from 'resend';
 import { generateGoogleCalendarUrl } from '@/lib/calendar';
 import { formatQuoteNumber } from '@/lib/format-quote-number';
+import { escapeHtml } from '@/lib/escape-html';
 
 export async function PATCH(
   request: Request,
@@ -109,12 +110,12 @@ export async function PATCH(
               <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 16px;">
                 <h2 style="margin: 0 0 16px; color: #111827; font-size: 20px;">Job Scheduled</h2>
                 <p style="color: #374151; font-size: 15px; line-height: 1.6; margin: 0 0 8px;">
-                  <strong>${existing.customer_name}</strong> — ${jobSummary}
+                  <strong>${escapeHtml(existing.customer_name)}</strong> — ${escapeHtml(jobSummary)}
                 </p>
                 <p style="color: #374151; font-size: 15px; line-height: 1.6; margin: 0 0 4px;">
                   <strong>Date:</strong> ${formattedDate}${formattedTime ? ` at ${formattedTime}` : ''}
                 </p>
-                ${existing.customer_phone ? `<p style="color: #6b7280; font-size: 14px; margin: 4px 0;">Phone: ${existing.customer_phone}</p>` : ''}
+                ${existing.customer_phone ? `<p style="color: #6b7280; font-size: 14px; margin: 4px 0;">Phone: ${escapeHtml(existing.customer_phone)}</p>` : ''}
                 <div style="margin: 24px 0; text-align: center;">
                   <a href="${googleCalUrl}" style="display: inline-block; background-color: #4f46e5; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: 600; font-size: 14px; margin-right: 8px;">
                     Add to Google Calendar

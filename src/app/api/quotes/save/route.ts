@@ -60,16 +60,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Invalid status for new quote' }, { status: 400 });
   }
 
-  // Get next quote number for this contractor
-  const { data: maxRow } = await supabase
-    .from('quotes')
-    .select('quote_number')
-    .eq('contractor_id', user.id)
-    .order('quote_number', { ascending: false, nullsFirst: false })
-    .limit(1)
-    .single();
-
-  const nextQuoteNumber = (maxRow?.quote_number ?? 0) + 1;
+  // Atomically get next quote number for this contractor (prevents race conditions)
+  const { data: nextNum } = await supabase.rpc('next_quote_number', { p_contractor_id: user.id });
+  const nextQuoteNumber = nextNum || 1;
 
   const { data: quote, error } = await supabase
     .from('quotes')

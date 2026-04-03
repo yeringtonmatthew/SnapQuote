@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { Resend } from 'resend';
 import { createClient } from '@/lib/supabase/server';
 import { rateLimit } from '@/lib/rate-limit';
+import { escapeHtml } from '@/lib/escape-html';
 
 export async function POST(request: Request) {
   // Require authentication — only logged-in users should trigger welcome emails
@@ -35,7 +36,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Email is required' }, { status: 400 });
   }
 
-  const greeting = name ? `Welcome aboard, ${name}!` : 'Welcome!';
+  const greeting = name ? `Welcome aboard, ${escapeHtml(name)}!` : 'Welcome!';
 
   const resend = new Resend(apiKey);
 

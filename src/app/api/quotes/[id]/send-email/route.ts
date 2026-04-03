@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { Resend } from 'resend';
+import { escapeHtml } from '@/lib/escape-html';
 
 export async function POST(
   _request: Request,
@@ -40,7 +41,9 @@ export async function POST(
     .single();
 
   const businessName = profile?.business_name || profile?.full_name || 'Licensed Professional';
-  const brandColor = profile?.brand_color || '#4f46e5';
+  const rawBrandColor = profile?.brand_color || '#4f46e5';
+  // Validate brand_color to a safe CSS hex color to prevent style injection
+  const brandColor = /^#[0-9a-fA-F]{3,6}$/.test(rawBrandColor) ? rawBrandColor : '#4f46e5';
   const amount = Number(quote.subtotal).toLocaleString('en-US', { minimumFractionDigits: 2 });
 
   const apiKey = process.env.RESEND_API_KEY;
@@ -63,11 +66,11 @@ export async function POST(
     html: `
       <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 16px;">
         <div style="text-align: center; margin-bottom: 24px;">
-          ${profile?.logo_url ? `<img src="${profile.logo_url}" alt="${businessName}" style="max-height: 48px; margin-bottom: 12px;" />` : ''}
-          <h2 style="margin: 0; color: #111827; font-size: 20px;">${businessName}</h2>
+          ${profile?.logo_url ? `<img src="${profile.logo_url}" alt="${escapeHtml(businessName)}" style="max-height: 48px; margin-bottom: 12px;" />` : ''}
+          <h2 style="margin: 0; color: #111827; font-size: 20px;">${escapeHtml(businessName)}</h2>
         </div>
         <p style="color: #374151; font-size: 15px; line-height: 1.6;">
-          Hi ${quote.customer_name},
+          Hi ${escapeHtml(quote.customer_name)},
         </p>
         <p style="color: #374151; font-size: 15px; line-height: 1.6;">
           You've received a quote for <strong>$${amount}</strong>. Review the details and approve it online:

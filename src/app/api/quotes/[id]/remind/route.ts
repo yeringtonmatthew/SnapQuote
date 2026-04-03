@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { Resend } from 'resend';
+import { escapeHtml } from '@/lib/escape-html';
 
 export async function POST(
   _request: Request,
@@ -67,14 +68,14 @@ export async function POST(
     html: `
       <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 16px;">
         <div style="text-align: center; margin-bottom: 24px;">
-          ${profile?.logo_url ? `<img src="${profile.logo_url}" alt="${businessName}" style="max-height: 48px; margin-bottom: 12px;" />` : ''}
-          <h2 style="margin: 0; color: #111827; font-size: 20px;">${businessName}</h2>
+          ${profile?.logo_url ? `<img src="${profile.logo_url}" alt="${escapeHtml(businessName)}" style="max-height: 48px; margin-bottom: 12px;" />` : ''}
+          <h2 style="margin: 0; color: #111827; font-size: 20px;">${escapeHtml(businessName)}</h2>
         </div>
         <p style="color: #374151; font-size: 15px; line-height: 1.6;">
-          Hi ${quote.customer_name},
+          Hi ${escapeHtml(quote.customer_name)},
         </p>
         <p style="color: #374151; font-size: 15px; line-height: 1.6;">
-          Just a reminder — you have a quote from <strong>${businessName}</strong> for <strong>$${amount}</strong> waiting for your review.
+          Just a reminder — you have a quote from <strong>${escapeHtml(businessName)}</strong> for <strong>$${amount}</strong> waiting for your review.
         </p>
         <div style="text-align: center; margin: 28px 0;">
           <a href="${proposalUrl}" style="display: inline-block; background-color: #4f46e5; color: #ffffff; text-decoration: none; padding: 12px 32px; border-radius: 8px; font-weight: 600; font-size: 15px;">
