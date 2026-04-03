@@ -117,6 +117,7 @@ export interface Quote {
   job_tasks: JobTask[];
   completed_at: string | null;
   started_at: string | null;
+  review_requested_at: string | null;
   created_at: string;
 }
 
@@ -205,6 +206,19 @@ export interface FollowUp {
   created_at: string;
 }
 
+export type LeadSourceValue =
+  | 'google'
+  | 'facebook'
+  | 'angi'
+  | 'homeadvisor'
+  | 'thumbtack'
+  | 'referral'
+  | 'website'
+  | 'yard_sign'
+  | 'door_knock'
+  | 'jobber'
+  | 'other';
+
 export interface Client {
   id: string;
   user_id: string;
@@ -215,6 +229,7 @@ export interface Client {
   company: string | null;
   notes: string | null;
   tags: string[];
+  lead_source: LeadSourceValue | null;
   created_at: string;
   updated_at: string;
   // Computed / joined fields

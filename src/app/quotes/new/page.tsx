@@ -13,9 +13,10 @@ import { formatPhoneNumber } from '@/lib/format-phone';
 import PageTransition from '@/components/PageTransition';
 import AddressAutocomplete from '@/components/ui/AddressAutocomplete';
 import FormField from '@/components/ui/FormField';
-import type { LineItem, InspectionFinding, AIQuoteResponse, User, QuoteTemplate } from '@/types/database';
+import type { LineItem, InspectionFinding, AIQuoteResponse, User, QuoteTemplate, LeadSourceValue } from '@/types/database';
 import { DEFAULT_TERMS } from '@/lib/defaultTerms';
 import { Spinner } from '@/components/ui/Spinner';
+import { LEAD_SOURCES } from '@/lib/constants';
 
 type Step = 'start' | 'details' | 'generating' | 'review';
 
@@ -73,6 +74,7 @@ export default function NewQuotePage() {
   const [customerEmail, setCustomerEmail] = useState('');
   const [jobAddress, setJobAddress] = useState('');
   const [jobDescription, setJobDescription] = useState('');
+  const [leadSource, setLeadSource] = useState<LeadSourceValue | ''>('');
 
   // Client picker
   const [clients, setClients] = useState<any[]>([]);
@@ -479,6 +481,7 @@ export default function NewQuotePage() {
           customer_phone: customerPhone,
           customer_email: customerEmail,
           job_address: jobAddress,
+          lead_source: leadSource || null,
           photos: finalPhotoUrls,
           ai_description: aiDescription,
           scope_of_work: scopeOfWork,
@@ -746,6 +749,22 @@ export default function NewQuotePage() {
                   placeholder="123 Main St, Indianapolis, IN"
                   className="input-field"
                 />
+              </div>
+              <div>
+                <label htmlFor="leadSource" className="label">
+                  Lead Source <span className="font-normal text-gray-400">(optional)</span>
+                </label>
+                <select
+                  id="leadSource"
+                  value={leadSource}
+                  onChange={(e) => setLeadSource(e.target.value as LeadSourceValue | '')}
+                  className="input-field"
+                >
+                  <option value="">Select source...</option>
+                  {LEAD_SOURCES.map((s) => (
+                    <option key={s.value} value={s.value}>{s.label}</option>
+                  ))}
+                </select>
               </div>
             </div>
 

@@ -82,6 +82,8 @@ export function JobDetailContent({ quote, profile, brandColor }: Props) {
   const [showStagePicker, setShowStagePicker] = useState(false);
   const [currentStage, setCurrentStage] = useState<PipelineStage>(quote.pipeline_stage);
   const [copiedInvoice, setCopiedInvoice] = useState(false);
+  const [onMyWaySending, setOnMyWaySending] = useState(false);
+  const [onMyWaySent, setOnMyWaySent] = useState(false);
 
   const subtotal = Number(quote.subtotal);
   const total = Number(quote.total ?? quote.subtotal);
@@ -157,6 +159,24 @@ export function JobDetailContent({ quote, profile, brandColor }: Props) {
     }
   }, [currentStage, quote.id, router]);
 
+  const handleOnMyWay = useCallback(async () => {
+    if (onMyWaySending || onMyWaySent) return;
+    setOnMyWaySending(true);
+    haptic('medium');
+    try {
+      const res = await fetch(`/api/quotes/${quote.id}/on-my-way`, { method: 'POST' });
+      if (res.ok) {
+        setOnMyWaySent(true);
+        haptic('heavy');
+        setTimeout(() => setOnMyWaySent(false), 5000);
+      }
+    } catch {
+      // silent
+    } finally {
+      setOnMyWaySending(false);
+    }
+  }, [onMyWaySending, onMyWaySent, quote.id]);
+
   const handleSaveSchedule = useCallback(async () => {
     if (!scheduleDate) return;
     setIsSavingSchedule(true);
@@ -180,6 +200,34 @@ export function JobDetailContent({ quote, profile, brandColor }: Props) {
       setIsSavingSchedule(false);
     }
   }, [scheduleDate, scheduleTime, quote.id, router]);
+
+  // ── Review request state ──
+  const [isRequestingReview, setIsRequestingReview] = useState(false);
+  const [reviewRequested, setReviewRequested] = useState(!!quote.review_requested_at);
+  const [reviewError, setReviewError] = useState<string | null>(null);
+
+  const handleRequestReview = useCallback(async () => {
+    setIsRequestingReview(true);
+    setReviewError(null);
+    haptic('medium');
+    try {
+      const res = await fetch(`/api/quotes/${quote.id}/request-review`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setReviewError(data.error || 'Failed to send review request');
+      } else {
+        setReviewRequested(true);
+        haptic('medium');
+      }
+    } catch {
+      setReviewError('Something went wrong. Please try again.');
+    } finally {
+      setIsRequestingReview(false);
+    }
+  }, [quote.id]);
 
   // ── Next action logic ──
   type NextAction = {
@@ -528,6 +576,52 @@ export function JobDetailContent({ quote, profile, brandColor }: Props) {
                 </span>
               </button>
             )}
+
+            {/* Navigate */}
+            {quote.job_address ? (
+              <a
+                href={`https://maps.apple.com/?daddr=${encodeURIComponent(quote.job_address)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex flex-col items-center gap-1 group"
+              >
+                <span className="flex h-11 w-11 items-center justify-center rounded-full bg-white shadow-sm ring-1 ring-black/[0.04] group-active:scale-95 transition-all">
+                  <svg className="h-[18px] w-[18px] text-gray-600" fill="none" viewBox="0 0 24 24" strokeWidth={1.75} stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 6.75V15m6-6v8.25m.503 3.498l4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 00-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0z" />
+                  </svg>
+                </span>
+                <span className="text-[10px] font-medium text-gray-500">Navigate</span>
+              </a>
+            ) : null}
+
+            {/* On My Way */}
+            {quote.customer_phone && (currentStage === 'job_scheduled' || currentStage === 'in_progress') && (
+              <button
+                onClick={handleOnMyWay}
+                disabled={onMyWaySending}
+                className="flex flex-col items-center gap-1 group"
+              >
+                <span className={`flex h-11 w-11 items-center justify-center rounded-full shadow-sm ring-1 ring-black/[0.04] group-active:scale-95 transition-all ${onMyWaySent ? 'bg-green-50' : 'bg-white'}`}>
+                  {onMyWaySent ? (
+                    <svg className="h-[18px] w-[18px] text-green-500" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                    </svg>
+                  ) : onMyWaySending ? (
+                    <svg className="h-[18px] w-[18px] text-brand-600 animate-spin" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    </svg>
+                  ) : (
+                    <svg className="h-[18px] w-[18px] text-brand-600" fill="none" viewBox="0 0 24 24" strokeWidth={1.75} stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 00-10.026 0 1.106 1.106 0 00-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12" />
+                    </svg>
+                  )}
+                </span>
+                <span className="text-[10px] font-medium text-gray-500">
+                  {onMyWaySent ? 'Sent!' : 'On My Way'}
+                </span>
+              </button>
+            )}
           </div>
         </div>
 
@@ -593,6 +687,70 @@ export function JobDetailContent({ quote, profile, brandColor }: Props) {
             customerPhone={quote.customer_phone}
             brandColor={brandColor}
           />
+        </div>
+      )}
+
+      {/* Request Google Review — shown for completed stage */}
+      {currentStage === 'completed' && (
+        <div>
+          <div className="rounded-2xl bg-white shadow-sm ring-1 ring-black/[0.04] border-l-[3px] border-l-amber-400 overflow-hidden">
+            <div className="flex items-start gap-3 px-4 py-3.5">
+              <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-600">
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.75} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" />
+                </svg>
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-[14px] font-semibold text-amber-700">
+                  {reviewRequested ? 'Review Request Sent' : 'Request Google Review'}
+                </p>
+                <p className="mt-0.5 text-[13px] leading-snug text-gray-500">
+                  {reviewRequested
+                    ? `Review request sent to ${quote.customer_name}.`
+                    : `Ask ${quote.customer_name} to leave a Google review via text and email.`
+                  }
+                </p>
+                {reviewError && (
+                  <p className="mt-1 text-[12px] text-red-500">{reviewError}</p>
+                )}
+              </div>
+            </div>
+            <div className="px-4 pb-3.5">
+              {reviewRequested ? (
+                <button
+                  onClick={handleRequestReview}
+                  disabled={isRequestingReview}
+                  className="flex w-full items-center justify-center rounded-xl px-4 py-2.5 text-[13px] font-semibold bg-gray-100 text-gray-600 active:scale-[0.98] transition-all disabled:opacity-60"
+                >
+                  {isRequestingReview ? (
+                    <span className="flex items-center gap-2">
+                      <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                      </svg>
+                      Sending...
+                    </span>
+                  ) : 'Send Again'}
+                </button>
+              ) : (
+                <button
+                  onClick={handleRequestReview}
+                  disabled={isRequestingReview}
+                  className="flex w-full items-center justify-center rounded-xl px-4 py-2.5 text-[13px] font-semibold bg-amber-500 text-white active:scale-[0.98] transition-all disabled:opacity-60"
+                >
+                  {isRequestingReview ? (
+                    <span className="flex items-center gap-2">
+                      <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                      </svg>
+                      Sending...
+                    </span>
+                  ) : 'Request Review'}
+                </button>
+              )}
+            </div>
+          </div>
         </div>
       )}
 

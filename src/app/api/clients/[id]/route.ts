@@ -58,7 +58,7 @@ export async function PATCH(
   const body = await req.json();
   const updates: Record<string, unknown> = { updated_at: new Date().toISOString() };
 
-  for (const key of ['name', 'phone', 'email', 'address', 'company', 'notes']) {
+  for (const key of ['name', 'phone', 'email', 'address', 'company', 'notes', 'lead_source']) {
     if (key in body) {
       updates[key] = typeof body[key] === 'string' ? body[key].trim() || null : body[key];
     }

@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { relativeTime } from '@/lib/relative-time';
 import AddressAutocomplete from '@/components/ui/AddressAutocomplete';
+import { LEAD_SOURCES } from '@/lib/constants';
+import type { LeadSourceValue } from '@/types/database';
 
 interface ClientData {
   id: string;
@@ -15,6 +17,7 @@ interface ClientData {
   company: string | null;
   notes: string | null;
   tags: string[];
+  lead_source: LeadSourceValue | null;
   created_at: string;
 }
 
@@ -150,6 +153,7 @@ export default function ClientProfileContent({ client, quotes, totalRevenue, tot
   const [address, setAddress] = useState(client.address || '');
   const [company, setCompany] = useState(client.company || '');
   const [notes, setNotes] = useState(client.notes || '');
+  const [leadSource, setLeadSource] = useState<LeadSourceValue | ''>(client.lead_source || '');
   const [saving, setSaving] = useState(false);
   const [showPhoneActions, setShowPhoneActions] = useState(false);
   const [showAddressActions, setShowAddressActions] = useState(false);
@@ -163,7 +167,7 @@ export default function ClientProfileContent({ client, quotes, totalRevenue, tot
       await fetch(`/api/clients/${client.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, phone, email, address, company, notes }),
+        body: JSON.stringify({ name, phone, email, address, company, notes, lead_source: leadSource || null }),
       });
       setEditing(false);
       router.refresh();
@@ -357,6 +361,16 @@ export default function ClientProfileContent({ client, quotes, totalRevenue, tot
               <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full rounded-xl bg-gray-50 dark:bg-gray-800 px-4 py-2.5 text-[14px] text-gray-900 dark:text-gray-100 ring-1 ring-black/[0.04] dark:ring-white/[0.06] focus:outline-none focus:ring-2 focus:ring-brand-500" />
               <input type="text" placeholder="Company" value={company} onChange={(e) => setCompany(e.target.value)} className="w-full rounded-xl bg-gray-50 dark:bg-gray-800 px-4 py-2.5 text-[14px] text-gray-900 dark:text-gray-100 ring-1 ring-black/[0.04] dark:ring-white/[0.06] focus:outline-none focus:ring-2 focus:ring-brand-500" />
               <AddressAutocomplete value={address} onChange={setAddress} placeholder="Address" />
+              <select
+                value={leadSource}
+                onChange={(e) => setLeadSource(e.target.value as LeadSourceValue | '')}
+                className="w-full rounded-xl bg-gray-50 dark:bg-gray-800 px-4 py-2.5 text-[14px] text-gray-900 dark:text-gray-100 ring-1 ring-black/[0.04] dark:ring-white/[0.06] focus:outline-none focus:ring-2 focus:ring-brand-500"
+              >
+                <option value="">Lead Source (optional)</option>
+                {LEAD_SOURCES.map((s) => (
+                  <option key={s.value} value={s.value}>{s.label}</option>
+                ))}
+              </select>
               <button onClick={handleSave} disabled={saving || !name.trim()} className="w-full rounded-xl bg-brand-600 py-3 text-[14px] font-semibold text-white disabled:opacity-50 press-scale">
                 {saving ? 'Saving...' : 'Save Changes'}
               </button>
@@ -404,6 +418,26 @@ export default function ClientProfileContent({ client, quotes, totalRevenue, tot
             </div>
           )}
 
+          {/* Lead Source badge */}
+          {(() => {
+            const source = LEAD_SOURCES.find((s) => s.value === client.lead_source);
+            if (!source && !editing) return null;
+            return (
+              <div className="rounded-2xl bg-white dark:bg-gray-900 ring-1 ring-black/[0.04] dark:ring-white/[0.06] px-4 py-3">
+                <div className="flex items-center justify-between">
+                  <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Lead Source</p>
+                  {source ? (
+                    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${source.color}`}>
+                      {source.label}
+                    </span>
+                  ) : (
+                    <button onClick={() => setEditing(true)} className="text-[11px] font-semibold text-brand-600 press-scale">Add</button>
+                  )}
+                </div>
+              </div>
+            );
+          })()}
+
           {/* Inline notes */}
           <div className="rounded-2xl bg-white dark:bg-gray-900 ring-1 ring-black/[0.04] dark:ring-white/[0.06] overflow-hidden">
             <div className="px-4 pt-3 pb-2 flex items-center justify-between">
@@ -449,8 +483,9 @@ export default function ClientProfileContent({ client, quotes, totalRevenue, tot
           </div>
         </div>
 
-        {/* Right column: jobs */}
-        <div className="mt-4 lg:mt-0">
+        {/* Right column: jobs + activity timeline */}
+        <div className="mt-4 lg:mt-0 space-y-5">
+          <div>
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-[14px] font-bold text-gray-900 dark:text-gray-100">Jobs ({quotes.length})</h3>
             <Link href={`/quotes/new?client_id=${client.id}`} className="text-[12px] font-semibold text-brand-600 press-scale">+ New Quote</Link>
@@ -499,6 +534,41 @@ export default function ClientProfileContent({ client, quotes, totalRevenue, tot
               })}
             </div>
           )}
+          </div>
+
+          {/* Activity Timeline */}
+          {quotes.length > 0 && (() => {
+            const events: { date: string; icon: string; iconBg: string; label: string; detail?: string }[] = [];
+            quotes.forEach((q) => {
+              const qLabel = q.quote_number ? `#${String(q.quote_number).padStart(4, '0')}` : '';
+              events.push({ date: q.created_at, icon: '📝', iconBg: 'bg-gray-100', label: `Quote ${qLabel} created`, detail: `$${Number(q.total).toLocaleString()}` });
+              if (q.sent_at) events.push({ date: q.sent_at, icon: '📤', iconBg: 'bg-blue-50', label: `Quote ${qLabel} sent` });
+              if (q.paid_at) events.push({ date: q.paid_at, icon: '💰', iconBg: 'bg-green-50', label: `Payment received`, detail: `$${Number(q.total).toLocaleString()}` });
+              if (q.scheduled_date) events.push({ date: q.scheduled_date + 'T12:00:00Z', icon: '📅', iconBg: 'bg-amber-50', label: `Job ${qLabel} scheduled` });
+              if (q.pipeline_stage === 'completed') events.push({ date: q.created_at, icon: '✅', iconBg: 'bg-emerald-50', label: `Job ${qLabel} completed` });
+            });
+            events.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+            const shown = events.slice(0, 8);
+            return (
+              <div>
+                <h3 className="text-[14px] font-bold text-gray-900 dark:text-gray-100 mb-3">Activity</h3>
+                <div className="rounded-2xl bg-white dark:bg-gray-900 ring-1 ring-black/[0.04] dark:ring-white/[0.06] overflow-hidden">
+                  {shown.map((ev, i) => (
+                    <div key={i} className={`flex items-start gap-3 px-4 py-3 ${i < shown.length - 1 ? 'border-b border-gray-50 dark:border-gray-800' : ''}`}>
+                      <span className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${ev.iconBg} text-[14px]`}>{ev.icon}</span>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[13px] text-gray-700 dark:text-gray-300">{ev.label}</p>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          <span className="text-[11px] text-gray-400">{relativeTime(ev.date)}</span>
+                          {ev.detail && <span className="text-[11px] font-medium text-gray-500">{ev.detail}</span>}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })()}
         </div>
       </div>
 

@@ -31,6 +31,7 @@ export async function POST(request: Request) {
     status,
     pipeline_stage,
     client_id,
+    lead_source,
   } = body;
 
   if (customer_name === undefined || customer_name === null || typeof customer_name !== 'string') {
@@ -118,6 +119,15 @@ export async function POST(request: Request) {
         .update({ photos: [...existingPhotos, ...newPhotos] })
         .eq('id', quote.client_id);
     }
+  }
+
+  // Set lead_source on the client if provided
+  if (quote.client_id && lead_source) {
+    await supabase
+      .from('clients')
+      .update({ lead_source })
+      .eq('id', quote.client_id)
+      .is('lead_source', null); // Only set if not already set
   }
 
   return NextResponse.json(quote);
