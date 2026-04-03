@@ -132,10 +132,14 @@ export function TierEditor({ baseLineItems, existingOptions, onChange }: TierEdi
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 backdrop-blur-sm p-4 pt-[10vh] overflow-y-auto" onClick={() => setIsOpen(false)}>
-      <div className="w-full max-w-2xl rounded-2xl bg-white shadow-2xl" onClick={e => e.stopPropagation()}>
+    <div className="fixed inset-0 z-50 flex items-end sm:items-start sm:justify-center bg-black/40 backdrop-blur-sm sm:p-4 sm:pt-[10vh] overflow-y-auto" onClick={() => setIsOpen(false)}>
+      <div className="w-full sm:max-w-2xl rounded-t-2xl sm:rounded-2xl bg-white shadow-2xl max-h-[90dvh] overflow-hidden flex flex-col" onClick={e => e.stopPropagation()}>
+        {/* Mobile handle */}
+        <div className="flex justify-center pt-3 pb-1 sm:hidden">
+          <div className="h-1 w-10 rounded-full bg-gray-200" />
+        </div>
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+        <div className="flex items-center justify-between px-4 sm:px-5 py-3 sm:py-4 border-b border-gray-100">
           <div>
             <h2 className="text-lg font-bold text-gray-900">Configure Package Options</h2>
             <p className="text-xs text-gray-500 mt-0.5">Customers will choose from these options</p>
@@ -148,7 +152,7 @@ export function TierEditor({ baseLineItems, existingOptions, onChange }: TierEdi
         </div>
 
         {/* Tiers */}
-        <div className="px-5 py-4 space-y-4 max-h-[60vh] overflow-y-auto">
+        <div className="px-4 sm:px-5 py-4 space-y-4 overflow-y-auto flex-1">
           {options.map((option, tierIdx) => (
             <div key={tierIdx} className={`rounded-xl border ${option.recommended ? 'border-brand-300 bg-brand-50/30' : 'border-gray-200'} overflow-hidden`}>
               {/* Tier header */}

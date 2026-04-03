@@ -12,7 +12,8 @@ export default function BottomNav({ active }: BottomNavProps) {
     <nav
       aria-label="Main navigation"
       data-no-print
-      className="fixed bottom-0 left-0 right-0 z-30 bg-white/90 dark:bg-gray-900/90 backdrop-blur-xl border-t border-gray-200/60 dark:border-gray-800/60 px-4 pb-6 pt-2 lg:hidden"
+      className="fixed bottom-0 left-0 right-0 z-30 bg-white/90 dark:bg-gray-900/90 backdrop-blur-xl border-t border-gray-200/60 dark:border-gray-800/60 px-4 pt-2 lg:hidden"
+      style={{ paddingBottom: 'max(env(safe-area-inset-bottom, 12px), 24px)' }}
     >
       <div className="mx-auto flex max-w-lg items-center justify-around">
         {/* Home */}
@@ -21,7 +22,7 @@ export default function BottomNav({ active }: BottomNavProps) {
           aria-current={active === 'home' ? 'page' : undefined}
           className="flex flex-col items-center gap-1 rounded-xl press-scale focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
         >
-          <div className={`flex h-8 w-8 items-center justify-center rounded-xl ${active === 'home' ? 'bg-brand-600' : ''}`}>
+          <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${active === 'home' ? 'bg-brand-600' : ''}`}>
             <svg
               className={active === 'home' ? 'h-4 w-4 text-white' : 'h-5 w-5 text-gray-400'}
               fill="currentColor"
@@ -41,7 +42,7 @@ export default function BottomNav({ active }: BottomNavProps) {
           aria-current={active === 'pipeline' ? 'page' : undefined}
           className="flex flex-col items-center gap-1 rounded-xl press-scale focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
         >
-          <div className={`flex h-8 w-8 items-center justify-center rounded-xl ${active === 'pipeline' ? 'bg-brand-600' : ''}`}>
+          <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${active === 'pipeline' ? 'bg-brand-600' : ''}`}>
             <svg
               className={active === 'pipeline' ? 'h-4 w-4 text-white' : 'h-5 w-5 text-gray-400'}
               fill="none"
@@ -67,7 +68,7 @@ export default function BottomNav({ active }: BottomNavProps) {
           aria-current={active === 'schedule' ? 'page' : undefined}
           className="flex flex-col items-center gap-1 rounded-xl press-scale focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
         >
-          <div className={`flex h-8 w-8 items-center justify-center rounded-xl ${active === 'schedule' ? 'bg-brand-600' : ''}`}>
+          <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${active === 'schedule' ? 'bg-brand-600' : ''}`}>
             <svg
               className={active === 'schedule' ? 'h-4 w-4 text-white' : 'h-5 w-5 text-gray-400'}
               fill="none"
@@ -88,7 +89,7 @@ export default function BottomNav({ active }: BottomNavProps) {
           aria-current={active === 'clients' ? 'page' : undefined}
           className="flex flex-col items-center gap-1 rounded-xl press-scale focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
         >
-          <div className={`flex h-8 w-8 items-center justify-center rounded-xl ${active === 'clients' ? 'bg-brand-600' : ''}`}>
+          <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${active === 'clients' ? 'bg-brand-600' : ''}`}>
             <svg
               className={active === 'clients' ? 'h-4 w-4 text-white' : 'h-5 w-5 text-gray-400'}
               fill="none"

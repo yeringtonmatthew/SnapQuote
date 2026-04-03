@@ -279,7 +279,7 @@ export default function PhotoUpload({
               type="button"
               onClick={(e) => { e.stopPropagation(); removeFile(i); }}
               aria-label={`Remove photo ${i + 1}`}
-              className="absolute right-1 top-1 flex h-6 w-6 items-center justify-center rounded-full bg-black/60 text-white focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
+              className="absolute right-1 top-1 flex h-8 w-8 items-center justify-center rounded-full bg-black/60 text-white focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
             >
               <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />

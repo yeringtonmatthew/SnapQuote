@@ -61,7 +61,7 @@ export default function LineItemEditor({ lineItems, onChange }: LineItemEditorPr
               type="button"
               onClick={() => removeItem(i)}
               aria-label={`Remove line item ${i + 1}`}
-              className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-gray-300 hover:bg-red-50 hover:text-red-500 focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-gray-300 hover:bg-red-50 hover:text-red-500 focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
             >
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -69,22 +69,23 @@ export default function LineItemEditor({ lineItems, onChange }: LineItemEditorPr
             </button>
           </div>
 
-          {/* Row 2: Qty, Unit, Price, Total */}
-          <div className="mt-3 grid grid-cols-4 gap-2">
+          {/* Row 2: Qty, Unit, Price, Total — 2x2 grid on mobile, 4-col on wider */}
+          <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-2">
             <div>
-              <label htmlFor={`li-qty-${i}`} className="text-[10px] font-medium uppercase tracking-wide text-gray-500">Qty</label>
+              <label htmlFor={`li-qty-${i}`} className="text-[11px] font-medium uppercase tracking-wide text-gray-500">Qty</label>
               <input
                 id={`li-qty-${i}`}
                 type="number"
+                inputMode="decimal"
                 min="0"
                 step="0.5"
                 value={item.quantity}
                 onChange={(e) => updateItem(i, 'quantity', parseFloat(e.target.value) || 0)}
-                className="mt-0.5 w-full rounded-lg border border-gray-200 px-2 py-1.5 text-sm text-gray-900 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500/20"
+                className="mt-0.5 w-full rounded-lg border border-gray-200 px-3 py-2.5 text-[15px] text-gray-900 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500/20"
               />
             </div>
             <div className="relative">
-              <label htmlFor={`li-unit-${i}`} className="text-[10px] font-medium uppercase tracking-wide text-gray-500">Unit</label>
+              <label htmlFor={`li-unit-${i}`} className="text-[11px] font-medium uppercase tracking-wide text-gray-500">Unit</label>
               <input
                 id={`li-unit-${i}`}
                 type="text"
@@ -95,7 +96,7 @@ export default function LineItemEditor({ lineItems, onChange }: LineItemEditorPr
                   // Delay to allow pill button click to register
                   setTimeout(() => setFocusedUnitIndex(prev => prev === i ? null : prev), 150);
                 }}
-                className="mt-0.5 w-full rounded-lg border border-gray-200 px-2 py-1.5 text-sm text-gray-900 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500/20"
+                className="mt-0.5 w-full rounded-lg border border-gray-200 px-3 py-2.5 text-[15px] text-gray-900 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500/20"
               />
               {focusedUnitIndex === i && (
                 <div className="absolute left-0 top-full z-10 mt-1 flex flex-wrap gap-1 rounded-lg border border-gray-200 bg-white p-1.5 shadow-lg">
@@ -117,32 +118,34 @@ export default function LineItemEditor({ lineItems, onChange }: LineItemEditorPr
               )}
             </div>
             <div>
-              <label htmlFor={`li-price-${i}`} className="text-[10px] font-medium uppercase tracking-wide text-gray-500">Price</label>
+              <label htmlFor={`li-price-${i}`} className="text-[11px] font-medium uppercase tracking-wide text-gray-500">Price</label>
               <div className="relative mt-0.5">
-                <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-2 text-xs text-gray-400">$</span>
+                <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-sm text-gray-400">$</span>
                 <input
                   id={`li-price-${i}`}
                   type="number"
+                  inputMode="decimal"
                   min="0"
                   step="0.01"
                   value={item.unit_price}
                   onChange={(e) => updateItem(i, 'unit_price', parseFloat(e.target.value) || 0)}
-                  className="w-full rounded-lg border border-gray-200 py-1.5 pl-5 pr-2 text-sm text-gray-900 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500/20"
+                  className="w-full rounded-lg border border-gray-200 py-2.5 pl-6 pr-2 text-[15px] text-gray-900 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500/20"
                 />
               </div>
             </div>
             <div>
-              <label htmlFor={`li-total-${i}`} className="text-[10px] font-medium uppercase tracking-wide text-gray-500">Total</label>
+              <label htmlFor={`li-total-${i}`} className="text-[11px] font-medium uppercase tracking-wide text-gray-500">Total</label>
               <div className="relative mt-0.5">
-                <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-2 text-xs text-gray-400">$</span>
+                <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-sm text-gray-400">$</span>
                 <input
                   id={`li-total-${i}`}
                   type="number"
+                  inputMode="decimal"
                   min="0"
                   step="0.01"
                   value={item.total}
                   onChange={(e) => updateItem(i, 'total', parseFloat(e.target.value) || 0)}
-                  className="w-full rounded-lg border border-gray-200 bg-gray-50 py-1.5 pl-5 pr-2 text-sm font-semibold text-gray-900 focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-brand-500/20"
+                  className="w-full rounded-lg border border-gray-200 bg-gray-50 py-2.5 pl-6 pr-2 text-[15px] font-semibold text-gray-900 focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-brand-500/20"
                 />
               </div>
             </div>

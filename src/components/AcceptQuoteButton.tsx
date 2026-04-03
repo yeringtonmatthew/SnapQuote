@@ -157,7 +157,12 @@ export function AcceptQuoteButton({ quoteId, depositAmount, currentStatus, strip
         className="w-full rounded-2xl py-3.5 text-[15px] font-semibold text-white shadow-sm press-scale transition-colors focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
         style={{ backgroundColor: brandColor }}
       >
-        {depositAmount > 0 ? `Approve & Secure Your Project — ${fmt(depositAmount)}` : 'Approve & Secure Your Project'}
+        {depositAmount > 0 ? (
+          <span className="flex flex-col sm:flex-row items-center gap-0.5 sm:gap-1.5">
+            <span>Approve & Secure Your Project</span>
+            <span className="text-white/80 text-[13px] sm:text-[15px]">{fmt(depositAmount)} deposit</span>
+          </span>
+        ) : 'Approve & Secure Your Project'}
       </button>
 
       {showModal && (

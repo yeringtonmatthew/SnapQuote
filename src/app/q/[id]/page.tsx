@@ -294,13 +294,13 @@ export default async function CustomerProposalPage({
                 : <>Your proposal is<br />ready for review.</>
             }
           </h1>
-          {hasTiers ? (
+          {hasTiers && quoteOptions ? (
             <div className="mt-6">
               <p className="text-[10px] font-semibold text-white/35 uppercase tracking-[0.2em] mb-1">Starting From</p>
               <p className="text-[48px] font-extrabold tracking-tight text-white leading-none">
-                {fmtShort(Math.min(...quoteOptions!.map((o: any) => (o.line_items || []).reduce((s: number, i: any) => s + (Number(i.total) || 0), 0))))}
+                {fmtShort(quoteOptions.length > 0 ? Math.min(...quoteOptions.map((o: any) => (o.line_items || []).reduce((s: number, i: any) => s + (Number(i.total) || 0), 0))) : 0)}
               </p>
-              <p className="text-[13px] font-medium text-white/50 mt-1">{quoteOptions!.length} package options available</p>
+              <p className="text-[13px] font-medium text-white/50 mt-1">{quoteOptions.length} package options available</p>
             </div>
           ) : (
             <div className="mt-6 flex items-end gap-3">
@@ -818,7 +818,7 @@ export default async function CustomerProposalPage({
           <div className="animate-fade-up" style={{ animationDelay: '0.2s' }}>
             <TieredQuoteView
               quoteId={quote.id}
-              options={quoteOptions!}
+              options={quoteOptions || []}
               taxRate={quote.tax_rate != null ? Number(quote.tax_rate) : null}
               discountAmount={quote.discount_amount != null ? Number(quote.discount_amount) : null}
               discountPercent={quote.discount_percent != null ? Number(quote.discount_percent) : null}
