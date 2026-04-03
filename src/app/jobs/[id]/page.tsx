@@ -47,7 +47,7 @@ export default async function JobDetailPage({
 
   return (
     <PageTransition>
-      <DesktopSidebar active="pipeline" />
+      <DesktopSidebar active="jobs" />
       <div className="lg:pl-[220px]">
         <JobDetailContent
           quote={quoteWithDefaults}

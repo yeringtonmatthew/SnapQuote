@@ -71,6 +71,21 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     letterSpacing: 1.5,
   },
+  unpaidBadge: {
+    marginTop: 6,
+    backgroundColor: '#fff7ed',
+    borderRadius: 4,
+    paddingVertical: 3,
+    paddingHorizontal: 8,
+    alignSelf: 'flex-end',
+  },
+  unpaidText: {
+    fontSize: 10,
+    fontFamily: 'Helvetica-Bold',
+    color: '#c2410c',
+    textAlign: 'center',
+    letterSpacing: 1.5,
+  },
 
   // -- Parties --
   parties: {
@@ -211,20 +226,35 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     paddingVertical: 5,
-    backgroundColor: '#dcfce7',
     borderRadius: 3,
     paddingHorizontal: 6,
     marginTop: 4,
   },
+  depositRowPaid: {
+    backgroundColor: '#dcfce7',
+  },
+  depositRowUnpaid: {
+    backgroundColor: '#fff7ed',
+  },
   depositLabel: {
     fontSize: 9,
     fontFamily: 'Helvetica-Bold',
+  },
+  depositLabelPaid: {
     color: '#15803d',
+  },
+  depositLabelUnpaid: {
+    color: '#c2410c',
   },
   depositValue: {
     fontSize: 9,
     fontFamily: 'Helvetica-Bold',
+  },
+  depositValuePaid: {
     color: '#15803d',
+  },
+  depositValueUnpaid: {
+    color: '#c2410c',
   },
   balanceRow: {
     flexDirection: 'row',
@@ -298,7 +328,11 @@ export function InvoicePDF({ quote, profile }: InvoicePDFProps) {
     ? formatInvoiceNumber(quote.quote_number)
     : `INV-${quote.id.slice(-6).toUpperCase()}`;
 
-  const issueDate = quote.paid_at ? formatDate(quote.paid_at) : formatDate(quote.created_at);
+  const issueDate = quote.sent_at
+    ? formatDate(quote.sent_at)
+    : quote.paid_at
+      ? formatDate(quote.paid_at)
+      : formatDate(quote.created_at);
 
   return (
     <Document>
@@ -331,9 +365,15 @@ export function InvoicePDF({ quote, profile }: InvoicePDFProps) {
                 Ref: Quote {formatQuoteNumber(quote.quote_number)}
               </Text>
             )}
-            <View style={styles.paidBadge}>
-              <Text style={styles.paidText}>PAID</Text>
-            </View>
+            {quote.status === 'deposit_paid' ? (
+              <View style={styles.paidBadge}>
+                <Text style={styles.paidText}>PAID</Text>
+              </View>
+            ) : (
+              <View style={styles.unpaidBadge}>
+                <Text style={styles.unpaidText}>UNPAID</Text>
+              </View>
+            )}
           </View>
         </View>
 
@@ -424,9 +464,13 @@ export function InvoicePDF({ quote, profile }: InvoicePDFProps) {
               <Text style={styles.grandTotalLabel}>Total</Text>
               <Text style={styles.grandTotalValue}>{fmt(quoteTotal)}</Text>
             </View>
-            <View style={styles.depositRow}>
-              <Text style={styles.depositLabel}>Deposit Paid ({quote.deposit_percent}%)</Text>
-              <Text style={styles.depositValue}>{fmt(deposit)}</Text>
+            <View style={[styles.depositRow, quote.status === 'deposit_paid' ? styles.depositRowPaid : styles.depositRowUnpaid]}>
+              <Text style={[styles.depositLabel, quote.status === 'deposit_paid' ? styles.depositLabelPaid : styles.depositLabelUnpaid]}>
+                {quote.status === 'deposit_paid' ? 'Deposit Paid' : 'Deposit Required'} ({quote.deposit_percent}%)
+              </Text>
+              <Text style={[styles.depositValue, quote.status === 'deposit_paid' ? styles.depositValuePaid : styles.depositValueUnpaid]}>
+                {fmt(deposit)}
+              </Text>
             </View>
             <View style={styles.balanceRow}>
               <Text style={styles.balanceLabel}>Balance Remaining</Text>
@@ -438,16 +482,32 @@ export function InvoicePDF({ quote, profile }: InvoicePDFProps) {
         {/* Payment details */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Payment Information</Text>
-          <Text style={styles.bodyText}>
-            Status: Deposit paid{quote.paid_at ? ` on ${formatDate(quote.paid_at)}` : ''}
-          </Text>
-          <Text style={styles.bodyText}>
-            Deposit amount: {fmt(deposit)} ({quote.deposit_percent}% of total)
-          </Text>
-          {balance > 0 && (
-            <Text style={styles.bodyText}>
-              Balance of {fmt(balance)} due upon completion of work.
-            </Text>
+          {quote.status === 'deposit_paid' ? (
+            <>
+              <Text style={styles.bodyText}>
+                Status: Deposit paid{quote.paid_at ? ` on ${formatDate(quote.paid_at)}` : ''}
+              </Text>
+              <Text style={styles.bodyText}>
+                Deposit amount: {fmt(deposit)} ({quote.deposit_percent}% of total)
+              </Text>
+              {balance > 0 && (
+                <Text style={styles.bodyText}>
+                  Balance of {fmt(balance)} due upon completion of work.
+                </Text>
+              )}
+            </>
+          ) : (
+            <>
+              <Text style={styles.bodyText}>Status: Payment pending</Text>
+              <Text style={styles.bodyText}>
+                Deposit required: {fmt(deposit)} ({quote.deposit_percent}% of total)
+              </Text>
+              {balance > 0 && (
+                <Text style={styles.bodyText}>
+                  Balance of {fmt(balance)} due upon completion of work.
+                </Text>
+              )}
+            </>
           )}
         </View>
 

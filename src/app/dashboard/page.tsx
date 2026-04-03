@@ -394,9 +394,19 @@ export default async function DashboardPage() {
                           </span>
                         </div>
                         {typeof event.job_address === 'string' && event.job_address && (
-                          <p className="text-[12px] text-gray-500 dark:text-gray-400 truncate mt-0.5">
-                            {event.job_address}
-                          </p>
+                          <a
+                            href={`https://maps.google.com/?q=${encodeURIComponent(event.job_address)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                            className="flex items-center gap-1 text-[12px] text-brand-600 dark:text-brand-400 truncate mt-0.5 active:text-brand-700"
+                          >
+                            <svg className="h-3 w-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
+                            </svg>
+                            <span className="truncate underline underline-offset-2">{event.job_address}</span>
+                          </a>
                         )}
                       </div>
                       {quoteId && (
@@ -520,7 +530,7 @@ export default async function DashboardPage() {
               <h2 className="text-[11px] font-semibold uppercase tracking-widest text-gray-400">
                 Active Jobs
               </h2>
-              <Link href="/pipeline" className="text-[12px] font-medium text-brand-600 dark:text-brand-400">
+              <Link href="/jobs" className="text-[12px] font-medium text-brand-600 dark:text-brand-400">
                 View All &rarr;
               </Link>
             </div>

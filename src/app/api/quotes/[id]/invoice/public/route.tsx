@@ -23,9 +23,9 @@ export async function GET(
       return NextResponse.json({ error: 'Quote not found' }, { status: 404 });
     }
 
-    if (quote.status !== 'deposit_paid') {
+    if (quote.status === 'draft') {
       return NextResponse.json(
-        { error: 'Invoice is only available for paid quotes' },
+        { error: 'Invoice is not available for draft quotes' },
         { status: 400 }
       );
     }

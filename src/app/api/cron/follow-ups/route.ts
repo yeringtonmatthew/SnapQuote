@@ -1,21 +1,31 @@
 import { NextResponse } from 'next/server';
 import { timingSafeEqual } from 'crypto';
-import { createClient } from '@supabase/supabase-js';
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import twilio from 'twilio';
 import { Resend } from 'resend';
 
 // Follow-up schedule: [hours after sent_at]
 const FOLLOW_UP_SCHEDULE = [
-  { number: 1, hoursAfter: 24 },    // 1 day
-  { number: 2, hoursAfter: 72 },    // 3 days
-  { number: 3, hoursAfter: 120 },   // 5 days
+  { number: 1, hoursAfter: 24 },      // Day 1
+  { number: 2, hoursAfter: 72 },      // Day 3
+  { number: 3, hoursAfter: 120 },     // Day 5
+  { number: 4, hoursAfter: 168 },     // Day 7 (1 week)
+  { number: 5, hoursAfter: 240 },     // Day 10
+  { number: 6, hoursAfter: 336 },     // Day 14 (2 weeks)
+  { number: 7, hoursAfter: 504 },     // Day 21 (3 weeks)
 ];
 
 const DEFAULT_TEMPLATES = [
   'Hey {{name}}, just checking if you saw your quote. Let me know if you have any questions!',
   'Hi {{name}}, we have an opening this week if you\'d like to move forward. Would love to get you on the schedule!',
   'Hey {{name}}, just wanted to follow up — happy to adjust anything if needed or get you scheduled.',
+  'Hi {{name}}, your quote from {{business}} is still available. Ready when you are!',
+  'Hey {{name}}, just a friendly check-in. If timing or budget changed, I\'m happy to work with you.',
+  'Hi {{name}}, wanted to reach out one more time about your project. We\'d love to help when you\'re ready.',
+  'Hey {{name}}, it\'s been a few weeks — if you\'re still considering the work, {{business}} is here to help. No pressure!',
 ];
+
+const QUARTERLY_TEMPLATE = 'Hi {{name}}, it\'s been a while! Just checking in from {{business}} to see if you still need help with your project. We\'re here whenever you\'re ready.';
 
 function replaceTemplateVars(
   template: string,
@@ -25,6 +35,149 @@ function replaceTemplateVars(
     .replace(/\{\{name\}\}/g, vars.name)
     .replace(/\{\{business\}\}/g, vars.business)
     .replace(/\{\{link\}\}/g, vars.link);
+}
+
+interface Quote {
+  id: string;
+  contractor_id: string;
+  customer_name: string;
+  customer_phone: string | null;
+  customer_email: string | null;
+  subtotal: number;
+  sent_at: string;
+  status: string;
+  job_notes: any[] | null;
+}
+
+interface Contractor {
+  id: string;
+  business_name: string | null;
+  full_name: string | null;
+  auto_follow_up: boolean;
+  follow_up_templates: string[] | null;
+}
+
+async function sendFollowUp({
+  quote,
+  contractor,
+  followUpNumber,
+  message,
+  proposalUrl,
+  supabase,
+  sentFollowUps,
+  results,
+}: {
+  quote: Quote;
+  contractor: Contractor;
+  followUpNumber: number;
+  message: string;
+  proposalUrl: string;
+  supabase: SupabaseClient;
+  sentFollowUps: Set<string>;
+  results: { sent: number; errors: number; skipped: number };
+}): Promise<boolean> {
+  const businessName = contractor.business_name || contractor.full_name || 'Licensed Professional';
+  let channel: 'sms' | 'email' = 'sms';
+  let sendSuccess = false;
+
+  // Try SMS first
+  const sid = process.env.TWILIO_ACCOUNT_SID;
+  const token = process.env.TWILIO_AUTH_TOKEN;
+  const from = process.env.TWILIO_PHONE_NUMBER;
+  const messagingServiceSid = process.env.TWILIO_MESSAGING_SERVICE_SID;
+
+  if (sid && token && (from || messagingServiceSid) && quote.customer_phone) {
+    try {
+      const client = twilio(sid, token);
+      const digits = quote.customer_phone.replace(/\D/g, '');
+      const toNumber = digits.startsWith('1') ? `+${digits}` : `+1${digits}`;
+
+      const smsBody = `${message}\n\nView your quote: ${proposalUrl}`;
+
+      await client.messages.create({
+        body: smsBody,
+        ...(messagingServiceSid ? { messagingServiceSid } : { from }),
+        to: toNumber,
+      });
+      channel = 'sms';
+      sendSuccess = true;
+    } catch (smsError) {
+      console.error(`[cron/follow-ups] SMS error for quote ${quote.id}:`, smsError);
+    }
+  }
+
+  // Fall back to email if SMS failed or no phone
+  if (!sendSuccess && quote.customer_email) {
+    const apiKey = process.env.RESEND_API_KEY;
+    if (apiKey) {
+      try {
+        const resend = new Resend(apiKey);
+        const fromAddress = process.env.RESEND_FROM_EMAIL || 'SnapQuote <quotes@snapquote.dev>';
+        const amount = Number(quote.subtotal).toLocaleString('en-US', { minimumFractionDigits: 2 });
+
+        await resend.emails.send({
+          from: fromAddress,
+          to: quote.customer_email,
+          subject: `Following up on your quote from ${businessName}`,
+          html: `
+            <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 16px;">
+              <h2 style="margin: 0 0 16px; color: #111827; font-size: 20px;">${businessName}</h2>
+              <p style="color: #374151; font-size: 15px; line-height: 1.6;">
+                ${message}
+              </p>
+              <p style="color: #374151; font-size: 15px; line-height: 1.6;">
+                Your quote for <strong>$${amount}</strong> is ready for review.
+              </p>
+              <div style="text-align: center; margin: 28px 0;">
+                <a href="${proposalUrl}" style="display: inline-block; background-color: #4f46e5; color: #ffffff; text-decoration: none; padding: 12px 32px; border-radius: 8px; font-weight: 600; font-size: 15px;">
+                  View Your Quote
+                </a>
+              </div>
+              <p style="color: #6b7280; font-size: 13px; line-height: 1.5;">
+                This is an automated follow-up sent via <a href="https://snapquote.dev" style="color: #4f46e5; text-decoration: none;">SnapQuote</a>.
+              </p>
+            </div>
+          `,
+        });
+        channel = 'email';
+        sendSuccess = true;
+      } catch (emailError) {
+        console.error(`[cron/follow-ups] Email error for quote ${quote.id}:`, emailError);
+      }
+    }
+  }
+
+  if (sendSuccess) {
+    // Record follow-up
+    await supabase.from('follow_ups').insert({
+      quote_id: quote.id,
+      contractor_id: quote.contractor_id,
+      follow_up_number: followUpNumber,
+      channel,
+      message,
+      status: 'sent',
+    });
+
+    // Add system note to job_notes
+    const existingNotes: any[] = quote.job_notes || [];
+    const systemNote = {
+      id: crypto.randomUUID(),
+      text: `[Auto] Follow-up #${followUpNumber} sent via ${channel.toUpperCase()}`,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+    await supabase
+      .from('quotes')
+      .update({ job_notes: [...existingNotes, systemNote] })
+      .eq('id', quote.id);
+
+    sentFollowUps.add(`${quote.id}:${followUpNumber}`);
+    results.sent++;
+    return true;
+  } else {
+    results.errors++;
+    return false;
+  }
 }
 
 export async function GET(request: Request) {
@@ -56,7 +209,7 @@ export async function GET(request: Request) {
   };
 
   try {
-    // 1. Get all sent quotes from contractors with auto_follow_up enabled
+    // 1. Get all sent/approved quotes from contractors with auto_follow_up enabled
     const { data: quotes, error: quotesError } = await supabase
       .from('quotes')
       .select(`
@@ -70,7 +223,7 @@ export async function GET(request: Request) {
         status,
         job_notes
       `)
-      .eq('status', 'sent')
+      .in('status', ['sent', 'approved'])
       .not('sent_at', 'is', null);
 
     if (quotesError) {
@@ -121,13 +274,16 @@ export async function GET(request: Request) {
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 
-    // 4. Process each quote
+    // 4. Process each quote — initial 21-day sequence (follow-ups 1–7)
     for (const quote of quotes) {
       const contractor = contractorMap.get(quote.contractor_id);
       if (!contractor) {
         results.skipped++;
         continue;
       }
+
+      // Initial sequence only applies to 'sent' quotes
+      if (quote.status !== 'sent') continue;
 
       const sentAt = new Date(quote.sent_at);
       const hoursSinceSent = (now.getTime() - sentAt.getTime()) / (1000 * 60 * 60);
@@ -155,106 +311,74 @@ export async function GET(request: Request) {
           link: proposalUrl,
         });
 
-        let channel: 'sms' | 'email' = 'sms';
-        let sendSuccess = false;
-
-        // Try SMS first
-        const sid = process.env.TWILIO_ACCOUNT_SID;
-        const token = process.env.TWILIO_AUTH_TOKEN;
-        const from = process.env.TWILIO_PHONE_NUMBER;
-        const messagingServiceSid = process.env.TWILIO_MESSAGING_SERVICE_SID;
-
-        if (sid && token && (from || messagingServiceSid) && quote.customer_phone) {
-          try {
-            const client = twilio(sid, token);
-            const digits = quote.customer_phone.replace(/\D/g, '');
-            const toNumber = digits.startsWith('1') ? `+${digits}` : `+1${digits}`;
-
-            const smsBody = `${message}\n\nView your quote: ${proposalUrl}`;
-
-            await client.messages.create({
-              body: smsBody,
-              ...(messagingServiceSid ? { messagingServiceSid } : { from }),
-              to: toNumber,
-            });
-            channel = 'sms';
-            sendSuccess = true;
-          } catch (smsError) {
-            console.error(`[cron/follow-ups] SMS error for quote ${quote.id}:`, smsError);
-          }
-        }
-
-        // Fall back to email if SMS failed or no phone
-        if (!sendSuccess && quote.customer_email) {
-          const apiKey = process.env.RESEND_API_KEY;
-          if (apiKey) {
-            try {
-              const resend = new Resend(apiKey);
-              const fromAddress = process.env.RESEND_FROM_EMAIL || 'SnapQuote <quotes@snapquote.dev>';
-              const amount = Number(quote.subtotal).toLocaleString('en-US', { minimumFractionDigits: 2 });
-
-              await resend.emails.send({
-                from: fromAddress,
-                to: quote.customer_email,
-                subject: `Following up on your quote from ${businessName}`,
-                html: `
-                  <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 16px;">
-                    <h2 style="margin: 0 0 16px; color: #111827; font-size: 20px;">${businessName}</h2>
-                    <p style="color: #374151; font-size: 15px; line-height: 1.6;">
-                      ${message}
-                    </p>
-                    <p style="color: #374151; font-size: 15px; line-height: 1.6;">
-                      Your quote for <strong>$${amount}</strong> is ready for review.
-                    </p>
-                    <div style="text-align: center; margin: 28px 0;">
-                      <a href="${proposalUrl}" style="display: inline-block; background-color: #4f46e5; color: #ffffff; text-decoration: none; padding: 12px 32px; border-radius: 8px; font-weight: 600; font-size: 15px;">
-                        View Your Quote
-                      </a>
-                    </div>
-                    <p style="color: #6b7280; font-size: 13px; line-height: 1.5;">
-                      This is an automated follow-up sent via <a href="https://snapquote.dev" style="color: #4f46e5; text-decoration: none;">SnapQuote</a>.
-                    </p>
-                  </div>
-                `,
-              });
-              channel = 'email';
-              sendSuccess = true;
-            } catch (emailError) {
-              console.error(`[cron/follow-ups] Email error for quote ${quote.id}:`, emailError);
-            }
-          }
-        }
-
-        if (sendSuccess) {
-          // Record follow-up
-          await supabase.from('follow_ups').insert({
-            quote_id: quote.id,
-            contractor_id: quote.contractor_id,
-            follow_up_number: schedule.number,
-            channel,
-            message,
-            status: 'sent',
-          });
-
-          // Add system note to job_notes
-          const existingNotes: any[] = quote.job_notes || [];
-          const systemNote = {
-            id: crypto.randomUUID(),
-            text: `[Auto] Follow-up #${schedule.number} sent via ${channel.toUpperCase()}`,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          };
-          await supabase
-            .from('quotes')
-            .update({ job_notes: [...existingNotes, systemNote] })
-            .eq('id', quote.id);
-
-          sentFollowUps.add(key);
-          results.sent++;
-        } else {
-          results.errors++;
-        }
+        await sendFollowUp({
+          quote: quote as Quote,
+          contractor: contractor as Contractor,
+          followUpNumber: schedule.number,
+          message,
+          proposalUrl,
+          supabase,
+          sentFollowUps,
+          results,
+        });
       }
+    }
+
+    // 5. Quarterly check-ins (follow-up 8–12)
+    // For quotes that have completed the 21-day sequence (follow-up 7 sent)
+    for (const quote of quotes) {
+      const contractor = contractorMap.get(quote.contractor_id);
+      if (!contractor) continue;
+
+      // Check if follow-up 7 was sent
+      if (!sentFollowUps.has(`${quote.id}:7`)) continue;
+
+      // Find the highest follow-up number sent for this quote
+      const maxSent = Math.max(
+        ...Array.from(sentFollowUps)
+          .filter((k) => k.startsWith(`${quote.id}:`))
+          .map((k) => parseInt(k.split(':')[1]))
+      );
+
+      // Cap at 12
+      if (maxSent >= 12) continue;
+
+      const nextNumber = maxSent + 1;
+
+      // Get the last follow-up's sent date
+      const { data: lastFollowUp } = await supabase
+        .from('follow_ups')
+        .select('created_at')
+        .eq('quote_id', quote.id)
+        .eq('follow_up_number', maxSent)
+        .single();
+
+      if (!lastFollowUp) continue;
+
+      const lastSentAt = new Date(lastFollowUp.created_at);
+      const daysSinceLastFollowUp = (now.getTime() - lastSentAt.getTime()) / (1000 * 60 * 60 * 24);
+
+      // Only send if 90+ days since last follow-up
+      if (daysSinceLastFollowUp < 90) continue;
+
+      const businessName = contractor.business_name || contractor.full_name || 'Licensed Professional';
+      const proposalUrl = `${appUrl}/q/${quote.id}`;
+      const message = replaceTemplateVars(QUARTERLY_TEMPLATE, {
+        name: quote.customer_name,
+        business: businessName,
+        link: proposalUrl,
+      });
+
+      await sendFollowUp({
+        quote: quote as Quote,
+        contractor: contractor as Contractor,
+        followUpNumber: nextNumber,
+        message,
+        proposalUrl,
+        supabase,
+        sentFollowUps,
+        results,
+      });
     }
 
     return NextResponse.json({
