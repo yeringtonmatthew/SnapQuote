@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import ClientCreateSheet from './ClientCreateSheet';
 
@@ -8,6 +9,8 @@ export default function QuickAddMenu() {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [showClientSheet, setShowClientSheet] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
 
   // Close on escape
   useEffect(() => {
@@ -114,8 +117,8 @@ export default function QuickAddMenu() {
         </span>
       </button>
 
-      {/* Menu Popover */}
-      {open && (
+      {/* Menu Popover — portaled to body so backdrop-filter on BottomNav doesn't break fixed positioning */}
+      {open && mounted && createPortal(
         <>
           {/* Backdrop */}
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
@@ -139,7 +142,8 @@ export default function QuickAddMenu() {
               ))}
             </div>
           </div>
-        </>
+        </>,
+        document.body
       )}
 
       {/* Client Create Sheet */}
