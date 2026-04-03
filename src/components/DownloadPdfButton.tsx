@@ -19,8 +19,8 @@ export function DownloadPdfButton({ quoteId }: { quoteId: string }) {
       a.click();
       a.remove();
       URL.revokeObjectURL(url);
-    } catch (e) {
-      console.error('PDF download failed:', e);
+    } catch {
+      // Download failed — loading state clears in finally
     } finally {
       setLoading(false);
     }

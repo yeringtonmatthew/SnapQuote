@@ -225,19 +225,12 @@ export default function PhotoUpload({
     try {
       const compressed = await Promise.all(
         raw.map(async (file) => {
-          const result = await compressImage(file);
-          const beforeKB = (file.size / 1024).toFixed(1);
-          const afterKB = (result.size / 1024).toFixed(1);
-          const pct = ((1 - result.size / file.size) * 100).toFixed(0);
-          console.log(
-            `[PhotoUpload] Compressed "${file.name}": ${beforeKB} KB → ${afterKB} KB (${pct}% reduction)`,
-          );
-          return result;
+          return compressImage(file);
         }),
       );
       onFilesChange([...files, ...compressed]);
     } catch (err) {
-      console.error('[PhotoUpload] Compression failed, using originals:', err);
+      // Compression failed — silently fall back to originals
       onFilesChange([...files, ...raw]);
     } finally {
       setCompressing(false);

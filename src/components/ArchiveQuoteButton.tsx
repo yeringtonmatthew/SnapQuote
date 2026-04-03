@@ -31,8 +31,8 @@ export function ArchiveQuoteButton({ quoteId, isArchived = false }: ArchiveQuote
         router.push('/quotes');
         router.refresh();
       }
-    } catch (err) {
-      console.error('Archive failed:', err);
+    } catch {
+      // Archive/unarchive failed silently — user can retry
     } finally {
       setLoading(false);
       setShowConfirm(false);

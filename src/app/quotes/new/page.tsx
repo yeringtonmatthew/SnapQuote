@@ -218,12 +218,12 @@ export default function NewQuotePage() {
           const { data: urlData } = supabase.storage.from('photos').getPublicUrl(filePath);
           newUrls.push(urlData.publicUrl);
         } else {
-          console.error('[PhotoUpload] Upload error:', uploadError.message);
+          // Upload error — skip this photo
         }
       }
       setPhotoUrls(prev => [...prev, ...newUrls]);
-    } catch (err) {
-      console.error('[PhotoUpload] Failed to upload:', err);
+    } catch {
+      // Photo upload failed silently
     } finally {
       setUploadingPhotos(false);
     }
@@ -465,7 +465,7 @@ export default function NewQuotePage() {
             const { data: urlData } = supabase.storage.from('photos').getPublicUrl(filePath);
             finalPhotoUrls.push(urlData.publicUrl);
           } else {
-            console.error('[Save] Supabase upload error:', uploadError.message);
+            // Upload error — skip this photo
           }
         }
       }

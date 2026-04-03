@@ -787,8 +787,8 @@ export function CalendarView({ initialEvents, unscheduledQuotes, allQuotes = [] 
           setEvents((prev) => [...prev, created]);
         }
       }
-    } catch (err) {
-      console.error('Failed to save event:', err);
+    } catch {
+      // Event save failed silently — user can retry
     }
     setSheetOpen(false);
     setEditingEvent(undefined);

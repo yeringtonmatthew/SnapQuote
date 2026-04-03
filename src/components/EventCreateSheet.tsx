@@ -196,8 +196,8 @@ export default function EventCreateSheet({
         setNewClientAddress('');
         haptic('medium');
       }
-    } catch (err) {
-      console.error('Failed to create client:', err);
+    } catch {
+      // Client creation failed silently — user can retry
     } finally {
       setCreatingClient(false);
     }
@@ -232,8 +232,8 @@ export default function EventCreateSheet({
       if (res.ok) {
         window.location.reload();
       }
-    } catch (err) {
-      console.error('Failed to delete event:', err);
+    } catch {
+      // Delete failed silently — user can retry
     }
   };
 

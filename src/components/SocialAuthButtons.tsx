@@ -23,7 +23,6 @@ export default function SocialAuthButtons({ redirectTo = '/dashboard' }: SocialA
     });
 
     if (error) {
-      console.error(`[social-auth] ${provider} error:`, error.message);
       setLoadingProvider(null);
     }
   }

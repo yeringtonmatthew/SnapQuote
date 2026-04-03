@@ -4,7 +4,7 @@ import Link from 'next/link';
 import QuickAddMenu from './QuickAddMenu';
 
 interface BottomNavProps {
-  active: 'home' | 'pipeline' | 'new' | 'schedule' | 'clients' | 'profile';
+  active: 'home' | 'pipeline' | 'jobs' | 'new' | 'schedule' | 'clients' | 'profile';
 }
 
 export default function BottomNav({ active }: BottomNavProps) {

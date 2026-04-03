@@ -46,8 +46,7 @@ export function LogoUpload({ currentLogoUrl, userId, onUpload }: LogoUploadProps
       if (updateError) throw updateError;
 
       onUpload(url);
-    } catch (err) {
-      console.error('Logo upload failed:', err);
+    } catch {
       toast({ message: 'Upload failed. Please try again.', type: 'error' });
     } finally {
       setUploading(false);

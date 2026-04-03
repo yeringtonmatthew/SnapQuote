@@ -155,8 +155,7 @@ export function BeforeAfterGenerator({
         }
         setIsGenerating(false);
       }, 'image/png');
-    } catch (err) {
-      console.error('Failed to generate before/after image:', err);
+    } catch {
       setIsGenerating(false);
     }
   }, [selectedBefore, selectedAfter, beforePhotos, afterPhotos, jobDescription, businessName, generatedUrl]);
@@ -182,8 +181,8 @@ export function BeforeAfterGenerator({
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
       }
-    } catch (err) {
-      console.error('Failed to copy:', err);
+    } catch {
+      // Copy to clipboard failed silently
     }
   }, []);
 

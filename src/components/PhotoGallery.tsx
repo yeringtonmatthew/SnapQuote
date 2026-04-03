@@ -51,10 +51,10 @@ export default function PhotoGallery({ photos, quoteId }: PhotoGalleryProps) {
         body: JSON.stringify({ photos: newPhotos }),
       });
       if (!res.ok) {
-        console.error('Failed to save photo order');
+        // Order save failed silently — visual order is already updated
       }
-    } catch (err) {
-      console.error('Error saving photo order:', err);
+    } catch {
+      // Network error — visual order is already updated
     } finally {
       setReorderSaving(false);
     }
@@ -231,8 +231,7 @@ export default function PhotoGallery({ photos, quoteId }: PhotoGalleryProps) {
         next[annotatingIndex] = url;
         return next;
       });
-    } catch (err) {
-      console.error('Annotation save failed:', err);
+    } catch {
       alert('Failed to save annotation. Please try again.');
     } finally {
       setSaving(false);

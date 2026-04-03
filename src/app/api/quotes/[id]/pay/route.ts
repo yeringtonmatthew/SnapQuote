@@ -17,6 +17,13 @@ export async function POST(
     return NextResponse.json({ error: 'Payment method required' }, { status: 400 });
   }
 
+  // Validate payment amount
+  if (amount !== undefined && amount !== null) {
+    if (typeof amount !== 'number' || !Number.isFinite(amount) || amount <= 0) {
+      return NextResponse.json({ error: 'Amount must be a positive number' }, { status: 400 });
+    }
+  }
+
   const { data: quote, error: fetchError } = await supabase
     .from('quotes')
     .select('*')
@@ -26,6 +33,14 @@ export async function POST(
 
   if (fetchError || !quote) {
     return NextResponse.json({ error: 'Quote not found' }, { status: 404 });
+  }
+
+  // Validate amount does not exceed quote total
+  if (amount !== undefined && amount !== null) {
+    const quoteTotal = Number(quote.total ?? quote.subtotal ?? 0);
+    if (amount > quoteTotal) {
+      return NextResponse.json({ error: 'Amount exceeds quote total' }, { status: 400 });
+    }
   }
 
   const { data: updated, error } = await supabase

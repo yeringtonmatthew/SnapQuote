@@ -156,8 +156,8 @@ export default function QuoteList({ quotes, defaultFilter = 'All' }: { quotes: Q
         exitSelectMode();
         router.refresh();
       }
-    } catch (err) {
-      console.error('Bulk action failed:', err);
+    } catch {
+      // Bulk action failed silently — user can retry
     } finally {
       setBulkLoading(false);
     }
@@ -171,8 +171,8 @@ export default function QuoteList({ quotes, defaultFilter = 'All' }: { quotes: Q
         body: JSON.stringify({ ids: [id], action: 'unarchive' }),
       });
       if (res.ok) router.refresh();
-    } catch (err) {
-      console.error('Unarchive failed:', err);
+    } catch {
+      // Unarchive failed silently — user can retry
     }
   }, [router]);
 
@@ -187,8 +187,8 @@ export default function QuoteList({ quotes, defaultFilter = 'All' }: { quotes: Q
         haptic('medium');
         router.refresh();
       }
-    } catch (err) {
-      console.error('Archive failed:', err);
+    } catch {
+      // Archive failed silently — user can retry
     }
   }, [router]);
 

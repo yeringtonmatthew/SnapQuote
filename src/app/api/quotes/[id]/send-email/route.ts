@@ -43,7 +43,7 @@ export async function POST(
   const businessName = profile?.business_name || profile?.full_name || 'Licensed Professional';
   const rawBrandColor = profile?.brand_color || '#4f46e5';
   // Validate brand_color to a safe CSS hex color to prevent style injection
-  const brandColor = /^#[0-9a-fA-F]{3,6}$/.test(rawBrandColor) ? rawBrandColor : '#4f46e5';
+  const brandColor = /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(rawBrandColor) ? rawBrandColor : '#4f46e5';
   const amount = Number(quote.subtotal).toLocaleString('en-US', { minimumFractionDigits: 2 });
 
   const apiKey = process.env.RESEND_API_KEY;

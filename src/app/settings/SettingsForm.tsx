@@ -172,7 +172,6 @@ export function SettingsForm({ profile, userId, email, stripeConnected, stripeSt
       .eq('id', userId);
     setSaving(false);
     if (error) {
-      console.error('[settings] Save error:', error);
       setSaveError(error.message);
       return;
     }
@@ -437,8 +436,8 @@ export function SettingsForm({ profile, userId, email, stripeConnected, stripeSt
                       setReviewsFetched(true);
                       setTimeout(() => setReviewsFetched(false), 3000);
                     }
-                  } catch (err) {
-                    console.error('Failed to sync reviews:', err);
+                  } catch {
+                    // Sync failed silently — user can retry
                   } finally {
                     setFetchingReviews(false);
                   }

@@ -274,6 +274,9 @@ export async function GET(request: Request) {
     );
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    if (process.env.NODE_ENV === 'production' && !process.env.NEXT_PUBLIC_APP_URL) {
+      console.error('[cron/follow-ups] NEXT_PUBLIC_APP_URL is not set in production — using localhost fallback');
+    }
 
     // 4. Process each quote — initial 21-day sequence (follow-ups 1–7)
     for (const quote of quotes) {

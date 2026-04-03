@@ -1,6 +1,10 @@
 'use client';
 
-export default function ProfileError({ reset }: { error: Error; reset: () => void }) {
+import * as Sentry from '@sentry/nextjs';
+import { useEffect } from 'react';
+
+export default function ProfileError({ error, reset }: { error: Error; reset: () => void }) {
+  useEffect(() => { Sentry.captureException(error); }, [error]);
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center bg-[#f2f2f7] px-6">
       <div className="text-center">
@@ -13,7 +17,7 @@ export default function ProfileError({ reset }: { error: Error; reset: () => voi
         <p className="mt-2 text-[14px] text-gray-500">We couldn't load this profile. Please try again.</p>
         <button
           onClick={reset}
-          className="mt-6 rounded-xl bg-gray-900 px-6 py-3 text-[14px] font-semibold text-white hover:bg-gray-800 transition-colors"
+          className="mt-6 rounded-xl bg-brand-600 px-6 py-3 text-[14px] font-semibold text-white hover:bg-brand-700 transition-colors"
         >
           Try Again
         </button>

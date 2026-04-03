@@ -59,7 +59,6 @@ export function JobPhotoManager({ quoteId, jobPhotos: initialPhotos, quotePhotos
           });
 
         if (uploadError) {
-          console.error('[JobPhotoManager] Upload failed:', uploadError);
           continue;
         }
 
@@ -86,8 +85,8 @@ export function JobPhotoManager({ quoteId, jobPhotos: initialPhotos, quotePhotos
       }
 
       router.refresh();
-    } catch (err) {
-      console.error('[JobPhotoManager] Error uploading:', err);
+    } catch {
+      // Upload failed silently — user can retry
     } finally {
       setUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = '';

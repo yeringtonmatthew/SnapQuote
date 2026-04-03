@@ -13,32 +13,48 @@ const nextConfig = {
   experimental: {
     serverComponentsExternalPackages: ['@react-pdf/renderer'],
   },
-  headers: async () => [
-    {
-      // Allow proposal pages to be iframed from our own domain (preview modal)
-      source: '/q/:id*',
-      headers: [
-        { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
-        { key: 'X-Content-Type-Options', value: 'nosniff' },
-        { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
-        { key: 'X-DNS-Prefetch-Control', value: 'on' },
-        { key: 'Strict-Transport-Security', value: 'max-age=31536000; includeSubDomains' },
-        { key: 'Permissions-Policy', value: 'camera=(self), microphone=(), geolocation=()' },
-      ],
-    },
-    {
-      // Block all other pages from being iframed
-      source: '/((?!q/).*)',
-      headers: [
-        { key: 'X-Frame-Options', value: 'DENY' },
-        { key: 'X-Content-Type-Options', value: 'nosniff' },
-        { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
-        { key: 'X-DNS-Prefetch-Control', value: 'on' },
-        { key: 'Strict-Transport-Security', value: 'max-age=31536000; includeSubDomains' },
-        { key: 'Permissions-Policy', value: 'camera=(self), microphone=(), geolocation=()' },
-      ],
-    },
-  ],
+  headers: async () => {
+    const cspDirectives = [
+      "default-src 'self'",
+      "script-src 'self' js.stripe.com va.vercel-scripts.com",
+      "style-src 'self' 'unsafe-inline' fonts.googleapis.com",
+      "img-src 'self' data: blob: *.supabase.co *.stripe.com",
+      "font-src 'self' fonts.gstatic.com",
+      "connect-src 'self' *.supabase.co *.stripe.com *.sentry.io vitals.vercel-insights.com",
+      "frame-src 'self' js.stripe.com",
+      "frame-ancestors 'self'",
+      "object-src 'none'",
+      "base-uri 'self'",
+    ].join('; ');
+
+    const sharedSecurityHeaders = [
+      { key: 'X-Content-Type-Options', value: 'nosniff' },
+      { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+      { key: 'X-DNS-Prefetch-Control', value: 'on' },
+      { key: 'Strict-Transport-Security', value: 'max-age=31536000; includeSubDomains' },
+      { key: 'Permissions-Policy', value: 'camera=(self), microphone=(), geolocation=()' },
+      { key: 'Content-Security-Policy-Report-Only', value: cspDirectives },
+    ];
+
+    return [
+      {
+        // Allow proposal pages to be iframed from our own domain (preview modal)
+        source: '/q/:id*',
+        headers: [
+          { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
+          ...sharedSecurityHeaders,
+        ],
+      },
+      {
+        // Block all other pages from being iframed
+        source: '/((?!q/).*)',
+        headers: [
+          { key: 'X-Frame-Options', value: 'DENY' },
+          ...sharedSecurityHeaders,
+        ],
+      },
+    ];
+  },
 };
 
 module.exports = withSentryConfig(nextConfig, {
