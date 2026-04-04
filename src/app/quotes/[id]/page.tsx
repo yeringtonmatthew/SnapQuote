@@ -364,6 +364,10 @@ export default async function QuoteDetailPage({
                 currentStatus={quote.status}
                 hasPhone={!!quote.customer_phone}
                 hasEmail={!!quote.customer_email}
+                customerName={quote.customer_name}
+                customerPhone={quote.customer_phone}
+                total={Number(quote.total ?? quote.subtotal)}
+                businessName={businessName}
               />
             </div>
             <div className="flex justify-center">
