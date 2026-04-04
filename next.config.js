@@ -13,15 +13,19 @@ const nextConfig = {
   experimental: {
     serverComponentsExternalPackages: ['@react-pdf/renderer'],
   },
+  redirects: async () => [
+    { source: '/login', destination: '/auth/login', permanent: true },
+    { source: '/signup', destination: '/auth/signup', permanent: true },
+  ],
   headers: async () => {
     const cspDirectives = [
       "default-src 'self'",
-      "script-src 'self' js.stripe.com va.vercel-scripts.com",
+      "script-src 'self' 'unsafe-inline' js.stripe.com va.vercel-scripts.com",
       "style-src 'self' 'unsafe-inline' fonts.googleapis.com",
       "img-src 'self' data: blob: *.supabase.co *.stripe.com",
       "font-src 'self' fonts.gstatic.com",
-      "connect-src 'self' *.supabase.co *.stripe.com *.sentry.io vitals.vercel-insights.com",
-      "frame-src 'self' js.stripe.com",
+      "connect-src 'self' *.supabase.co *.stripe.com *.sentry.io vitals.vercel-insights.com accounts.google.com",
+      "frame-src 'self' js.stripe.com accounts.google.com",
       "frame-ancestors 'self'",
       "object-src 'none'",
       "base-uri 'self'",
@@ -33,7 +37,7 @@ const nextConfig = {
       { key: 'X-DNS-Prefetch-Control', value: 'on' },
       { key: 'Strict-Transport-Security', value: 'max-age=31536000; includeSubDomains' },
       { key: 'Permissions-Policy', value: 'camera=(self), microphone=(), geolocation=()' },
-      { key: 'Content-Security-Policy-Report-Only', value: cspDirectives },
+      { key: 'Content-Security-Policy', value: cspDirectives },
     ];
 
     return [
