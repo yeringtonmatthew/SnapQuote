@@ -35,6 +35,17 @@ export async function POST(request: NextRequest) {
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
         process.env.SUPABASE_SERVICE_ROLE_KEY!
       );
+
+      // Idempotency: skip if this checkout session was already processed
+      const { data: existing } = await supabase
+        .from('quotes')
+        .select('stripe_checkout_session_id')
+        .eq('id', quoteId)
+        .single();
+      if (existing?.stripe_checkout_session_id === session.id) {
+        return NextResponse.json({ received: true });
+      }
+
       const { error: updateError } = await supabase
         .from('quotes')
         .update({
