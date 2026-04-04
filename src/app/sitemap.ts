@@ -1,5 +1,6 @@
 import { MetadataRoute } from 'next';
 import { createClient } from '@supabase/supabase-js';
+import { getAllArticles } from '@/lib/blog';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticPages: MetadataRoute.Sitemap = [
@@ -8,7 +9,32 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: 'https://snapquote.dev/auth/signup', lastModified: new Date(), changeFrequency: 'monthly', priority: 0.7 },
     { url: 'https://snapquote.dev/privacy', lastModified: new Date(), changeFrequency: 'yearly', priority: 0.3 },
     { url: 'https://snapquote.dev/terms', lastModified: new Date(), changeFrequency: 'yearly', priority: 0.3 },
+    // Comparison pages
+    { url: 'https://snapquote.dev/compare/snapquote-vs-sumoquote', lastModified: new Date(), changeFrequency: 'monthly', priority: 0.7 },
+    { url: 'https://snapquote.dev/compare/snapquote-vs-roofr', lastModified: new Date(), changeFrequency: 'monthly', priority: 0.7 },
+    { url: 'https://snapquote.dev/compare/snapquote-vs-jobber', lastModified: new Date(), changeFrequency: 'monthly', priority: 0.7 },
+    // Trade-specific landing pages
+    { url: 'https://snapquote.dev/roofing-estimate-software', lastModified: new Date(), changeFrequency: 'monthly', priority: 0.8 },
+    { url: 'https://snapquote.dev/hvac-quoting-app', lastModified: new Date(), changeFrequency: 'monthly', priority: 0.8 },
+    { url: 'https://snapquote.dev/contractor-estimate-app', lastModified: new Date(), changeFrequency: 'monthly', priority: 0.8 },
   ];
+
+  // Blog pages
+  staticPages.push({
+    url: 'https://snapquote.dev/blog',
+    lastModified: new Date(),
+    changeFrequency: 'weekly',
+    priority: 0.8,
+  });
+
+  for (const article of getAllArticles()) {
+    staticPages.push({
+      url: `https://snapquote.dev/blog/${article.slug}`,
+      lastModified: new Date(article.date),
+      changeFrequency: 'monthly',
+      priority: 0.7,
+    });
+  }
 
   // Dynamically include public contractor profiles
   try {
