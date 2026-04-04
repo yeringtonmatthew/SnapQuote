@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
         process.env.SUPABASE_SERVICE_ROLE_KEY!
       );
-      await supabase
+      const { error: updateError } = await supabase
         .from('quotes')
         .update({
           status: 'deposit_paid',
@@ -46,6 +46,11 @@ export async function POST(request: NextRequest) {
         })
         .eq('id', quoteId)
         .neq('status', 'deposit_paid');
+
+      if (updateError) {
+        console.error('[stripe-webhook] Failed to update quote:', updateError);
+        return NextResponse.json({ error: 'Quote update failed' }, { status: 500 });
+      }
 
       // Notify contractor about payment
       const { data: quote } = await supabase
