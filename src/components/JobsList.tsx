@@ -157,63 +157,102 @@ export default function JobsList({ jobs }: { jobs: Job[] }) {
             </p>
           </div>
         ) : (
-          filtered.map((job) => {
+          filtered.map((job, idx) => {
             const config = STAGE_CONFIG[job.pipeline_stage] || STAGE_CONFIG.deposit_collected;
             const tasks = job.job_tasks || [];
             const completedTasks = tasks.filter((t) => t.done).length;
             const totalTasks = tasks.length;
+            const taskPct = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+            const initial = job.customer_name?.charAt(0)?.toUpperCase() || '?';
+
+            // Deterministic avatar color
+            const avatarColors = [
+              'bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400',
+              'bg-violet-50 text-violet-600 dark:bg-violet-950/40 dark:text-violet-400',
+              'bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400',
+              'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400',
+              'bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-400',
+              'bg-cyan-50 text-cyan-600 dark:bg-cyan-950/40 dark:text-cyan-400',
+            ];
+            let hash = 0;
+            for (let i = 0; i < job.customer_name.length; i++) {
+              hash = job.customer_name.charCodeAt(i) + ((hash << 5) - hash);
+            }
+            const avatarClass = avatarColors[Math.abs(hash) % avatarColors.length];
 
             return (
               <Link
                 key={job.id}
                 href={`/jobs/${job.id}`}
-                className="block rounded-2xl bg-white dark:bg-gray-900 p-4 shadow-sm press-scale transition-all hover:shadow-md active:scale-[0.98]"
+                className="block rounded-2xl bg-white dark:bg-gray-900 p-4 shadow-[0_1px_3px_rgba(0,0,0,0.04),0_1px_2px_rgba(0,0,0,0.02)] dark:shadow-none ring-1 ring-black/[0.03] dark:ring-white/[0.06] transition-all duration-200 hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] hover:-translate-y-[0.5px] active:scale-[0.98] animate-card-enter"
+                style={{ animationDelay: `${idx * 40}ms` }}
               >
-                <div className="flex items-start justify-between gap-3">
-                  {/* Left side */}
+                <div className="flex items-start gap-3.5">
+                  {/* Avatar */}
+                  <div className={`h-11 w-11 shrink-0 rounded-full flex items-center justify-center text-[14px] font-bold ${avatarClass}`}>
+                    {initial}
+                  </div>
+
+                  {/* Content */}
                   <div className="min-w-0 flex-1">
-                    <p className="text-[15px] font-semibold text-gray-900 dark:text-gray-100 truncate">
-                      {job.customer_name}
-                    </p>
-                    {job.job_address && (
-                      <p className="text-[13px] text-gray-500 dark:text-gray-400 truncate mt-0.5">
-                        {job.job_address}
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[15px] font-semibold text-gray-900 dark:text-gray-100 truncate leading-tight">
+                          {job.customer_name}
+                        </p>
+                        {job.job_address && (
+                          <p className="text-[12px] text-gray-400 dark:text-gray-500 truncate mt-0.5">
+                            {job.job_address}
+                          </p>
+                        )}
+                      </div>
+                      <p className="shrink-0 text-[15px] font-bold text-gray-900 dark:text-gray-100 tabular-nums">
+                        {formatCurrency(Number(job.total))}
                       </p>
-                    )}
-                    <div className="flex items-center gap-2 mt-2">
+                    </div>
+
+                    {/* Status row */}
+                    <div className="flex items-center gap-2 mt-2.5">
                       <span
                         className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold ${config.bg} ${config.text}`}
                       >
                         <span className={`mr-1.5 h-1.5 w-1.5 rounded-full ${config.color}`} />
                         {config.label}
                         {job.pipeline_stage === 'job_scheduled' && job.scheduled_date && (
-                          <span className="ml-1">
+                          <span className="ml-1 opacity-70">
                             &middot; {formatDate(job.scheduled_date)}
                           </span>
                         )}
                       </span>
+
+                      {/* Task progress bar */}
                       {totalTasks > 0 && (
-                        <span className="text-[11px] text-gray-400 dark:text-gray-500 font-medium">
-                          {completedTasks}/{totalTasks} tasks
+                        <span className="inline-flex items-center gap-1.5 text-[11px] text-gray-400 dark:text-gray-500 font-medium tabular-nums">
+                          <span className="relative h-1 w-8 rounded-full bg-gray-100 dark:bg-gray-800 overflow-hidden">
+                            <span
+                              className={`absolute inset-y-0 left-0 rounded-full transition-all duration-500 ease-out ${
+                                taskPct === 100 ? 'bg-emerald-500' : 'bg-brand-500'
+                              }`}
+                              style={{ width: `${taskPct}%` }}
+                            />
+                          </span>
+                          {completedTasks}/{totalTasks}
                         </span>
                       )}
-                    </div>
-                  </div>
 
-                  {/* Right side */}
-                  <div className="text-right shrink-0">
-                    <p className="text-[15px] font-semibold text-gray-900 dark:text-gray-100">
-                      {formatCurrency(Number(job.total))}
-                    </p>
-                    <svg
-                      className="h-4 w-4 text-gray-300 dark:text-gray-600 ml-auto mt-1"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      strokeWidth={2}
-                      stroke="currentColor"
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-                    </svg>
+                      <span className="flex-1" />
+
+                      {/* Chevron */}
+                      <svg
+                        className="h-4 w-4 text-gray-300 dark:text-gray-600"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        strokeWidth={2}
+                        stroke="currentColor"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                      </svg>
+                    </div>
                   </div>
                 </div>
               </Link>

@@ -20,7 +20,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    if (!rateLimit(user.id + ':generate', 10, 3_600_000)) {
+    if (!(await rateLimit(user.id + ':generate', 10, 3_600_000))) {
       return NextResponse.json({ error: 'Too many requests. Please try again later.' }, { status: 429 });
     }
 

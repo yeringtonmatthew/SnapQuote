@@ -12,7 +12,7 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   const ip = request.headers.get('x-forwarded-for') || 'unknown';
-  if (!rateLimit(ip + ':invoice-public', 20, 60_000)) {
+  if (!(await rateLimit(ip + ':invoice-public', 20, 60_000))) {
     return new Response('Too many requests', { status: 429 });
   }
 
@@ -37,14 +37,20 @@ export async function GET(
       );
     }
 
+    // Select only fields required for PDF rendering — never expose stripe_account_id,
+    // webhook_url, api keys, or other sensitive profile columns in a public endpoint
     const { data: profile } = await supabase
       .from('users')
-      .select('*')
+      .select('id, business_name, full_name, email, phone, address, logo_url, brand_color, license_number, website')
       .eq('id', quote.contractor_id)
       .single();
 
+    if (!profile) {
+      return NextResponse.json({ error: 'Contractor profile not found' }, { status: 404 });
+    }
+
     const buffer = await renderToBuffer(
-      <InvoicePDF quote={quote} profile={profile} />
+      <InvoicePDF quote={quote} profile={profile as unknown as import('@/types/database').User} />
     );
 
     const customerSlug = quote.customer_name.replace(/\s+/g, '-').toLowerCase();

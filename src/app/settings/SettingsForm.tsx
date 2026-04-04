@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { LogoUpload } from '@/components/LogoUpload';
@@ -8,19 +8,51 @@ import { StripeConnectButton } from '@/components/StripeConnectButton';
 import PhoneInput from '@/components/ui/PhoneInput';
 import FormField from '@/components/ui/FormField';
 import { Spinner } from '@/components/ui/Spinner';
+import type { User } from '@/types/database';
 import { TeamSection } from './TeamSection';
 import { LeadIntegrationsSection } from './LeadIntegrationsSection';
 
 interface Props {
-  profile: any;
+  profile: User;
   userId: string;
   email: string;
   stripeConnected: boolean;
   stripeStatus?: string | null;
 }
 
-const TABS = ['Account', 'Profile', 'Team', 'Pricing', 'Branding', 'Payments', 'Automation', 'Integrations', 'Advanced'] as const;
-type Tab = typeof TABS[number];
+// Grouped navigation — iOS-style section list
+const SECTIONS = [
+  {
+    group: 'Business',
+    icon: (
+      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 3h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008z" />
+      </svg>
+    ),
+    tabs: ['Account', 'Profile', 'Branding'] as const,
+  },
+  {
+    group: 'Features',
+    icon: (
+      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 010 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 010-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28z" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+      </svg>
+    ),
+    tabs: ['Pricing', 'Automation'] as const,
+  },
+  {
+    group: 'Integrations',
+    icon: (
+      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" />
+      </svg>
+    ),
+    tabs: ['Payments', 'Team', 'Integrations', 'Advanced'] as const,
+  },
+] as const;
+
+type Tab = typeof SECTIONS[number]['tabs'][number];
 
 export function SettingsForm({ profile, userId, email, stripeConnected, stripeStatus }: Props) {
   const router = useRouter();
@@ -76,14 +108,15 @@ export function SettingsForm({ profile, userId, email, stripeConnected, stripeSt
       setEmailUpdating(false);
     }
   }, [newEmail, emailCooldown]);
+
   const [saved, setSaved] = useState(false);
   const [logoUrl, setLogoUrl] = useState<string | null>(profile?.logo_url || null);
   const [businessName, setBusinessName] = useState(profile?.business_name || '');
   const [fullName, setFullName] = useState(profile?.full_name || '');
   const [phone, setPhone] = useState(profile?.phone || '');
-  const [tradeType, setTradeType] = useState(profile?.trade_type || 'general');
+  const [tradeType, setTradeType] = useState<import('@/types/database').TradeType>(profile?.trade_type || 'general');
   const [hourlyRate, setHourlyRate] = useState(String(profile?.hourly_rate || '125'));
-  const [rateType, setRateType] = useState(profile?.rate_type || 'hourly');
+  const [rateType, setRateType] = useState<import('@/types/database').RateType>(profile?.rate_type || 'hourly');
   const [depositPercent, setDepositPercent] = useState(String(profile?.default_deposit_percent ?? '0'));
   const [defaultTaxRate, setDefaultTaxRate] = useState(String(profile?.default_tax_rate ?? ''));
   const [profileSlug, setProfileSlug] = useState(profile?.profile_slug || '');
@@ -102,11 +135,56 @@ export function SettingsForm({ profile, userId, email, stripeConnected, stripeSt
       "Hey {{name}}, just wanted to follow up — happy to adjust anything if needed or get you scheduled.",
     ]
   );
+  const [businessEmail, setBusinessEmail] = useState(profile?.business_email || '');
   const [googlePlaceId, setGooglePlaceId] = useState(profile?.google_place_id || '');
   const [showReviewsOnQuotes, setShowReviewsOnQuotes] = useState(profile?.show_reviews_on_quotes ?? true);
   const [fetchingReviews, setFetchingReviews] = useState(false);
   const [reviewsFetched, setReviewsFetched] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<{ businessName?: string; webhookUrl?: string }>({});
+
+  // Track dirty state for unsaved changes indicator
+  const initialValues = useRef({
+    businessName: profile?.business_name || '',
+    fullName: profile?.full_name || '',
+    phone: profile?.phone || '',
+    tradeType: profile?.trade_type || 'general',
+    hourlyRate: String(profile?.hourly_rate || '125'),
+    rateType: profile?.rate_type || 'hourly',
+    depositPercent: String(profile?.default_deposit_percent ?? '0'),
+    defaultTaxRate: String(profile?.default_tax_rate ?? ''),
+    profileSlug: profile?.profile_slug || '',
+    profileBio: profile?.profile_bio || '',
+    profilePublic: profile?.profile_public || false,
+    brandColor: profile?.brand_color || '',
+    webhookUrl: profile?.webhook_url || '',
+    autoFollowUp: profile?.auto_follow_up || false,
+    businessEmail: profile?.business_email || '',
+    googlePlaceId: profile?.google_place_id || '',
+    showReviewsOnQuotes: profile?.show_reviews_on_quotes ?? true,
+  });
+
+  const isDirty = useMemo(() => {
+    const iv = initialValues.current;
+    return (
+      businessName !== iv.businessName ||
+      fullName !== iv.fullName ||
+      phone !== iv.phone ||
+      tradeType !== iv.tradeType ||
+      hourlyRate !== iv.hourlyRate ||
+      rateType !== iv.rateType ||
+      depositPercent !== iv.depositPercent ||
+      defaultTaxRate !== iv.defaultTaxRate ||
+      profileSlug !== iv.profileSlug ||
+      profileBio !== iv.profileBio ||
+      profilePublic !== iv.profilePublic ||
+      brandColor !== iv.brandColor ||
+      webhookUrl !== iv.webhookUrl ||
+      autoFollowUp !== iv.autoFollowUp ||
+      businessEmail !== iv.businessEmail ||
+      googlePlaceId !== iv.googlePlaceId ||
+      showReviewsOnQuotes !== iv.showReviewsOnQuotes
+    );
+  }, [businessName, fullName, phone, tradeType, hourlyRate, rateType, depositPercent, defaultTaxRate, profileSlug, profileBio, profilePublic, brandColor, webhookUrl, autoFollowUp, businessEmail, googlePlaceId, showReviewsOnQuotes]);
 
   function isValidUrl(str: string): boolean {
     try {
@@ -138,7 +216,6 @@ export function SettingsForm({ profile, userId, email, stripeConnected, stripeSt
     if (webhookUrl.trim() && !isValidUrl(webhookUrl.trim())) errors.webhookUrl = 'Enter a valid URL (https://...)';
     if (Object.keys(errors).length > 0) {
       setFieldErrors(errors);
-      // Switch to the tab that has the error
       if (errors.businessName) setActiveTab('Profile');
       else if (errors.webhookUrl) setActiveTab('Advanced');
       return;
@@ -162,6 +239,7 @@ export function SettingsForm({ profile, userId, email, stripeConnected, stripeSt
         profile_slug: profileSlug.trim() || null,
         profile_bio: profileBio.trim() || null,
         profile_public: profilePublic,
+        business_email: businessEmail.trim() || null,
         webhook_url: webhookUrl.trim() || null,
         brand_color: brandColor.trim() || null,
         auto_follow_up: autoFollowUp,
@@ -175,41 +253,76 @@ export function SettingsForm({ profile, userId, email, stripeConnected, stripeSt
       setSaveError(error.message);
       return;
     }
+    // Update initial values so isDirty resets
+    initialValues.current = {
+      businessName, fullName, phone, tradeType, hourlyRate, rateType,
+      depositPercent, defaultTaxRate, profileSlug, profileBio, profilePublic,
+      brandColor, webhookUrl, autoFollowUp, businessEmail, googlePlaceId, showReviewsOnQuotes,
+    };
     setSaved(true);
     router.refresh();
-    setTimeout(() => setSaved(false), 2500);
+    setTimeout(() => setSaved(false), 3000);
   }
 
+  // Find which group the active tab is in
+  const activeGroup = SECTIONS.find((s) => (s.tabs as readonly string[]).includes(activeTab))?.group || 'Business';
+
   return (
-    <div className="space-y-6">
-      {/* Tab Bar */}
-      <div className="flex gap-1 overflow-x-auto scrollbar-none bg-gray-100 dark:bg-gray-800 rounded-xl p-1">
-        {TABS.map((tab) => (
+    <div className="space-y-4">
+      {/* Section Group Selector — always visible, no overflow */}
+      <div className="grid grid-cols-3 gap-2">
+        {SECTIONS.map((section) => (
           <button
-            key={tab}
+            key={section.group}
             type="button"
-            onClick={() => setActiveTab(tab)}
-            className={`shrink-0 px-4 py-2 text-[13px] font-medium rounded-lg transition-all ${
-              activeTab === tab
-                ? 'bg-white dark:bg-gray-900 shadow-sm text-gray-900 dark:text-gray-100 font-semibold'
-                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+            aria-label={`${section.group} settings`}
+            aria-pressed={activeGroup === section.group}
+            onClick={() => setActiveTab(section.tabs[0])}
+            className={`flex flex-col items-center gap-1.5 rounded-2xl border-2 px-3 py-3 min-h-[44px] transition-all active:scale-[0.97] ${
+              activeGroup === section.group
+                ? 'border-brand-600 bg-brand-50 dark:bg-brand-900/20 text-brand-600 dark:text-brand-400'
+                : 'border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 text-gray-500 dark:text-gray-400 hover:border-gray-200 dark:hover:border-gray-700'
             }`}
           >
-            {tab}
+            <span className={activeGroup === section.group ? 'text-brand-600 dark:text-brand-400' : 'text-gray-400 dark:text-gray-500'}>{section.icon}</span>
+            <span className="text-[12px] font-semibold">{section.group}</span>
           </button>
         ))}
       </div>
 
+      {/* Sub-tabs within the active group */}
+      {(() => {
+        const section = SECTIONS.find((s) => s.group === activeGroup);
+        if (!section || section.tabs.length <= 1) return null;
+        return (
+          <div className="flex gap-1 bg-gray-100 dark:bg-gray-800 rounded-xl p-1">
+            {section.tabs.map((tab) => (
+              <button
+                key={tab}
+                type="button"
+                onClick={() => setActiveTab(tab)}
+                className={`flex-1 px-3 py-2 min-h-[44px] text-[13px] font-medium rounded-lg transition-all ${
+                  activeTab === tab
+                    ? 'bg-white dark:bg-gray-900 shadow-sm text-gray-900 dark:text-gray-100 font-semibold'
+                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                }`}
+              >
+                {tab}
+              </button>
+            ))}
+          </div>
+        );
+      })()}
+
       {/* Account Tab */}
       {activeTab === 'Account' && (
-        <div className="card space-y-4">
-          <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">Account</p>
+        <div className="card space-y-5">
+          <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">Account</p>
 
-          <div>
-            <label className="label">Email Address</label>
+          <FormField label="Login Email" htmlFor="account-email">
             {!editingEmail ? (
               <div className="flex items-center justify-between rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 px-4 py-3">
-                <span className="text-sm text-gray-900 dark:text-gray-100">{email}</span>
+                <span className="text-base text-gray-900 dark:text-gray-100">{email}</span>
                 <button
                   type="button"
                   onClick={() => {
@@ -218,7 +331,7 @@ export function SettingsForm({ profile, userId, email, stripeConnected, stripeSt
                     setEmailError(null);
                     setEmailSuccess(false);
                   }}
-                  className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                  className="flex h-11 w-11 items-center justify-center rounded-xl text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                   title="Edit email"
                 >
                   <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
@@ -235,9 +348,9 @@ export function SettingsForm({ profile, userId, email, stripeConnected, stripeSt
                   Current: {email}
                 </div>
 
-                <div>
-                  <label className="label">New Email Address</label>
+                <FormField label="New Email Address" htmlFor="newEmail">
                   <input
+                    id="newEmail"
                     type="email"
                     value={newEmail}
                     onChange={(e) => {
@@ -252,9 +365,9 @@ export function SettingsForm({ profile, userId, email, stripeConnected, stripeSt
                       if (e.key === 'Escape') setEditingEmail(false);
                     }}
                   />
-                </div>
+                </FormField>
 
-                <p className="text-xs text-gray-400">
+                <p className="text-xs text-gray-400 dark:text-gray-500">
                   A confirmation link will be sent to your new email.
                 </p>
 
@@ -303,7 +416,7 @@ export function SettingsForm({ profile, userId, email, stripeConnected, stripeSt
                 </div>
               </div>
             )}
-          </div>
+          </FormField>
         </div>
       )}
 
@@ -323,15 +436,16 @@ export function SettingsForm({ profile, userId, email, stripeConnected, stripeSt
             <p className="mt-4 text-sm font-semibold text-gray-900 dark:text-gray-100">
               {businessName || 'Your Business'}
             </p>
-            <p className="text-xs text-gray-400">{email}</p>
+            <p className="text-xs text-gray-400 dark:text-gray-500">{email}</p>
           </div>
 
           {/* Business Info */}
-          <div className="card space-y-4">
-            <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">Business</p>
+          <div className="card space-y-5">
+            <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">Business Info</p>
 
-            <FormField label="Business Name" required error={fieldErrors.businessName}>
+            <FormField label="Business Name" required error={fieldErrors.businessName} htmlFor="businessName">
               <input
+                id="businessName"
                 type="text"
                 value={businessName}
                 onChange={(e) => { setBusinessName(e.target.value); setFieldErrors(prev => { const n = {...prev}; delete n.businessName; return n; }); }}
@@ -340,30 +454,57 @@ export function SettingsForm({ profile, userId, email, stripeConnected, stripeSt
               />
             </FormField>
 
-            <div>
-              <label className="label">Your Name</label>
+            <FormField label="Your Name" htmlFor="fullName">
               <input
+                id="fullName"
                 type="text"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
                 placeholder="John Smith"
                 className="input-field"
               />
-            </div>
+            </FormField>
 
-            <div>
-              <label className="label">Phone Number</label>
+            <FormField label="Phone Number" htmlFor="phone">
               <PhoneInput
                 value={phone}
                 onChange={setPhone}
               />
-            </div>
+            </FormField>
 
             <div>
-              <label className="label">Trade</label>
+              <FormField label="Business Email" htmlFor="businessEmail">
+                <input
+                  id="businessEmail"
+                  type="email"
+                  value={businessEmail}
+                  onChange={(e) => setBusinessEmail(e.target.value)}
+                  placeholder="billing@yourbusiness.com"
+                  className="input-field"
+                />
+              </FormField>
+              <p className="mt-1.5 text-xs text-gray-400 dark:text-gray-500">
+                This email appears on your quotes. Leave blank to use your login email.
+              </p>
+              {/* Customer-facing preview */}
+              <div className="mt-3 rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700/50 px-4 py-3">
+                <p className="text-[11px] font-medium text-gray-400 dark:text-gray-500 mb-1">Customers will see</p>
+                <div className="flex items-center gap-2">
+                  <svg className="h-4 w-4 text-gray-400 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+                  </svg>
+                  <span className="text-sm text-gray-700 dark:text-gray-300">
+                    {businessEmail.trim() || email}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <FormField label="Trade" htmlFor="tradeType">
               <select
+                id="tradeType"
                 value={tradeType}
-                onChange={(e) => setTradeType(e.target.value)}
+                onChange={(e) => setTradeType(e.target.value as import('@/types/database').TradeType)}
                 className="input-field"
               >
                 <option value="roofing">Roofing</option>
@@ -375,24 +516,25 @@ export function SettingsForm({ profile, userId, email, stripeConnected, stripeSt
                 <option value="general">General Contractor</option>
                 <option value="other">Other</option>
               </select>
-            </div>
+            </FormField>
           </div>
 
           {/* Reviews Integration */}
-          <div className="card space-y-4">
-            <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">Reviews</p>
+          <div className="card space-y-5">
+            <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">Reviews</p>
 
-            <div className="flex items-center justify-between">
-              <div>
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-gray-900 dark:text-gray-100">Show reviews on quotes</p>
-                <p className="text-xs text-gray-400">Display your Google reviews on every proposal you send</p>
+                <p className="text-xs text-gray-400 dark:text-gray-500">Display your Google reviews on every proposal you send</p>
               </div>
               <button
                 type="button"
                 role="switch"
                 aria-checked={showReviewsOnQuotes}
+                aria-label="Show reviews on quotes"
                 onClick={() => setShowReviewsOnQuotes(!showReviewsOnQuotes)}
-                className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors ${
+                className={`relative inline-flex h-7 w-12 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors ${
                   showReviewsOnQuotes ? 'bg-brand-600' : 'bg-gray-200 dark:bg-gray-700'
                 }`}
               >
@@ -402,22 +544,22 @@ export function SettingsForm({ profile, userId, email, stripeConnected, stripeSt
               </button>
             </div>
 
-            <div>
-              <label className="label">Google Place ID</label>
+            <FormField label="Google Place ID" htmlFor="googlePlaceId">
               <input
+                id="googlePlaceId"
                 type="text"
                 value={googlePlaceId}
                 onChange={(e) => setGooglePlaceId(e.target.value)}
                 placeholder="ChIJ..."
                 className="input-field"
               />
-              <p className="mt-1 text-xs text-gray-400">
-                Find your Place ID at{' '}
-                <a href="https://developers.google.com/maps/documentation/places/web-service/place-id" target="_blank" rel="noopener noreferrer" className="text-brand-600 hover:underline">
-                  Google Place ID Finder
-                </a>
-              </p>
-            </div>
+            </FormField>
+            <p className="-mt-3 text-xs text-gray-400 dark:text-gray-500">
+              Find your Place ID at{' '}
+              <a href="https://developers.google.com/maps/documentation/places/web-service/place-id" target="_blank" rel="noopener noreferrer" className="text-brand-600 hover:underline">
+                Google Place ID Finder
+              </a>
+            </p>
 
             {googlePlaceId.trim() && (
               <button
@@ -432,7 +574,6 @@ export function SettingsForm({ profile, userId, email, stripeConnected, stripeSt
                       body: JSON.stringify({ google_place_id: googlePlaceId.trim() }),
                     });
                     if (res.ok) {
-                      const data = await res.json();
                       setReviewsFetched(true);
                       setTimeout(() => setReviewsFetched(false), 3000);
                     }
@@ -473,73 +614,75 @@ export function SettingsForm({ profile, userId, email, stripeConnected, stripeSt
 
       {/* Pricing Tab */}
       {activeTab === 'Pricing' && (
-        <div className="card space-y-4">
-          <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">Pricing Defaults</p>
+        <div className="card space-y-5">
+          <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">Pricing Defaults</p>
 
-          <div>
-            <label className="label">Rate Type</label>
+          <FormField label="Rate Type" htmlFor="rateType">
             <select
+              id="rateType"
               value={rateType}
-              onChange={(e) => setRateType(e.target.value)}
+              onChange={(e) => setRateType(e.target.value as import('@/types/database').RateType)}
               className="input-field"
             >
               <option value="hourly">Hourly ($/hr)</option>
-              <option value="per_square">Per Square ($/sq — 100 sq ft)</option>
+              <option value="per_square">Per Square ($/sq -- 100 sq ft)</option>
               <option value="per_sqft">Per Square Foot ($/sq ft)</option>
               <option value="per_linear_ft">Per Linear Foot ($/lin ft)</option>
               <option value="flat_rate">Flat Rate ($/job)</option>
             </select>
-          </div>
+          </FormField>
 
-          <div>
-            <label className="label">
-              {rateType === 'hourly' ? 'Hourly Rate' : rateType === 'per_square' ? 'Rate per Square' : rateType === 'per_sqft' ? 'Rate per Sq Ft' : rateType === 'per_linear_ft' ? 'Rate per Linear Ft' : 'Flat Rate'}
-            </label>
+          <FormField label={rateType === 'hourly' ? 'Hourly Rate' : rateType === 'per_square' ? 'Rate per Square' : rateType === 'per_sqft' ? 'Rate per Sq Ft' : rateType === 'per_linear_ft' ? 'Rate per Linear Ft' : 'Flat Rate'} htmlFor="hourlyRate">
             <div className="relative">
               <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 text-gray-400">$</span>
               <input
+                id="hourlyRate"
                 type="number"
                 value={hourlyRate}
                 onChange={(e) => setHourlyRate(e.target.value)}
+                placeholder="125"
                 className="input-field pl-8"
               />
-              <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-4 text-gray-400">
+              <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-4 text-gray-400 text-sm">
                 {rateType === 'hourly' ? '/hr' : rateType === 'per_square' ? '/sq' : rateType === 'per_sqft' ? '/sq ft' : rateType === 'per_linear_ft' ? '/lin ft' : '/job'}
               </span>
             </div>
-          </div>
+          </FormField>
 
-          <div>
-            <label className="label">Default Deposit %</label>
+          <FormField label="Default Deposit %" htmlFor="depositPercent">
             <div className="relative">
               <input
+                id="depositPercent"
                 type="number"
                 min="0"
                 max="100"
                 value={depositPercent}
                 onChange={(e) => setDepositPercent(e.target.value)}
-                className="input-field pr-8"
-              />
-              <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-4 text-gray-400">%</span>
-            </div>
-          </div>
-
-          <div>
-            <label className="label">Default Tax Rate (%)</label>
-            <div className="relative">
-              <input
-                type="number"
-                min="0"
-                max="100"
-                step="0.01"
-                value={defaultTaxRate}
-                onChange={(e) => setDefaultTaxRate(e.target.value)}
                 placeholder="0"
                 className="input-field pr-8"
               />
               <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-4 text-gray-400">%</span>
             </div>
-            <p className="mt-1 text-xs text-gray-400">Leave blank for no tax. Applied to new quotes by default.</p>
+          </FormField>
+
+          <div>
+            <FormField label="Default Tax Rate (%)" htmlFor="defaultTaxRate">
+              <div className="relative">
+                <input
+                  id="defaultTaxRate"
+                  type="number"
+                  min="0"
+                  max="100"
+                  step="0.01"
+                  value={defaultTaxRate}
+                  onChange={(e) => setDefaultTaxRate(e.target.value)}
+                  placeholder="0"
+                  className="input-field pr-8"
+                />
+                <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-4 text-gray-400">%</span>
+              </div>
+            </FormField>
+            <p className="mt-1.5 text-xs text-gray-400 dark:text-gray-500">Leave blank for no tax. Applied to new quotes by default.</p>
           </div>
         </div>
       )}
@@ -548,23 +691,24 @@ export function SettingsForm({ profile, userId, email, stripeConnected, stripeSt
       {activeTab === 'Branding' && (
         <>
           {/* Brand Color */}
-          <div className="card space-y-4">
+          <div className="card space-y-5">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">Brand Color</p>
-              <p className="mt-1 text-xs text-gray-500">Choose your accent color for customer-facing pages, emails, and PDFs.</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">Brand Color</p>
+              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Choose your accent color for customer-facing pages, emails, and PDFs.</p>
             </div>
 
-            <div className="grid grid-cols-4 gap-2">
+            <div className="grid grid-cols-4 gap-3">
               {BRAND_PRESETS.map((preset) => (
                 <button
                   key={preset.hex}
                   type="button"
                   onClick={() => { setBrandColor(preset.hex); setCustomHex(''); }}
-                  className="relative flex h-10 w-10 items-center justify-center rounded-full border-2 transition-all press-scale"
-                  style={{
-                    backgroundColor: preset.hex,
-                    borderColor: activeBrandColor === preset.hex ? '#111827' : 'transparent',
-                  }}
+                  className={`relative flex h-11 w-11 items-center justify-center rounded-full border-2 transition-all press-scale mx-auto ${
+                    activeBrandColor === preset.hex
+                      ? 'border-gray-900 dark:border-white ring-2 ring-offset-2 ring-gray-900/20 dark:ring-white/20 dark:ring-offset-gray-900'
+                      : 'border-transparent'
+                  }`}
+                  style={{ backgroundColor: preset.hex }}
                   title={preset.name}
                 >
                   {activeBrandColor === preset.hex && (
@@ -576,14 +720,14 @@ export function SettingsForm({ profile, userId, email, stripeConnected, stripeSt
               ))}
             </div>
 
-            <div>
-              <label className="label">Custom Hex</label>
-              <div className="flex items-center gap-2">
+            <FormField label="Custom Hex" htmlFor="customHex">
+              <div className="flex items-center gap-3">
                 <div
-                  className="h-10 w-10 shrink-0 rounded-full border border-gray-200 dark:border-gray-700"
+                  className="h-11 w-11 shrink-0 rounded-full border border-gray-200 dark:border-gray-700"
                   style={{ backgroundColor: activeBrandColor }}
                 />
                 <input
+                  id="customHex"
                   type="text"
                   value={customHex || (BRAND_PRESETS.some(p => p.hex === brandColor) ? '' : brandColor)}
                   onChange={(e) => {
@@ -599,11 +743,11 @@ export function SettingsForm({ profile, userId, email, stripeConnected, stripeSt
                   maxLength={7}
                 />
               </div>
-            </div>
+            </FormField>
 
             {/* Preview */}
             <div>
-              <p className="text-xs font-medium text-gray-500 mb-2">Preview</p>
+              <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Preview</p>
               <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4 space-y-3">
                 <div className="h-1.5 rounded-full" style={{ backgroundColor: activeBrandColor }} />
                 <div className="flex items-center gap-3">
@@ -625,16 +769,19 @@ export function SettingsForm({ profile, userId, email, stripeConnected, stripeSt
           </div>
 
           {/* Public Profile */}
-          <div className="card space-y-4">
-            <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">Public Profile</p>
+          <div className="card space-y-5">
+            <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">Public Profile</p>
 
-            <div className="flex items-center justify-between">
-              <div>
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex-1 min-w-0">
                 <p className="text-[14px] font-medium text-gray-900 dark:text-gray-100">Show profile publicly</p>
-                <p className="text-[12px] text-gray-400">Allow customers to find your profile page</p>
+                <p className="text-[12px] text-gray-400 dark:text-gray-500">Allow customers to find your profile page</p>
               </div>
               <button
                 type="button"
+                role="switch"
+                aria-checked={profilePublic}
+                aria-label="Show profile publicly"
                 onClick={() => setProfilePublic(!profilePublic)}
                 className={`toggle-switch relative inline-flex h-7 w-12 shrink-0 rounded-full ${
                   profilePublic ? 'bg-brand-600' : 'bg-gray-200 dark:bg-gray-700'
@@ -648,14 +795,14 @@ export function SettingsForm({ profile, userId, email, stripeConnected, stripeSt
               </button>
             </div>
 
-            <div>
-              <label className="label">Profile URL</label>
+            <FormField label="Profile URL" htmlFor="profileSlug">
               <div className="flex items-center gap-2">
                 <div className="flex-1 relative">
                   <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-[12px] text-gray-400">
                     snapquote.dev/p/
                   </span>
                   <input
+                    id="profileSlug"
                     type="text"
                     value={profileSlug}
                     onChange={(e) =>
@@ -687,25 +834,25 @@ export function SettingsForm({ profile, userId, email, stripeConnected, stripeSt
                   </button>
                 )}
               </div>
-            </div>
+            </FormField>
 
-            <div>
-              <label className="label">Bio / Description</label>
+            <FormField label="Bio / Description" htmlFor="profileBio">
               <textarea
+                id="profileBio"
                 value={profileBio}
                 onChange={(e) => setProfileBio(e.target.value)}
                 placeholder="Tell customers about your business, experience, and what makes you different..."
                 rows={3}
                 className="input-field resize-none"
               />
-            </div>
+            </FormField>
 
             {profileSlug && profilePublic && (
               <a
                 href={`/p/${profileSlug}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center justify-center gap-2 rounded-xl border border-brand-200 bg-brand-50 px-4 py-2.5 text-[13px] font-medium text-brand-700 hover:bg-brand-100 transition-colors"
+                className="flex items-center justify-center gap-2 rounded-xl border border-brand-200 bg-brand-50 dark:bg-brand-900/20 dark:border-brand-800 px-4 py-2.5 text-[13px] font-medium text-brand-700 dark:text-brand-400 hover:bg-brand-100 dark:hover:bg-brand-900/30 transition-colors"
               >
                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
@@ -719,21 +866,71 @@ export function SettingsForm({ profile, userId, email, stripeConnected, stripeSt
 
       {/* Payments Tab */}
       {activeTab === 'Payments' && (
-        <div className="card space-y-4">
+        <div className="card space-y-5">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">Payments</p>
-            <p className="mt-1 text-xs text-gray-500">Connect Stripe to collect deposits online directly from your quotes.</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">Payments</p>
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Connect Stripe to collect deposits online directly from your quotes.</p>
           </div>
+
+          {/* Status indicator */}
+          <div className={`flex items-center gap-3 rounded-xl px-4 py-3 ${
+            stripeConnected
+              ? 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800'
+              : 'bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700'
+          }`}>
+            <div className={`flex h-8 w-8 items-center justify-center rounded-full shrink-0 ${
+              stripeConnected ? 'bg-green-600' : 'bg-gray-300 dark:bg-gray-600'
+            }`}>
+              {stripeConnected ? (
+                <svg className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                </svg>
+              ) : (
+                <svg className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              )}
+            </div>
+            <div>
+              <p className={`text-sm font-semibold ${stripeConnected ? 'text-green-900 dark:text-green-300' : 'text-gray-700 dark:text-gray-300'}`}>
+                {stripeConnected ? 'Stripe Connected' : 'Not Connected'}
+              </p>
+              <p className={`text-xs ${stripeConnected ? 'text-green-600 dark:text-green-400' : 'text-gray-400 dark:text-gray-500'}`}>
+                {stripeConnected ? 'Customers can pay deposits online' : 'Set up Stripe to accept online payments'}
+              </p>
+            </div>
+          </div>
+
           {stripeStatus === 'connected' && (
-            <div className="rounded-xl bg-green-50 border border-green-200 px-3 py-2 text-[13px] font-medium text-green-700">
+            <div className="rounded-xl bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 px-3 py-2 text-[13px] font-medium text-green-700 dark:text-green-400">
               Stripe connected successfully!
             </div>
           )}
           {stripeStatus === 'error' && (
-            <div className="rounded-xl bg-red-50 border border-red-200 px-3 py-2 text-[13px] font-medium text-red-700">
+            <div className="rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 px-3 py-2 text-[13px] font-medium text-red-700 dark:text-red-400">
               Connection failed. Please try again.
             </div>
           )}
+
+          {/* Step-by-step if not connected */}
+          {!stripeConnected && (
+            <div className="space-y-3">
+              <p className="text-xs font-medium text-gray-500 dark:text-gray-400">How it works</p>
+              {[
+                { step: 1, text: 'Click the button below to connect your Stripe account' },
+                { step: 2, text: 'Complete setup on Stripe (takes about 5 minutes)' },
+                { step: 3, text: 'Customers can pay deposits right from their quote' },
+              ].map((item) => (
+                <div key={item.step} className="flex items-start gap-3">
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-100 dark:bg-brand-900/30 text-[11px] font-bold text-brand-700 dark:text-brand-300">
+                    {item.step}
+                  </span>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 pt-0.5">{item.text}</p>
+                </div>
+              ))}
+            </div>
+          )}
+
           <StripeConnectButton isConnected={stripeConnected} />
         </div>
       )}
@@ -742,21 +939,24 @@ export function SettingsForm({ profile, userId, email, stripeConnected, stripeSt
       {activeTab === 'Automation' && (
         <div className="space-y-4">
           {/* Toggle Card */}
-          <div className="card space-y-4">
+          <div className="card space-y-5">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">Auto Follow-Ups</p>
-              <p className="mt-1 text-xs text-gray-500">
+              <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">Auto Follow-Ups</p>
+              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                 Automatically send reminders to customers who haven&apos;t responded to their quote. Increase your close rate without lifting a finger.
               </p>
             </div>
 
-            <div className="flex items-center justify-between">
-              <div>
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex-1 min-w-0">
                 <p className="text-[14px] font-medium text-gray-900 dark:text-gray-100">Enable auto follow-ups</p>
-                <p className="text-[12px] text-gray-400">Sends up to 3 reminders via SMS or email</p>
+                <p className="text-[12px] text-gray-400 dark:text-gray-500">Sends up to 3 reminders via SMS or email</p>
               </div>
               <button
                 type="button"
+                role="switch"
+                aria-checked={autoFollowUp}
+                aria-label="Enable auto follow-ups"
                 onClick={() => setAutoFollowUp(!autoFollowUp)}
                 className={`relative inline-flex h-7 w-12 shrink-0 rounded-full transition-colors ${
                   autoFollowUp ? 'bg-brand-600' : 'bg-gray-200 dark:bg-gray-700'
@@ -785,7 +985,7 @@ export function SettingsForm({ profile, userId, email, stripeConnected, stripeSt
                   </span>
                   <div className="flex-1">
                     <p className="text-[13px] font-semibold text-gray-900 dark:text-gray-100">{item.label}</p>
-                    <p className="text-[11px] text-gray-400">{item.timing}</p>
+                    <p className="text-[11px] text-gray-400 dark:text-gray-500">{item.timing}</p>
                   </div>
                 </div>
                 <textarea
@@ -808,7 +1008,7 @@ export function SettingsForm({ profile, userId, email, stripeConnected, stripeSt
                 {/* Preview */}
                 {followUpTemplates[item.index] && (
                   <div className="rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700/50 px-3 py-2">
-                    <p className="text-[11px] font-medium text-gray-400 mb-1">Preview</p>
+                    <p className="text-[11px] font-medium text-gray-400 dark:text-gray-500 mb-1">Preview</p>
                     <p className="text-[12px] text-gray-600 dark:text-gray-300 leading-relaxed">
                       {followUpTemplates[item.index]
                         .replace(/\{\{name\}\}/g, 'John')
@@ -819,7 +1019,7 @@ export function SettingsForm({ profile, userId, email, stripeConnected, stripeSt
               </div>
             ))}
 
-            <p className="text-[11px] text-gray-400 px-1">
+            <p className="text-[11px] text-gray-400 dark:text-gray-500 px-1">
               Use <code className="rounded bg-gray-100 dark:bg-gray-800 px-1 py-0.5 text-[10px] font-mono">{'{{name}}'}</code> for customer name, <code className="rounded bg-gray-100 dark:bg-gray-800 px-1 py-0.5 text-[10px] font-mono">{'{{business}}'}</code> for your business name. A link to the quote is included automatically.
             </p>
           </div>
@@ -831,19 +1031,20 @@ export function SettingsForm({ profile, userId, email, stripeConnected, stripeSt
 
       {/* Advanced Tab */}
       {activeTab === 'Advanced' && (
-        <div className="card space-y-4">
+        <div className="card space-y-5">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">Webhooks & Integrations</p>
-            <p className="mt-1 text-xs text-gray-500">
+            <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">Webhooks & Integrations</p>
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
               Webhooks send automatic notifications to external services when quote events occur. Most users don&apos;t need this.
             </p>
-            <p className="mt-1 text-xs text-gray-500">
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
               Works with Zapier, Make, or any webhook endpoint.
             </p>
           </div>
 
-          <FormField label="Webhook URL" error={fieldErrors.webhookUrl}>
+          <FormField label="Webhook URL" error={fieldErrors.webhookUrl} htmlFor="webhookUrl">
             <input
+              id="webhookUrl"
               type="url"
               value={webhookUrl}
               onChange={(e) => {
@@ -860,8 +1061,8 @@ export function SettingsForm({ profile, userId, email, stripeConnected, stripeSt
             <div
               className={`rounded-xl border px-3 py-2 text-[13px] font-medium ${
                 webhookTestResult.ok
-                  ? 'bg-green-50 border-green-200 text-green-700'
-                  : 'bg-red-50 border-red-200 text-red-700'
+                  ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 text-green-700 dark:text-green-400'
+                  : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 text-red-700 dark:text-red-400'
               }`}
             >
               {webhookTestResult.message}
@@ -874,7 +1075,6 @@ export function SettingsForm({ profile, userId, email, stripeConnected, stripeSt
             onClick={async () => {
               setTestingWebhook(true);
               setWebhookTestResult(null);
-              // Save the URL first so the test endpoint can read it
               const supabase = createClient();
               await supabase
                 .from('users')
@@ -902,24 +1102,50 @@ export function SettingsForm({ profile, userId, email, stripeConnected, stripeSt
 
       {/* Save Error */}
       {saveError && (
-        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-[13px] font-medium text-red-700" role="alert">
+        <div className="rounded-xl border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-[13px] font-medium text-red-700 dark:text-red-400" role="alert">
           Save failed: {saveError}
         </div>
       )}
 
-      {/* Save Button - always visible */}
-      <button
-        onClick={handleSave}
-        disabled={saving}
-        className={`btn-primary transition-all ${saved ? '!bg-green-600' : ''}`}
-      >
-        {saving ? (
-          <span className="flex items-center justify-center gap-2">
-            <Spinner size="md" />
-            Saving...
-          </span>
-        ) : saved ? '\u2713 Saved' : 'Save Changes'}
-      </button>
+      {/* Sticky Save Bar */}
+      <div className="sticky bottom-0 z-20 -mx-4 px-4 pb-4 pt-3 bg-gradient-to-t from-gray-50 via-gray-50 to-gray-50/0 dark:from-gray-950 dark:via-gray-950 dark:to-gray-950/0">
+        {/* Unsaved changes indicator */}
+        {isDirty && !saved && (
+          <p className="text-center text-xs font-medium text-amber-600 dark:text-amber-400 mb-2">
+            You have unsaved changes
+          </p>
+        )}
+
+        {/* Success toast */}
+        {saved && (
+          <div className="mb-2 flex items-center justify-center gap-2 rounded-xl bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 px-4 py-2 text-[13px] font-medium text-green-700 dark:text-green-400 step-enter">
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+            </svg>
+            Settings saved
+          </div>
+        )}
+
+        <button
+          onClick={handleSave}
+          disabled={saving || (!isDirty && !saving)}
+          className={`btn-primary transition-all ${saved ? '!bg-green-600' : ''} ${!isDirty && !saving ? 'opacity-50' : ''}`}
+        >
+          {saving ? (
+            <span className="flex items-center justify-center gap-2">
+              <Spinner size="md" />
+              Saving...
+            </span>
+          ) : saved ? (
+            <span className="flex items-center justify-center gap-2">
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+              </svg>
+              Saved
+            </span>
+          ) : 'Save Changes'}
+        </button>
+      </div>
 
       {/* Sign Out */}
       <button
@@ -928,7 +1154,7 @@ export function SettingsForm({ profile, userId, email, stripeConnected, stripeSt
           await supabase.auth.signOut();
           router.push('/auth/login');
         }}
-        className="w-full rounded-2xl border border-red-200 bg-red-50 py-3 text-[14px] font-semibold text-red-600 press-scale"
+        className="w-full rounded-2xl border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 py-3 text-[14px] font-semibold text-red-600 dark:text-red-400 press-scale"
       >
         Sign Out
       </button>

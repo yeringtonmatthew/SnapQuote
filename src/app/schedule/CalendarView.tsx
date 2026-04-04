@@ -18,25 +18,25 @@ const EVENT_COLORS: Record<EventType, string> = {
 };
 
 const EVENT_COLORS_LIGHT: Record<EventType, string> = {
-  estimate: 'bg-blue-50 border-blue-200',
-  follow_up: 'bg-amber-50 border-amber-200',
-  job_scheduled: 'bg-indigo-50 border-indigo-200',
-  material_dropoff: 'bg-orange-50 border-orange-200',
-  production: 'bg-purple-50 border-purple-200',
-  walkthrough: 'bg-cyan-50 border-cyan-200',
-  payment_collection: 'bg-green-50 border-green-200',
-  blocked_time: 'bg-gray-50 border-gray-200',
+  estimate: 'bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800',
+  follow_up: 'bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800',
+  job_scheduled: 'bg-indigo-50 dark:bg-indigo-950/30 border-indigo-200 dark:border-indigo-800',
+  material_dropoff: 'bg-orange-50 dark:bg-orange-950/30 border-orange-200 dark:border-orange-800',
+  production: 'bg-purple-50 dark:bg-purple-950/30 border-purple-200 dark:border-purple-800',
+  walkthrough: 'bg-cyan-50 dark:bg-cyan-950/30 border-cyan-200 dark:border-cyan-800',
+  payment_collection: 'bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-800',
+  blocked_time: 'bg-gray-50 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700',
 };
 
 const EVENT_TEXT_COLORS: Record<EventType, string> = {
-  estimate: 'text-blue-700',
-  follow_up: 'text-amber-700',
-  job_scheduled: 'text-indigo-700',
-  material_dropoff: 'text-orange-700',
-  production: 'text-purple-700',
-  walkthrough: 'text-cyan-700',
-  payment_collection: 'text-green-700',
-  blocked_time: 'text-gray-600',
+  estimate: 'text-blue-700 dark:text-blue-300',
+  follow_up: 'text-amber-700 dark:text-amber-300',
+  job_scheduled: 'text-indigo-700 dark:text-indigo-300',
+  material_dropoff: 'text-orange-700 dark:text-orange-300',
+  production: 'text-purple-700 dark:text-purple-300',
+  walkthrough: 'text-cyan-700 dark:text-cyan-300',
+  payment_collection: 'text-green-700 dark:text-green-300',
+  blocked_time: 'text-gray-600 dark:text-gray-400',
 };
 
 const EVENT_TYPE_LABELS: Record<EventType, string> = {
@@ -95,7 +95,7 @@ function formatRelativeDate(date: Date, today: Date): string {
 }
 
 // ── Types ────────────────────────────────────────────────
-type ViewType = 'day' | 'week' | 'agenda';
+type ViewType = 'month' | 'day' | 'week' | 'agenda';
 
 interface UnscheduledQuote {
   id: string;
@@ -125,8 +125,8 @@ function EventCard({
 }) {
   const eventType = event.event_type as EventType;
   const colorBar = EVENT_COLORS[eventType] || 'bg-gray-400';
-  const lightBg = EVENT_COLORS_LIGHT[eventType] || 'bg-gray-50 border-gray-200';
-  const textColor = EVENT_TEXT_COLORS[eventType] || 'text-gray-600';
+  const lightBg = EVENT_COLORS_LIGHT[eventType] || 'bg-gray-50 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700';
+  const textColor = EVENT_TEXT_COLORS[eventType] || 'text-gray-600 dark:text-gray-400';
 
   if (compact) {
     return (
@@ -136,7 +136,7 @@ function EventCard({
       >
         <div className="flex items-center gap-1.5">
           <div className={`h-2 w-2 rounded-full shrink-0 ${colorBar}`} />
-          <span className="text-[12px] font-bold text-gray-900 truncate">
+          <span className="text-[12px] font-bold text-gray-900 dark:text-gray-100 truncate">
             {event.customer_name || event.title}
           </span>
         </div>
@@ -147,17 +147,17 @@ function EventCard({
   return (
     <button
       onClick={() => onTap(event)}
-      className="w-full text-left rounded-xl bg-white ring-1 ring-black/[0.04] overflow-hidden active:scale-[0.98] transition-all hover:shadow-md hover:ring-black/[0.08]"
+      className="w-full text-left rounded-xl bg-white dark:bg-gray-900 shadow-sm ring-1 ring-black/[0.04] dark:ring-white/[0.06] overflow-hidden active:scale-[0.98] transition-all hover:shadow-md hover:ring-black/[0.08] dark:hover:ring-white/[0.1] min-h-[56px]"
     >
       <div className="flex">
         <div className={`w-1 shrink-0 ${colorBar}`} />
         <div className="flex-1 px-3.5 py-2.5 min-w-0">
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0 flex-1">
-              <p className="text-[14px] font-bold text-gray-900 truncate">
+              <p className="text-[14px] font-bold text-gray-900 dark:text-gray-100 truncate">
                 {event.customer_name || event.title}
               </p>
-              <p className="text-[12px] text-gray-400 mt-0.5">
+              <p className="text-[12px] text-gray-400 dark:text-gray-500 mt-0.5">
                 {event.all_day ? 'All day' : formatTimeRange(event.start_time, event.end_time)}
               </p>
             </div>
@@ -166,7 +166,13 @@ function EventCard({
             </span>
           </div>
           {event.job_address && typeof event.job_address === 'string' && (
-            <p className="text-[11px] text-gray-400 truncate mt-1">{event.job_address}</p>
+            <div className="flex items-center gap-1 mt-1">
+              <svg className="h-3 w-3 text-gray-400 dark:text-gray-500 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
+              </svg>
+              <p className="text-[11px] text-gray-400 dark:text-gray-500 truncate">{event.job_address}</p>
+            </div>
           )}
         </div>
       </div>
@@ -235,7 +241,7 @@ function EventDetailSheet({
                   {event.customer_name || event.title}
                 </h2>
               </div>
-              <button onClick={onEdit} className="shrink-0 rounded-lg bg-gray-100 dark:bg-gray-800 px-3 py-1.5 text-[12px] font-semibold text-gray-600 dark:text-gray-300 press-scale">
+              <button onClick={onEdit} className="shrink-0 rounded-lg bg-gray-100 dark:bg-gray-800 px-3.5 py-2 text-[13px] font-semibold text-gray-600 dark:text-gray-300 press-scale min-h-[44px] flex items-center">
                 Edit
               </button>
             </div>
@@ -284,7 +290,7 @@ function EventDetailSheet({
                 <span className="text-[10px] font-semibold text-gray-500">Call</span>
               </a>
             ) : (
-              <div className="flex flex-col items-center gap-1 rounded-xl bg-gray-50/50 py-3 opacity-30">
+              <div className="flex flex-col items-center gap-1 rounded-xl bg-gray-50/50 dark:bg-gray-800/30 py-3 opacity-30">
                 <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.75} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z" /></svg>
                 <span className="text-[10px] font-semibold text-gray-400">Call</span>
               </div>
@@ -297,7 +303,7 @@ function EventDetailSheet({
                 <span className="text-[10px] font-semibold text-gray-500">Text</span>
               </a>
             ) : (
-              <div className="flex flex-col items-center gap-1 rounded-xl bg-gray-50/50 py-3 opacity-30">
+              <div className="flex flex-col items-center gap-1 rounded-xl bg-gray-50/50 dark:bg-gray-800/30 py-3 opacity-30">
                 <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.75} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" /></svg>
                 <span className="text-[10px] font-semibold text-gray-400">Text</span>
               </div>
@@ -310,7 +316,7 @@ function EventDetailSheet({
                 <span className="text-[10px] font-semibold text-gray-500">View Job</span>
               </a>
             ) : (
-              <div className="flex flex-col items-center gap-1 rounded-xl bg-gray-50/50 py-3 opacity-30">
+              <div className="flex flex-col items-center gap-1 rounded-xl bg-gray-50/50 dark:bg-gray-800/30 py-3 opacity-30">
                 <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.75} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>
                 <span className="text-[10px] font-semibold text-gray-400">Job</span>
               </div>
@@ -338,7 +344,7 @@ function EventDetailSheet({
               </button>
             )}
             {!canStart && !canComplete && (
-              <div className="flex flex-col items-center gap-1 rounded-xl bg-gray-50/50 py-3 opacity-30">
+              <div className="flex flex-col items-center gap-1 rounded-xl bg-gray-50/50 dark:bg-gray-800/30 py-3 opacity-30">
                 <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.75} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                 <span className="text-[10px] font-semibold text-gray-400">Done</span>
               </div>
@@ -354,6 +360,127 @@ function EventDetailSheet({
         </div>
       </div>
     </>
+  );
+}
+
+// ── Month View ──────────────────────────────────────────
+function MonthView({
+  date,
+  events,
+  onEventTap,
+  onDaySelect,
+}: {
+  date: Date;
+  events: CalendarEvent[];
+  onEventTap: (event: CalendarEvent) => void;
+  onDaySelect: (date: Date) => void;
+}) {
+  const today = new Date();
+  const year = date.getFullYear();
+  const month = date.getMonth();
+  const firstDay = new Date(year, month, 1);
+  const lastDay = new Date(year, month + 1, 0);
+  const startOffset = firstDay.getDay(); // 0=Sun
+  const daysInMonth = lastDay.getDate();
+
+  // Build grid: leading blanks + days
+  const cells: (Date | null)[] = [];
+  for (let i = 0; i < startOffset; i++) cells.push(null);
+  for (let d = 1; d <= daysInMonth; d++) cells.push(new Date(year, month, d));
+  // Trailing blanks to fill last row
+  while (cells.length % 7 !== 0) cells.push(null);
+
+  // Map events by date key
+  const eventsByDate: Record<string, CalendarEvent[]> = {};
+  for (const ev of events) {
+    if (!eventsByDate[ev.event_date]) eventsByDate[ev.event_date] = [];
+    eventsByDate[ev.event_date].push(ev);
+  }
+
+  // Selected day events
+  const selectedKey = toDateKey(date);
+  const selectedDayEvents = eventsByDate[selectedKey] || [];
+
+  return (
+    <div className="space-y-4">
+      {/* Calendar grid */}
+      <div className="rounded-2xl bg-white dark:bg-gray-900 ring-1 ring-black/[0.04] dark:ring-white/[0.06] overflow-hidden p-3">
+        {/* Day headers */}
+        <div className="grid grid-cols-7 mb-2">
+          {DAY_NAMES.map((d) => (
+            <div key={d} className="text-center text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider py-1">
+              {d}
+            </div>
+          ))}
+        </div>
+
+        {/* Date cells */}
+        <div className="grid grid-cols-7 gap-y-0.5">
+          {cells.map((cellDate, i) => {
+            if (!cellDate) {
+              return <div key={`blank-${i}`} className="h-11" />;
+            }
+            const key = toDateKey(cellDate);
+            const isToday = isSameDay(cellDate, today);
+            const isSelected = isSameDay(cellDate, date);
+            const dayEvents = eventsByDate[key] || [];
+
+            return (
+              <button
+                key={key}
+                onClick={() => onDaySelect(cellDate)}
+                className={`relative flex flex-col items-center justify-center h-11 rounded-xl transition-all active:scale-[0.94] min-h-[44px] ${
+                  isSelected
+                    ? 'bg-brand-600 text-white shadow-sm'
+                    : isToday
+                    ? 'bg-brand-50 dark:bg-brand-950/30 text-brand-700 dark:text-brand-300'
+                    : 'text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800'
+                }`}
+              >
+                <span className={`text-[14px] font-semibold ${isSelected ? 'text-white' : ''}`}>
+                  {cellDate.getDate()}
+                </span>
+                {/* Event dots */}
+                {dayEvents.length > 0 && (
+                  <div className="flex gap-0.5 mt-0.5">
+                    {dayEvents.slice(0, 3).map((ev, j) => (
+                      <div
+                        key={j}
+                        className={`h-1 w-1 rounded-full ${
+                          isSelected ? 'bg-white/80' : (EVENT_COLORS[ev.event_type as EventType] || 'bg-gray-400')
+                        }`}
+                      />
+                    ))}
+                    {dayEvents.length > 3 && (
+                      <div className={`h-1 w-1 rounded-full ${isSelected ? 'bg-white/50' : 'bg-gray-300 dark:bg-gray-600'}`} />
+                    )}
+                  </div>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Selected day events */}
+      {selectedDayEvents.length > 0 ? (
+        <div className="space-y-2">
+          <p className="text-[12px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider px-1">
+            {formatRelativeDate(date, today)} ({selectedDayEvents.length})
+          </p>
+          {selectedDayEvents.map((ev) => (
+            <EventCard key={ev.id} event={ev} onTap={onEventTap} />
+          ))}
+        </div>
+      ) : (
+        <div className="rounded-xl bg-white dark:bg-gray-900 ring-1 ring-black/[0.04] dark:ring-white/[0.06] p-6 text-center">
+          <p className="text-[14px] font-semibold text-gray-900 dark:text-gray-100">No events</p>
+          <p className="text-[13px] text-gray-500 dark:text-gray-400 mt-1">
+            {isSameDay(date, today) ? 'Nothing scheduled today' : formatRelativeDate(date, today)}
+          </p>
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -394,6 +521,8 @@ function DayView({
   const startHour = 6;
   const hourHeight = 60; // px per hour
 
+  const hasEvents = allDayEvents.length > 0 || timedEvents.length > 0;
+
   return (
     <div className="space-y-3">
       {/* All-day events */}
@@ -406,6 +535,17 @@ function DayView({
         </div>
       )}
 
+      {/* Empty state */}
+      {!hasEvents && (
+        <div className="rounded-xl bg-white dark:bg-gray-900 ring-1 ring-black/[0.04] dark:ring-white/[0.06] p-8 text-center">
+          <svg className="h-10 w-10 mx-auto text-gray-300 dark:text-gray-600" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" />
+          </svg>
+          <p className="text-[14px] font-semibold text-gray-900 dark:text-gray-100 mt-3">No events today</p>
+          <p className="text-[13px] text-gray-500 dark:text-gray-400 mt-1">Tap a time slot or + to add an event</p>
+        </div>
+      )}
+
       {/* Time grid */}
       <div className="relative" style={{ height: `${HOURS.length * hourHeight}px` }}>
         {/* Hour lines */}
@@ -413,10 +553,10 @@ function DayView({
           <button
             key={hour}
             onClick={() => onEmptySlotTap(hour)}
-            className="absolute left-0 right-0 flex items-start border-t border-gray-100 active:bg-gray-50 transition-colors"
+            className="absolute left-0 right-0 flex items-start border-t border-gray-100 dark:border-gray-800 active:bg-gray-50 dark:active:bg-gray-800 transition-colors"
             style={{ top: `${(hour - startHour) * hourHeight}px`, height: `${hourHeight}px` }}
           >
-            <span className="text-[11px] text-gray-400 font-medium w-12 -mt-2 text-right pr-3 shrink-0">
+            <span className="text-[11px] text-gray-400 dark:text-gray-500 font-medium w-12 -mt-2 text-right pr-3 shrink-0">
               {hour === 0 ? '12 AM' : hour < 12 ? `${hour} AM` : hour === 12 ? '12 PM' : `${hour - 12} PM`}
             </span>
           </button>
@@ -441,8 +581,8 @@ function DayView({
           const height = Math.max(((evEnd - evStart) / 60) * hourHeight, 36);
           const eventType = ev.event_type as EventType;
           const colorBar = EVENT_COLORS[eventType] || 'bg-gray-400';
-          const lightBg = EVENT_COLORS_LIGHT[eventType] || 'bg-gray-50 border-gray-200';
-          const textColor = EVENT_TEXT_COLORS[eventType] || 'text-gray-600';
+          const lightBg = EVENT_COLORS_LIGHT[eventType] || 'bg-gray-50 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700';
+          const textColor = EVENT_TEXT_COLORS[eventType] || 'text-gray-600 dark:text-gray-400';
 
           return (
             <button
@@ -539,12 +679,12 @@ function WeekView({
             <button
               key={i}
               onClick={() => onDaySelect(day)}
-              className="text-center py-1 lg:py-3 lg:rounded-xl lg:bg-white lg:ring-1 lg:ring-black/[0.04] lg:hover:shadow-sm active:scale-[0.96] transition-all"
+              className="text-center py-1 lg:py-3 lg:rounded-xl lg:bg-white lg:dark:bg-gray-900 lg:ring-1 lg:ring-black/[0.04] lg:dark:ring-white/[0.06] lg:hover:shadow-sm active:scale-[0.96] transition-all min-h-[44px]"
             >
               <p className="text-[10px] lg:text-[11px] font-medium text-gray-400 uppercase">{DAY_NAMES[i]}</p>
               <div
                 className={`mt-1 mx-auto flex h-9 w-9 items-center justify-center rounded-full text-sm font-semibold transition-colors ${
-                  isToday ? 'bg-brand-600 text-white' : 'text-gray-900'
+                  isToday ? 'bg-brand-600 text-white' : 'text-gray-900 dark:text-gray-100'
                 }`}
               >
                 {day.getDate()}
@@ -568,12 +708,12 @@ function WeekView({
 
       {/* Agenda list grouped by day */}
       {groupedEvents.length === 0 ? (
-        <div className="rounded-xl bg-white ring-1 ring-black/[0.04] p-8 text-center">
-          <svg className="h-10 w-10 mx-auto text-gray-300" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+        <div className="rounded-xl bg-white dark:bg-gray-900 ring-1 ring-black/[0.04] dark:ring-white/[0.06] p-8 text-center">
+          <svg className="h-10 w-10 mx-auto text-gray-300 dark:text-gray-600" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
           </svg>
-          <p className="text-[14px] font-semibold text-gray-900 mt-3">No events this week</p>
-          <p className="text-[13px] text-gray-500 mt-1">Tap + to add an event</p>
+          <p className="text-[14px] font-semibold text-gray-900 dark:text-gray-100 mt-3">No events this week</p>
+          <p className="text-[13px] text-gray-500 dark:text-gray-400 mt-1">Tap + to add an event</p>
         </div>
       ) : (
         <div className="space-y-4">
@@ -632,12 +772,12 @@ function AgendaView({
 
   if (groups.length === 0) {
     return (
-      <div className="rounded-xl bg-white ring-1 ring-black/[0.04] p-8 text-center">
-        <svg className="h-10 w-10 mx-auto text-gray-300" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+      <div className="rounded-xl bg-white dark:bg-gray-900 ring-1 ring-black/[0.04] dark:ring-white/[0.06] p-8 text-center">
+        <svg className="h-10 w-10 mx-auto text-gray-300 dark:text-gray-600" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
         </svg>
-        <p className="text-[14px] font-semibold text-gray-900 mt-3">No upcoming events</p>
-        <p className="text-[13px] text-gray-500 mt-1">Your schedule is clear</p>
+        <p className="text-[14px] font-semibold text-gray-900 dark:text-gray-100 mt-3">No upcoming events</p>
+        <p className="text-[13px] text-gray-500 dark:text-gray-400 mt-1">Your schedule is clear</p>
       </div>
     );
   }
@@ -646,8 +786,8 @@ function AgendaView({
     <div className="space-y-5">
       {groups.map(({ date, events: dayEvents }) => (
         <div key={toDateKey(date)}>
-          <div className="sticky top-[120px] z-[5] bg-[#f2f2f7]/95 backdrop-blur-sm py-1.5 px-1">
-            <p className="text-[12px] font-semibold text-gray-500 uppercase tracking-wider">
+          <div className="sticky top-[120px] z-[5] bg-[#f2f2f7]/95 dark:bg-gray-950/95 backdrop-blur-sm py-1.5 px-1">
+            <p className="text-[12px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
               {formatRelativeDate(date, new Date())}
             </p>
           </div>
@@ -673,13 +813,13 @@ function NeedsSchedulingSection({ quotes }: { quotes: UnscheduledQuote[] }) {
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between px-1">
-        <p className="text-[12px] font-semibold text-gray-500 uppercase tracking-wider">
+        <p className="text-[12px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
           Needs Scheduling ({quotes.length})
         </p>
         {quotes.length > 3 && (
           <button
             onClick={() => setExpanded(!expanded)}
-            className="text-[12px] font-semibold text-brand-600 press-scale"
+            className="text-[13px] font-semibold text-brand-600 dark:text-brand-400 press-scale min-h-[44px] flex items-center"
           >
             {expanded ? 'Show less' : 'Show all'}
           </button>
@@ -690,20 +830,20 @@ function NeedsSchedulingSection({ quotes }: { quotes: UnscheduledQuote[] }) {
           <Link
             key={q.id}
             href={`/jobs/${q.id}`}
-            className="flex items-center gap-3 rounded-xl bg-white ring-1 ring-black/[0.04] px-3.5 py-3 active:scale-[0.98] transition-transform"
+            className="flex items-center gap-3 rounded-xl bg-white dark:bg-gray-900 ring-1 ring-black/[0.04] dark:ring-white/[0.06] px-3.5 py-3 active:scale-[0.98] transition-transform min-h-[56px]"
           >
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-amber-50">
-              <svg className="h-4 w-4 text-amber-500" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-amber-50 dark:bg-amber-950/40">
+              <svg className="h-4 w-4 text-amber-500 dark:text-amber-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-[14px] font-semibold text-gray-900 truncate">{q.customer_name}</p>
+              <p className="text-[14px] font-semibold text-gray-900 dark:text-gray-100 truncate">{q.customer_name}</p>
               {q.job_address && (
                 <p className="text-[12px] text-gray-400 truncate">{q.job_address}</p>
               )}
             </div>
-            <span className="text-[12px] font-medium text-amber-600 bg-amber-50 rounded-full px-2 py-0.5 shrink-0">
+            <span className="text-[12px] font-medium text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 rounded-full px-2 py-0.5 shrink-0">
               {q.status === 'deposit_paid' ? 'Paid' : 'Approved'}
             </span>
           </Link>
@@ -715,7 +855,7 @@ function NeedsSchedulingSection({ quotes }: { quotes: UnscheduledQuote[] }) {
 
 // ── Main CalendarView Component ──────────────────────────
 export function CalendarView({ initialEvents, unscheduledQuotes, allQuotes = [] }: CalendarViewProps) {
-  const [view, setView] = useState<ViewType>('day');
+  const [view, setView] = useState<ViewType>('month');
   const [selectedDate, setSelectedDate] = useState(() => new Date());
   const [events, setEvents] = useState<CalendarEvent[]>(initialEvents);
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -745,6 +885,14 @@ export function CalendarView({ initialEvents, unscheduledQuotes, allQuotes = [] 
     });
   }, []);
 
+  const navigateMonth = useCallback((delta: number) => {
+    setSelectedDate((prev) => {
+      const d = new Date(prev);
+      d.setMonth(d.getMonth() + delta);
+      return d;
+    });
+  }, []);
+
   // Formatted date for header
   const headerDate = useMemo(() => {
     if (view === 'day') {
@@ -759,6 +907,9 @@ export function CalendarView({ initialEvents, unscheduledQuotes, allQuotes = [] 
         return `${MONTH_NAMES[weekStart.getMonth()]} ${weekStart.getDate()} - ${weekEnd.getDate()}`;
       }
       return `${MONTH_NAMES[weekStart.getMonth()].slice(0, 3)} ${weekStart.getDate()} - ${MONTH_NAMES[weekEnd.getMonth()].slice(0, 3)} ${weekEnd.getDate()}`;
+    }
+    if (view === 'month') {
+      return `${MONTH_NAMES[selectedDate.getMonth()]} ${selectedDate.getFullYear()}`;
     }
     return MONTH_NAMES[selectedDate.getMonth()] + ' ' + selectedDate.getFullYear();
   }, [view, selectedDate]);
@@ -829,26 +980,26 @@ export function CalendarView({ initialEvents, unscheduledQuotes, allQuotes = [] 
   return (
     <>
       {/* Header */}
-      <header className="sticky top-0 z-10 bg-[#f2f2f7]/90 backdrop-blur-xl border-b border-black/5 px-5 pt-14 lg:pt-6 pb-3">
+      <header className="sticky top-0 z-10 bg-[#f2f2f7]/90 dark:bg-gray-950/90 backdrop-blur-xl border-b border-black/5 dark:border-white/5 px-5 pt-14 lg:pt-6 pb-4">
         <div className="mx-auto max-w-7xl">
           {/* Title row */}
           <div className="flex items-center justify-between mb-3">
-            <h1 className="text-[22px] font-bold tracking-tight text-gray-900">Schedule</h1>
+            <h1 className="text-[28px] font-bold tracking-tight text-gray-900 dark:text-gray-100">Schedule</h1>
             <div className="flex items-center gap-2">
               {!isToday && (
                 <button
                   onClick={goToToday}
-                  className="rounded-lg bg-white ring-1 ring-black/[0.04] px-3 py-1.5 text-[12px] font-semibold text-brand-600 active:scale-[0.96] transition-transform"
+                  className="rounded-lg bg-white dark:bg-gray-900 ring-1 ring-black/[0.04] dark:ring-white/[0.06] px-3.5 py-2 text-[13px] font-semibold text-brand-600 dark:text-brand-400 active:scale-[0.96] transition-transform min-h-[44px] flex items-center"
                 >
                   Today
                 </button>
               )}
               <button
                 onClick={openCreateSheet}
-                className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-600 active:scale-[0.94] transition-transform"
+                className="flex h-11 w-11 items-center justify-center rounded-full bg-brand-600 shadow-sm active:scale-[0.94] transition-transform"
                 aria-label="Create event"
               >
-                <svg className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+                <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                 </svg>
               </button>
@@ -856,15 +1007,15 @@ export function CalendarView({ initialEvents, unscheduledQuotes, allQuotes = [] 
           </div>
 
           {/* Segmented control */}
-          <div className="flex rounded-lg bg-gray-200/70 p-0.5">
-            {(['day', 'week', 'agenda'] as ViewType[]).map((v) => (
+          <div className="flex rounded-lg bg-gray-200/70 dark:bg-gray-800/70 p-0.5">
+            {(['month', 'day', 'week', 'agenda'] as ViewType[]).map((v) => (
               <button
                 key={v}
                 onClick={() => setView(v)}
-                className={`flex-1 rounded-md py-1.5 text-[13px] font-semibold transition-all ${
+                className={`flex-1 rounded-md py-2 text-[13px] font-semibold transition-all min-h-[44px] flex items-center justify-center ${
                   view === v
-                    ? 'bg-white text-gray-900 shadow-sm'
-                    : 'text-gray-500'
+                    ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm'
+                    : 'text-gray-500 dark:text-gray-400'
                 }`}
               >
                 {v.charAt(0).toUpperCase() + v.slice(1)}
@@ -875,29 +1026,41 @@ export function CalendarView({ initialEvents, unscheduledQuotes, allQuotes = [] 
       </header>
 
       <main className="mx-auto max-w-7xl px-4 pt-4 space-y-5 lg:px-8">
-        {/* Date navigation (Day and Week views) */}
+        {/* Date navigation (Day, Week, Month views) */}
         {view !== 'agenda' && (
           <div className="flex items-center justify-between">
             <button
-              onClick={() => view === 'day' ? navigateDay(-1) : navigateWeek(-1)}
-              className="flex h-8 w-8 items-center justify-center rounded-lg bg-white ring-1 ring-black/[0.04] active:scale-[0.94] transition-transform"
+              onClick={() => view === 'day' ? navigateDay(-1) : view === 'week' ? navigateWeek(-1) : navigateMonth(-1)}
+              className="flex h-9 w-9 items-center justify-center rounded-lg bg-white dark:bg-gray-900 ring-1 ring-black/[0.04] dark:ring-white/[0.06] active:scale-[0.94] transition-transform min-h-[44px] min-w-[44px]"
               aria-label="Previous"
             >
-              <svg className="h-4 w-4 text-gray-600" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+              <svg className="h-4 w-4 text-gray-600 dark:text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
               </svg>
             </button>
-            <p className="text-[14px] font-semibold text-gray-900">{headerDate}</p>
+            <p className="text-[14px] font-semibold text-gray-900 dark:text-gray-100">{headerDate}</p>
             <button
-              onClick={() => view === 'day' ? navigateDay(1) : navigateWeek(1)}
-              className="flex h-8 w-8 items-center justify-center rounded-lg bg-white ring-1 ring-black/[0.04] active:scale-[0.94] transition-transform"
+              onClick={() => view === 'day' ? navigateDay(1) : view === 'week' ? navigateWeek(1) : navigateMonth(1)}
+              className="flex h-9 w-9 items-center justify-center rounded-lg bg-white dark:bg-gray-900 ring-1 ring-black/[0.04] dark:ring-white/[0.06] active:scale-[0.94] transition-transform min-h-[44px] min-w-[44px]"
               aria-label="Next"
             >
-              <svg className="h-4 w-4 text-gray-600" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+              <svg className="h-4 w-4 text-gray-600 dark:text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
               </svg>
             </button>
           </div>
+        )}
+
+        {/* Month View */}
+        {view === 'month' && (
+          <MonthView
+            date={selectedDate}
+            events={events}
+            onEventTap={handleEventTap}
+            onDaySelect={(day) => {
+              setSelectedDate(day);
+            }}
+          />
         )}
 
         {/* Day View */}

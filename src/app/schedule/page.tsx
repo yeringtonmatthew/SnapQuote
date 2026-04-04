@@ -46,8 +46,7 @@ export default async function SchedulePage() {
     .order('start_time', { ascending: true });
 
   // Flatten joined quote/client data onto event
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const calendarEvents: CalendarEvent[] = (events || []).map((e: any) => {
+  const calendarEvents: CalendarEvent[] = (events || []).map((e: Record<string, unknown>) => {
     const quote = e.quotes as Record<string, unknown> | null;
     const client = e.clients as Record<string, unknown> | null;
     const { quotes: _q, clients: _c, ...rest } = e;
@@ -87,11 +86,11 @@ export default async function SchedulePage() {
   return (
     <PageTransition>
       <DesktopSidebar active="schedule" />
-      <div className="min-h-dvh bg-[#f2f2f7] pb-28 lg:pb-8 lg:pl-[220px]">
+      <div className="min-h-dvh bg-[#f2f2f7] dark:bg-gray-950 pb-28 lg:pb-8 lg:pl-[220px]">
         <CalendarView
           initialEvents={calendarEvents}
           unscheduledQuotes={unscheduledQuotes}
-          allQuotes={(allQuotes || []) as any}
+          allQuotes={(allQuotes || []) as { id: string; customer_name: string; job_address: string | null }[]}
         />
         <BottomNav active="schedule" />
       </div>

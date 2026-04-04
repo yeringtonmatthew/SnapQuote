@@ -49,16 +49,16 @@ export async function GET(request: Request) {
   }
 
   // Flatten the joined quotes data onto each event
-  const flattened = (events || []).map((event: any) => {
-    const { quotes, clients, ...rest } = event;
+  const flattened = (events || []).map((event: Record<string, unknown>) => {
+    const { quotes, clients, ...rest } = event as { quotes: Record<string, unknown> | null; clients: Record<string, unknown> | null; [key: string]: unknown };
     return {
       ...rest,
-      customer_name: clients?.name ?? quotes?.customer_name ?? null,
-      job_address: clients?.address ?? quotes?.job_address ?? null,
-      customer_phone: clients?.phone ?? quotes?.customer_phone ?? null,
-      quote_number: quotes?.quote_number ?? null,
-      pipeline_stage: quotes?.pipeline_stage ?? null,
-      total: quotes?.total ?? null,
+      customer_name: (clients?.name as string) ?? (quotes?.customer_name as string) ?? null,
+      job_address: (clients?.address as string) ?? (quotes?.job_address as string) ?? null,
+      customer_phone: (clients?.phone as string) ?? (quotes?.customer_phone as string) ?? null,
+      quote_number: (quotes?.quote_number as number) ?? null,
+      pipeline_stage: (quotes?.pipeline_stage as string) ?? null,
+      total: (quotes?.total as number) ?? null,
     };
   });
 

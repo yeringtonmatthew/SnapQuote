@@ -2,7 +2,7 @@ import { MetadataRoute } from 'next';
 
 export default function robots(): MetadataRoute.Robots {
   return {
-    rules: { userAgent: '*', allow: '/', disallow: ['/dashboard', '/quotes', '/settings', '/api'] },
+    rules: { userAgent: '*', allow: '/', disallow: ['/dashboard', '/quotes', '/settings', '/api', '/clients', '/jobs', '/pipeline', '/schedule', '/onboarding', '/invoice', '/receipt', '/auth'] },
     sitemap: 'https://snapquote.dev/sitemap.xml',
   };
 }

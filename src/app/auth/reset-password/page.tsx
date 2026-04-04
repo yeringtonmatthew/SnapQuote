@@ -18,7 +18,7 @@ export default function ResetPasswordPage() {
 
     const supabase = createClient();
     const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: window.location.origin + '/auth/login',
+      redirectTo: window.location.origin + '/auth/callback?next=/auth/update-password',
     });
 
     if (resetError) {
@@ -32,24 +32,24 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <div className="flex min-h-dvh flex-col justify-center px-6 py-12">
+    <div className="flex min-h-dvh flex-col justify-center px-6 py-12 bg-white dark:bg-gray-950 animate-in fade-in duration-500">
       <div className="mx-auto w-full max-w-sm">
         {/* Header */}
         <div className="text-center">
           <SnapQuoteLogo size="lg" variant="mark" className="justify-center" />
-          <h1 className="mt-4 text-2xl font-bold text-gray-900">
+          <h1 className="mt-4 text-2xl font-bold text-gray-900 dark:text-gray-100">
             Reset Password
           </h1>
-          <p className="mt-1 text-sm text-gray-500">
+          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
             Enter your email and we&apos;ll send you a reset link
           </p>
         </div>
 
         {sent ? (
           <div className="mt-8 space-y-5">
-            <div className="rounded-2xl bg-green-50 border border-green-200 px-4 py-4 text-center">
-              <p className="text-[15px] font-semibold text-green-700">Check your email</p>
-              <p className="mt-1 text-[13px] text-green-600">
+            <div className="rounded-2xl bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 px-4 py-4 text-center">
+              <p className="text-[15px] font-semibold text-green-700 dark:text-green-400">Check your email</p>
+              <p className="mt-1 text-[13px] text-green-600 dark:text-green-500">
                 We sent a password reset link to {email}
               </p>
             </div>
@@ -64,7 +64,7 @@ export default function ResetPasswordPage() {
           <>
             <form onSubmit={handleReset} className="mt-8 space-y-5">
               {error && (
-                <div className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600">
+                <div role="alert" className="rounded-xl bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-600 dark:text-red-400">
                   {error}
                 </div>
               )}

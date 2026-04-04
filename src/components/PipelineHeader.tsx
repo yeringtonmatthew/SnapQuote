@@ -24,17 +24,21 @@ export default function PipelineHeader({ activeCount, totalValue, isEmpty }: Pip
               Pipeline
             </h1>
             {!isEmpty && (
-              <p className="text-[13px] text-gray-500 dark:text-gray-400 tabular-nums mt-0.5">
-                {activeCount} active
-                <span className="mx-1.5 text-gray-300 dark:text-gray-600">&middot;</span>
-                ${totalValue.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
-              </p>
+              <div className="flex items-center gap-3 mt-1">
+                <span className="inline-flex items-center gap-1.5 text-[13px] text-gray-500 dark:text-gray-400 tabular-nums">
+                  <span className="h-1.5 w-1.5 rounded-full bg-brand-500" />
+                  {activeCount} active
+                </span>
+                <span className="text-[13px] font-semibold text-gray-700 dark:text-gray-300 tabular-nums">
+                  ${totalValue.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                </span>
+              </div>
             )}
           </div>
           <div className="flex items-center gap-2">
             <button
               onClick={() => setShowLeadSheet(true)}
-              className="flex items-center gap-1.5 rounded-full bg-white dark:bg-gray-800 px-3.5 py-2 text-[13px] font-semibold text-gray-700 dark:text-gray-300 shadow-sm ring-1 ring-black/[0.04] dark:ring-white/[0.06] press-scale transition-colors"
+              className="flex items-center gap-1.5 rounded-full bg-white dark:bg-gray-800 px-3.5 py-2.5 text-[13px] font-semibold text-gray-700 dark:text-gray-300 shadow-sm ring-1 ring-black/[0.04] dark:ring-white/[0.06] press-scale transition-colors min-h-[44px]"
             >
               <svg
                 className="h-3.5 w-3.5"
@@ -50,7 +54,7 @@ export default function PipelineHeader({ activeCount, totalValue, isEmpty }: Pip
             </button>
             <Link
               href="/quotes/new"
-              className="flex items-center gap-1.5 rounded-full bg-brand-600 px-4 py-2 text-[13px] font-semibold text-white shadow-sm press-scale transition-colors focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
+              className="flex items-center gap-1.5 rounded-full bg-brand-600 px-4 py-2.5 text-[13px] font-semibold text-white shadow-sm press-scale transition-colors focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 min-h-[44px]"
             >
               <svg
                 className="h-3.5 w-3.5"

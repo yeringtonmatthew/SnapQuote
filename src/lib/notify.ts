@@ -40,7 +40,7 @@ export async function sendNotificationEmail({
 }: SendNotificationEmailParams) {
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) {
-    console.log('[notify] Skipping email — no RESEND_API_KEY');
+    console.warn('[notify] Skipping email — no RESEND_API_KEY');
     return;
   }
 

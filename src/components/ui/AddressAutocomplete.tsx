@@ -91,7 +91,7 @@ export default function AddressAutocomplete({ value, onChange, placeholder, clas
       if (!res.ok) { setSuggestions([]); return; }
       const data = await res.json();
       if (data.predictions?.length > 0) {
-        setSuggestions(data.predictions.map((p: any) => ({
+        setSuggestions(data.predictions.map((p: { description: string; place_id: string }) => ({
           description: p.description,
           place_id: p.place_id,
         })));

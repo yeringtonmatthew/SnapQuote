@@ -13,7 +13,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Google Place ID is required' }, { status: 400 });
   }
 
-  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+  const apiKey = process.env.GOOGLE_MAPS_SERVER_KEY || process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
   if (!apiKey) {
     return NextResponse.json({ error: 'Google Maps API key not configured' }, { status: 500 });
   }
@@ -55,7 +55,7 @@ export async function POST(request: Request) {
       .eq('source', 'google');
 
     // Insert new Google reviews
-    const reviewRows = reviews.map((r: any) => ({
+    const reviewRows = reviews.map((r: { author_name?: string; rating: number; text?: string; profile_photo_url?: string; time?: number }) => ({
       contractor_id: user.id,
       customer_name: r.author_name || 'Google Reviewer',
       rating: r.rating,

@@ -3,10 +3,11 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/components/ui/Toast';
+import type { LineItem } from '@/types/database';
 
 interface DuplicateQuoteButtonProps {
   quote: {
-    line_items: any[];
+    line_items: LineItem[];
     notes: string | null;
     scope_of_work: string | null;
     ai_description: string | null;

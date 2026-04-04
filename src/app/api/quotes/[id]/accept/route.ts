@@ -10,13 +10,27 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   const ip = request.headers.get('x-forwarded-for') || 'unknown';
-  if (!rateLimit(ip, 5, 60_000)) {
+  if (!(await rateLimit(ip, 5, 60_000))) {
     return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
   }
 
   const supabase = createClient();
   const body = await request.json();
   const { customer_name, customer_signature, customer_signed_name, selected_option } = body;
+
+  // Validate customer_name input
+  if (customer_name !== undefined && (typeof customer_name !== 'string' || customer_name.trim().length === 0)) {
+    return NextResponse.json({ error: 'Invalid customer name' }, { status: 400 });
+  }
+  if (customer_signed_name !== undefined && (typeof customer_signed_name !== 'string' || customer_signed_name.length > 200)) {
+    return NextResponse.json({ error: 'Invalid signed name' }, { status: 400 });
+  }
+  // Limit base64 signature payload to ~2MB to prevent memory exhaustion
+  if (customer_signature !== undefined && customer_signature !== null) {
+    if (typeof customer_signature !== 'string' || customer_signature.length > 2_000_000) {
+      return NextResponse.json({ error: 'Signature data too large or invalid' }, { status: 400 });
+    }
+  }
 
   // Public endpoint — no auth required (customer is accepting)
   const { data: quote, error: fetchError } = await supabase
@@ -43,14 +57,18 @@ export async function POST(
   const shouldAdvance = advanceStages.includes(currentStage);
 
   // If tiered quote and customer selected an option, apply that tier's line items
-  let tierUpdate: Record<string, any> = {};
+  let tierUpdate: Record<string, unknown> = {};
   if (quote.quote_options && Array.isArray(quote.quote_options) && typeof selected_option === 'number') {
+    // selected_option must be a safe non-negative integer within the options array bounds
+    if (!Number.isInteger(selected_option) || selected_option < 0 || selected_option > 99) {
+      return NextResponse.json({ error: 'Invalid option selected' }, { status: 400 });
+    }
     const option = quote.quote_options[selected_option];
     if (!option) {
       return NextResponse.json({ error: 'Invalid option selected' }, { status: 400 });
     }
     const items = option.line_items || [];
-    const subtotal = items.reduce((sum: number, item: any) => sum + (Number(item.total) || 0), 0);
+    const subtotal = items.reduce((sum: number, item: { total?: number }) => sum + (Number(item.total ?? 0) || 0), 0);
     const roundedSubtotal = Math.round(subtotal * 100) / 100;
 
     // Apply same discount/tax logic as update route

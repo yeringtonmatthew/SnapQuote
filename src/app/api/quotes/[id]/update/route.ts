@@ -83,8 +83,8 @@ export async function PATCH(
 
   // Server-side recalculation of subtotal and deposit from line items
   const items = Array.isArray(line_items) ? line_items : [];
-  const subtotal = items.reduce((sum: number, item: any) => {
-    const total = Number(item.total) || 0;
+  const subtotal = items.reduce((sum: number, item: { total?: number }) => {
+    const total = Number(item.total ?? 0) || 0;
     return sum + Math.round(total * 100) / 100;
   }, 0);
   const roundedSubtotal = Math.round(subtotal * 100) / 100;

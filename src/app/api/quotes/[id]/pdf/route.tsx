@@ -30,12 +30,16 @@ export async function GET(
 
     const { data: profile } = await supabase
       .from('users')
-      .select('*')
+      .select('id, business_name, full_name, email, phone, address, logo_url, brand_color, license_number, website')
       .eq('id', user.id)
       .single();
 
+    if (!profile) {
+      return NextResponse.json({ error: 'Contractor profile not found' }, { status: 404 });
+    }
+
     const buffer = await renderToBuffer(
-      <QuotePDF quote={quote} profile={profile} />
+      <QuotePDF quote={quote} profile={profile as unknown as import('@/types/database').User} />
     );
 
     const customerSlug = quote.customer_name.replace(/\s+/g, '-').toLowerCase();

@@ -18,11 +18,70 @@ import { TierEditor } from '@/components/TierEditor';
 import { DEFAULT_TERMS } from '@/lib/defaultTerms';
 import { Spinner } from '@/components/ui/Spinner';
 import { LEAD_SOURCES } from '@/lib/constants';
+import { triggerConfetti } from '@/components/ConfettiEffect';
 
-type Step = 'start' | 'details' | 'generating' | 'review';
+type Step = 'start' | 'details' | 'generating' | 'review' | 'send';
 
-function AIProgressSteps() {
+// ---- Progress Indicator (Apple setup wizard style) ----
+const STEP_LABELS = ['Start', 'Details', 'AI', 'Review', 'Send'];
+const STEP_MAP: Record<Step, number> = { start: 0, details: 1, generating: 2, review: 3, send: 4 };
+
+function StepIndicator({ currentStep }: { currentStep: Step }) {
+  const stepIndex = STEP_MAP[currentStep];
+  return (
+    <div className="flex items-center justify-center gap-1 py-2">
+      {STEP_LABELS.map((label, i) => (
+        <div key={label} className="flex items-center gap-1">
+          <div className="flex flex-col items-center">
+            <div
+              className={`h-2 w-2 rounded-full transition-all duration-500 ${
+                i < stepIndex
+                  ? 'bg-brand-600 scale-100'
+                  : i === stepIndex
+                    ? 'bg-brand-600 scale-125 ring-4 ring-brand-100 dark:ring-brand-900/40'
+                    : 'bg-gray-200 dark:bg-gray-700 scale-100'
+              }`}
+            />
+            <span
+              className={`mt-1 text-[10px] font-medium transition-colors duration-300 ${
+                i <= stepIndex ? 'text-brand-600 dark:text-brand-400' : 'text-gray-400 dark:text-gray-500'
+              }`}
+            >
+              {label}
+            </span>
+          </div>
+          {i < STEP_LABELS.length - 1 && (
+            <div
+              className={`mx-0.5 mb-3 h-px w-6 sm:w-8 transition-colors duration-500 ${
+                i < stepIndex ? 'bg-brand-400' : 'bg-gray-200 dark:bg-gray-700'
+              }`}
+            />
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ---- Draft Saved Toast ----
+function DraftSavedIndicator({ show }: { show: boolean }) {
+  if (!show) return null;
+  return (
+    <div className="draft-saved-indicator fixed bottom-20 left-1/2 z-40 -translate-x-1/2 rounded-full bg-gray-900/80 px-4 py-2 text-[13px] font-medium text-white backdrop-blur-sm">
+      <span className="flex items-center gap-1.5">
+        <svg className="h-3.5 w-3.5 text-green-400" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+        </svg>
+        Draft saved
+      </span>
+    </div>
+  );
+}
+
+// ---- AI Generation Animation ----
+function AIGeneratingView({ photoUrls }: { photoUrls: string[] }) {
   const [currentStep, setCurrentStep] = useState(0);
+  const [analyzingPhotoIndex, setAnalyzingPhotoIndex] = useState(0);
   const steps = [
     { label: 'Analyzing photos...', detail: 'Identifying materials, damage, and conditions' },
     { label: 'Inspecting for issues...', detail: 'Checking for damage, wear, and safety concerns' },
@@ -36,16 +95,223 @@ function AIProgressSteps() {
       setCurrentStep(prev => (prev < steps.length - 1 ? prev + 1 : prev));
     }, 2500);
     return () => clearInterval(interval);
-  }, []);
+  }, [steps.length]);
+
+  useEffect(() => {
+    if (photoUrls.length <= 1) return;
+    const interval = setInterval(() => {
+      setAnalyzingPhotoIndex(prev => (prev + 1) % photoUrls.length);
+    }, 1800);
+    return () => clearInterval(interval);
+  }, [photoUrls.length]);
 
   return (
-    <div className="space-y-2">
-      <p className="text-[17px] font-semibold text-gray-900">{steps[currentStep].label}</p>
-      <p className="text-[14px] text-gray-500">{steps[currentStep].detail}</p>
-      <div className="mt-4 flex justify-center gap-1.5">
-        {steps.map((_, i) => (
-          <div key={i} className={`h-1.5 w-8 rounded-full transition-colors duration-500 ${i <= currentStep ? 'bg-brand-600' : 'bg-gray-200'}`} />
+    <div className="step-enter flex flex-col items-center justify-center py-10 px-4" aria-live="polite">
+      {/* Photo being "analyzed" */}
+      {photoUrls.length > 0 && (
+        <div className="relative mb-8">
+          <div className="h-32 w-32 overflow-hidden rounded-2xl analyze-pulse">
+            <img
+              src={photoUrls[analyzingPhotoIndex]}
+              alt="Analyzing"
+              className="h-full w-full object-cover transition-all duration-500"
+            />
+          </div>
+          {/* Scanning line animation */}
+          <div className="absolute inset-0 overflow-hidden rounded-2xl pointer-events-none">
+            <div
+              className="absolute left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-brand-400 to-transparent"
+              style={{
+                animation: 'scan-line 2s ease-in-out infinite',
+              }}
+            />
+            <style>{`
+              @keyframes scan-line {
+                0% { top: 0%; opacity: 0; }
+                10% { opacity: 1; }
+                90% { opacity: 1; }
+                100% { top: 100%; opacity: 0; }
+              }
+            `}</style>
+          </div>
+          {/* Photo count badge */}
+          {photoUrls.length > 1 && (
+            <div className="absolute -bottom-2 -right-2 flex h-7 w-7 items-center justify-center rounded-full bg-brand-600 text-[11px] font-bold text-white shadow-lg">
+              {analyzingPhotoIndex + 1}/{photoUrls.length}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Shimmer preview cards */}
+      <div className="mb-8 w-full max-w-xs space-y-2">
+        {[1, 2, 3].map((n) => (
+          <div
+            key={n}
+            className="flex items-center gap-3 rounded-xl bg-white dark:bg-gray-900 p-3 shadow-sm border border-gray-100 dark:border-gray-800"
+            style={{ animationDelay: `${n * 200}ms` }}
+          >
+            <div className="shimmer-line h-4 w-4 rounded-md" style={{ animationDelay: `${n * 150}ms` }} />
+            <div className="flex-1 space-y-1.5">
+              <div className="shimmer-line h-3 rounded" style={{ width: `${70 + n * 8}%`, animationDelay: `${n * 100}ms` }} />
+              <div className="shimmer-line h-2.5 w-12 rounded" style={{ animationDelay: `${n * 100 + 50}ms` }} />
+            </div>
+            <div className="shimmer-line h-3 w-14 rounded" style={{ animationDelay: `${n * 100 + 100}ms` }} />
+          </div>
         ))}
+      </div>
+
+      {/* Step text */}
+      <div className="text-center space-y-2">
+        <p className="text-[17px] font-semibold text-gray-900 dark:text-gray-100 transition-all duration-300">{steps[currentStep].label}</p>
+        <p className="text-[14px] text-gray-500 dark:text-gray-400 transition-all duration-300">{steps[currentStep].detail}</p>
+        <div className="mt-4 flex justify-center gap-1.5">
+          {steps.map((_, i) => (
+            <div key={i} className={`h-1.5 w-8 rounded-full transition-colors duration-500 ${i <= currentStep ? 'bg-brand-600' : 'bg-gray-200 dark:bg-gray-700'}`} />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ---- Send Confirmation View ----
+function SendView({
+  customerName,
+  customerPhone,
+  customerEmail,
+  total,
+  lineItemCount,
+  sending,
+  onSend,
+  onSaveDraft,
+  onBack,
+}: {
+  customerName: string;
+  customerPhone: string;
+  customerEmail: string;
+  total: number;
+  lineItemCount: number;
+  sending: boolean;
+  onSend: (method: 'sms' | 'email' | 'both') => void;
+  onSaveDraft: () => void;
+  onBack: () => void;
+}) {
+  const hasPhone = !!customerPhone.trim();
+  const hasEmail = !!customerEmail.trim();
+
+  return (
+    <div className="step-enter space-y-6 pb-8">
+      {/* Mini quote preview card */}
+      <div className="card !bg-gradient-to-br !from-brand-50 dark:!from-brand-950/30 !to-white dark:!to-gray-900 !border-brand-200 dark:!border-brand-800">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-600 text-white">
+            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+            </svg>
+          </div>
+          <div>
+            <p className="text-[13px] font-medium text-gray-500 dark:text-gray-400">Quote for</p>
+            <p className="text-[17px] font-bold text-gray-900 dark:text-gray-100">{customerName}</p>
+          </div>
+        </div>
+        <div className="flex items-center justify-between border-t border-brand-100 dark:border-brand-800 pt-3">
+          <span className="text-[13px] text-gray-500 dark:text-gray-400">{lineItemCount} item{lineItemCount !== 1 ? 's' : ''}</span>
+          <span className="text-[22px] font-bold text-gray-900 dark:text-gray-100">
+            ${total.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+          </span>
+        </div>
+      </div>
+
+      {/* Delivery method buttons */}
+      <div>
+        <h3 className="mb-3 text-[15px] font-semibold text-gray-900 dark:text-gray-100">How do you want to send it?</h3>
+        <div className="space-y-2">
+          {hasPhone && (
+            <button
+              onClick={() => onSend('sms')}
+              disabled={sending}
+              className="flex w-full min-h-[56px] items-center gap-4 rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4 text-left shadow-sm transition-all hover:border-brand-300 hover:bg-brand-50 dark:hover:bg-brand-950/20 active:scale-[0.98] disabled:opacity-50"
+            >
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-green-100 text-green-600">
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" />
+                </svg>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[15px] font-semibold text-gray-900 dark:text-gray-100">Send via SMS</p>
+                <p className="text-[13px] text-gray-500 truncate">{formatPhoneNumber(customerPhone)}</p>
+              </div>
+              <svg className="h-5 w-5 text-gray-300" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+              </svg>
+            </button>
+          )}
+          {hasEmail && (
+            <button
+              onClick={() => onSend('email')}
+              disabled={sending}
+              className="flex w-full min-h-[56px] items-center gap-4 rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4 text-left shadow-sm transition-all hover:border-brand-300 hover:bg-brand-50 dark:hover:bg-brand-950/20 active:scale-[0.98] disabled:opacity-50"
+            >
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-100 text-blue-600">
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+                </svg>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[15px] font-semibold text-gray-900 dark:text-gray-100">Send via Email</p>
+                <p className="text-[13px] text-gray-500 truncate">{customerEmail}</p>
+              </div>
+              <svg className="h-5 w-5 text-gray-300" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+              </svg>
+            </button>
+          )}
+          {hasPhone && hasEmail && (
+            <button
+              onClick={() => onSend('both')}
+              disabled={sending}
+              className="flex w-full min-h-[56px] items-center gap-4 rounded-2xl border-2 border-brand-200 dark:border-brand-700 bg-brand-50 dark:bg-brand-950/30 p-4 text-left shadow-sm transition-all hover:border-brand-400 active:scale-[0.98] disabled:opacity-50"
+            >
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-600 text-white">
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
+                </svg>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[15px] font-semibold text-gray-900 dark:text-gray-100">Send via SMS + Email</p>
+                <p className="text-[13px] text-gray-500">Best chance they see it</p>
+              </div>
+              <svg className="h-5 w-5 text-brand-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+              </svg>
+            </button>
+          )}
+        </div>
+      </div>
+
+      {sending && (
+        <div className="flex items-center justify-center gap-2 py-4">
+          <Spinner size="md" />
+          <span className="text-[15px] font-medium text-gray-600 dark:text-gray-400">Sending your quote...</span>
+        </div>
+      )}
+
+      <div className="space-y-3 pt-2">
+        <button
+          onClick={onSaveDraft}
+          disabled={sending}
+          className="btn-secondary"
+        >
+          Save as Draft Instead
+        </button>
+        <button
+          onClick={onBack}
+          disabled={sending}
+          className="w-full py-2 text-center text-[14px] text-gray-500 hover:text-gray-700 rounded-lg"
+        >
+          Back to Review
+        </button>
       </div>
     </div>
   );
@@ -65,9 +331,8 @@ export default function NewQuotePage() {
   const [templates, setTemplates] = useState<QuoteTemplate[]>([]);
   const [loadingTemplates, setLoadingTemplates] = useState(true);
 
-  // Job details — File objects are compressed client-side by PhotoUpload
+  // Job details
   const [files, setFiles] = useState<File[]>([]);
-  // Persisted photo URLs — uploaded to Supabase as soon as files are added
   const [photoUrls, setPhotoUrls] = useState<string[]>([]);
   const [uploadingPhotos, setUploadingPhotos] = useState(false);
   const [customerName, setCustomerName] = useState('');
@@ -78,7 +343,7 @@ export default function NewQuotePage() {
   const [leadSource, setLeadSource] = useState<LeadSourceValue | ''>('');
 
   // Client picker
-  const [clients, setClients] = useState<any[]>([]);
+  const [clients, setClients] = useState<{ id: string; name: string; phone: string | null; email: string | null; address: string | null }[]>([]);
   const [clientId, setClientId] = useState<string | null>(null);
   const [clientSearch, setClientSearch] = useState('');
   const [showClientDropdown, setShowClientDropdown] = useState(false);
@@ -99,11 +364,15 @@ export default function NewQuotePage() {
   const [discountValue, setDiscountValue] = useState<string>('');
   const [quoteOptions, setQuoteOptions] = useState<QuoteOption[] | null>(null);
 
+  // Tax & discount collapsible
+  const [showTaxDiscount, setShowTaxDiscount] = useState(false);
+
   // UI state
   const [generating, setGenerating] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
+  const [draftSavedVisible, setDraftSavedVisible] = useState(false);
 
   // Clear a specific field error when user starts typing
   function clearFieldError(field: keyof FieldErrors) {
@@ -130,6 +399,7 @@ export default function NewQuotePage() {
         setDepositPercent(data.default_deposit_percent ?? 0);
         if (data.default_tax_rate != null) {
           setTaxRate(String(data.default_tax_rate));
+          setShowTaxDiscount(true);
         }
       }
     }
@@ -141,7 +411,7 @@ export default function NewQuotePage() {
           setTemplates(data);
         }
       } catch {
-        // Templates are optional — fail silently
+        // Templates are optional
       } finally {
         setLoadingTemplates(false);
       }
@@ -154,7 +424,7 @@ export default function NewQuotePage() {
           setClients(data);
         }
       } catch {
-        // Clients are optional — fail silently
+        // Clients are optional
       }
     }
     loadProfile();
@@ -173,6 +443,23 @@ export default function NewQuotePage() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // Back button warning for unsaved changes
+  useEffect(() => {
+    function handleBeforeUnload(e: BeforeUnloadEvent) {
+      const hasContent = customerName || lineItems.length > 0 || aiDescription || files.length > 0 || photoUrls.length > 0;
+      if (hasContent && step !== 'start') {
+        e.preventDefault();
+        // Save draft on exit attempt
+        const data = getDraftData();
+        if (data.customerName || data.lineItems.length > 0 || data.aiDescription || data.photos.length > 0) {
+          saveDraft(data);
+        }
+      }
+    }
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [customerName, lineItems, aiDescription, files, photoUrls, step]);
+
   // Filter clients based on search input
   const filteredClients = clientSearch.trim()
     ? clients.filter(c => {
@@ -185,7 +472,7 @@ export default function NewQuotePage() {
       })
     : clients;
 
-  function selectClient(client: any) {
+  function selectClient(client: { id: string; name: string; phone: string | null; email: string | null; address: string | null }) {
     setClientId(client.id);
     setCustomerName(client.name || '');
     setCustomerPhone(client.phone || '');
@@ -221,8 +508,6 @@ export default function NewQuotePage() {
         if (!uploadError) {
           const { data: urlData } = supabase.storage.from('photos').getPublicUrl(filePath);
           newUrls.push(urlData.publicUrl);
-        } else {
-          // Upload error — skip this photo
         }
       }
       setPhotoUrls(prev => [...prev, ...newUrls]);
@@ -233,27 +518,22 @@ export default function NewQuotePage() {
     }
   }
 
-  // Wrap file change: update local File[] state AND upload to storage in background
   function handleFilesChange(newFiles: File[]) {
     clearFieldError('photos');
 
     if (newFiles.length > files.length) {
-      // Addition: upload only the newly added files
       const addedFiles = newFiles.slice(files.length);
       setFiles(newFiles);
       uploadPhotosToStorage(addedFiles);
     } else if (newFiles.length < files.length) {
-      // Removal: find which file was removed by checking which one is missing
       const removedIndex = files.findIndex(f => !newFiles.includes(f));
       setFiles(newFiles);
       if (removedIndex !== -1) {
         setPhotoUrls(prev => prev.filter((_, i) => i !== removedIndex));
       } else {
-        // Fallback: last file was removed (e.g., same object references)
         setPhotoUrls(prev => prev.slice(0, newFiles.length));
       }
     } else {
-      // Reorder: update files and reorder photoUrls to match
       const newOrder = newFiles.map(f => files.indexOf(f));
       setFiles(newFiles);
       setPhotoUrls(prev => {
@@ -273,31 +553,20 @@ export default function NewQuotePage() {
     notes,
     scopeOfWork,
     aiDescription,
-    photos: photoUrls, // NOW persists uploaded photo URLs
+    photos: photoUrls,
   }), [customerName, customerPhone, customerEmail, jobAddress, lineItems, notes, scopeOfWork, aiDescription, photoUrls]);
 
-  // Auto-save every 30 seconds
+  // Auto-save every 30 seconds with visual indicator
   useEffect(() => {
     const interval = setInterval(() => {
       const data = getDraftData();
-      // Only save if there's meaningful content
       if (data.customerName || data.lineItems.length > 0 || data.aiDescription || data.photos.length > 0) {
         saveDraft(data);
+        setDraftSavedVisible(true);
+        setTimeout(() => setDraftSavedVisible(false), 2600);
       }
     }, 30000);
     return () => clearInterval(interval);
-  }, [getDraftData]);
-
-  // Save on beforeunload
-  useEffect(() => {
-    function handleBeforeUnload() {
-      const data = getDraftData();
-      if (data.customerName || data.lineItems.length > 0 || data.aiDescription || data.photos.length > 0) {
-        saveDraft(data);
-      }
-    }
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [getDraftData]);
 
   // Resume draft handler
@@ -305,16 +574,14 @@ export default function NewQuotePage() {
     setCustomerName(draft.customerName || '');
     setCustomerPhone(draft.customerPhone || '');
     setCustomerEmail(draft.customerEmail || '');
-    setJobAddress((draft as any).jobAddress || '');
+    setJobAddress(draft.jobAddress || '');
     setLineItems(draft.lineItems || []);
     setNotes(draft.notes || DEFAULT_TERMS);
     setScopeOfWork(draft.scopeOfWork || '');
     setAiDescription(draft.aiDescription || '');
-    // Restore persisted photo URLs
     if (draft.photos && draft.photos.length > 0) {
       setPhotoUrls(draft.photos);
     }
-    // Jump to review if we have line items, otherwise details
     if (draft.lineItems && draft.lineItems.length > 0) {
       setStep('review');
     } else if (draft.customerName || (draft.photos && draft.photos.length > 0)) {
@@ -361,7 +628,6 @@ export default function NewQuotePage() {
         canvas.height = h;
         canvas.getContext('2d')!.drawImage(img, 0, 0, w, h);
         const dataUri = canvas.toDataURL('image/jpeg', 0.7);
-        // Strip the data URI prefix — only send raw base64
         resolve(dataUri.replace(/^data:image\/\w+;base64,/, ''));
       };
       img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Failed to load image')); };
@@ -393,12 +659,10 @@ export default function NewQuotePage() {
     setStep('generating');
 
     try {
-      // Compress each file client-side, then send as JSON (avoids FormData/multipart issues)
       let images: string[];
       if (files.length > 0) {
         images = await Promise.all(files.map(compressToBase64));
       } else if (photoUrls.length > 0) {
-        // Draft recovery: files are gone but URLs exist — fetch and convert to base64
         images = await Promise.all(
           photoUrls.map(async (url) => {
             const resp = await fetch(url);
@@ -451,12 +715,9 @@ export default function NewQuotePage() {
     setFieldErrors({});
 
     try {
-      // Photos are already uploaded to Supabase storage (uploaded on add).
-      // Only upload any remaining files that might not have URLs yet.
       const supabase = createClient();
       let finalPhotoUrls = [...photoUrls];
 
-      // If there are more files than URLs, upload the extras
       if (files.length > photoUrls.length) {
         const remainingFiles = files.slice(photoUrls.length);
         for (const file of remainingFiles) {
@@ -468,8 +729,6 @@ export default function NewQuotePage() {
           if (!uploadError) {
             const { data: urlData } = supabase.storage.from('photos').getPublicUrl(filePath);
             finalPhotoUrls.push(urlData.publicUrl);
-          } else {
-            // Upload error — skip this photo
           }
         }
       }
@@ -498,7 +757,7 @@ export default function NewQuotePage() {
           deposit_percent: depositPercent,
           notes,
           quote_options: quoteOptions,
-          status: 'draft', // Always save as draft first
+          status: 'draft',
         }),
       });
 
@@ -509,19 +768,17 @@ export default function NewQuotePage() {
 
       const savedQuote = await res.json();
 
-      // If user clicked "Send Quote", fire the send route (SMS + status update)
       if (status === 'sent') {
         try {
           await fetch(`/api/quotes/${savedQuote.id}/send`, { method: 'POST' });
+          // Trigger confetti on successful send
+          triggerConfetti();
         } catch {
-          // Send failed but quote is saved — they can resend from detail page
+          // Send failed but quote is saved
         }
       }
 
-      // Clear auto-saved draft on successful save
       clearDraft();
-
-      // Go to the quote detail page so they can see the result
       router.push(`/quotes/${savedQuote.id}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong');
@@ -530,18 +787,49 @@ export default function NewQuotePage() {
     }
   }
 
+  // Handle back navigation with draft save
+  function handleBackClick() {
+    const hasContent = customerName || lineItems.length > 0 || aiDescription || files.length > 0 || photoUrls.length > 0;
+    if (hasContent && step !== 'start') {
+      const data = getDraftData();
+      saveDraft(data);
+    }
+    if (step === 'details') {
+      setStep('start');
+    } else if (step === 'review') {
+      setStep('details');
+    } else if (step === 'send') {
+      setStep('review');
+    } else {
+      router.push('/dashboard');
+    }
+  }
+
+  // Smooth scroll to top when step changes
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [step]);
+
   return (
     <PageTransition>
-    <div className="min-h-dvh bg-gray-50 pb-8">
-      {/* Header */}
-      <header className="sticky top-0 z-10 border-b border-gray-200 bg-white px-4 py-3">
-        <div className="mx-auto flex max-w-lg items-center gap-3">
-          <Link href="/dashboard" aria-label="Back to dashboard" className="flex h-9 w-9 items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2">
-            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
-            </svg>
-          </Link>
-          <h1 className="text-lg font-bold text-gray-900">New Quote</h1>
+    <div className="min-h-dvh bg-gray-50 dark:bg-gray-950 pb-8">
+      {/* Header with progress indicator */}
+      <header className="sticky top-0 z-10 border-b border-gray-200 dark:border-gray-800 bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl px-4">
+        <div className="mx-auto max-w-lg">
+          <div className="flex items-center gap-3 py-3">
+            <button
+              onClick={handleBackClick}
+              aria-label={step === 'start' ? 'Back to dashboard' : 'Go back'}
+              className="flex h-11 w-11 items-center justify-center rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
+            >
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+              </svg>
+            </button>
+            <h1 className="text-lg font-bold text-gray-900 dark:text-gray-100">New Quote</h1>
+          </div>
+          {/* Progress indicator -- only show after start */}
+          {step !== 'start' && <StepIndicator currentStep={step} />}
         </div>
       </header>
 
@@ -550,7 +838,7 @@ export default function NewQuotePage() {
           <DraftRecovery onResume={handleResumeDraft} />
         )}
         {error && (
-          <div role="alert" className="mb-4 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600">
+          <div role="alert" className="mb-4 rounded-xl bg-red-50 dark:bg-red-950/30 px-4 py-3 text-[15px] text-red-600 dark:text-red-400">
             {error}
           </div>
         )}
@@ -559,14 +847,14 @@ export default function NewQuotePage() {
         {step === 'start' && (
           <div className="space-y-6">
             <div>
-              <h2 className="text-lg font-bold text-gray-900">How do you want to start?</h2>
-              <p className="mt-1 text-sm text-gray-500">Snap photos for an AI quote, or start from a saved template.</p>
+              <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">How do you want to start?</h2>
+              <p className="mt-1 text-[15px] text-gray-500">Snap photos for an AI quote, or start from a saved template.</p>
             </div>
 
             {/* Snap a Photo option */}
             <button
               onClick={() => setStep('details')}
-              className="w-full rounded-2xl border-2 border-brand-200 bg-brand-50 p-5 text-left transition-colors hover:border-brand-400 focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
+              className="w-full rounded-2xl border-2 border-brand-200 dark:border-brand-700 bg-brand-50 dark:bg-brand-950/30 p-5 text-left transition-colors hover:border-brand-400 active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
             >
               <div className="flex items-center gap-4">
                 <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-brand-600 text-white">
@@ -576,8 +864,8 @@ export default function NewQuotePage() {
                   </svg>
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-gray-900">Snap a Photo</p>
-                  <p className="mt-0.5 text-xs text-gray-500">AI generates a quote from your job photos</p>
+                  <p className="text-[15px] font-bold text-gray-900 dark:text-gray-100">Snap a Photo</p>
+                  <p className="mt-0.5 text-[13px] text-gray-500">AI generates a quote from your job photos</p>
                 </div>
               </div>
             </button>
@@ -591,14 +879,14 @@ export default function NewQuotePage() {
                     <button
                       key={template.id}
                       onClick={() => handleSelectTemplate(template)}
-                      className="w-full rounded-2xl border border-gray-200 bg-white p-4 text-left shadow-sm transition-colors hover:border-brand-300 hover:bg-brand-50 active:bg-brand-100 focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
+                      className="w-full rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4 text-left shadow-sm transition-colors hover:border-brand-300 hover:bg-brand-50 dark:hover:bg-brand-950/20 active:bg-brand-100 dark:active:bg-brand-900/30 active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
                     >
                       <div className="flex items-center justify-between">
                         <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-semibold text-gray-900">{template.name}</p>
-                          <p className="mt-0.5 text-xs text-gray-500">
+                          <p className="truncate text-[15px] font-semibold text-gray-900 dark:text-gray-100">{template.name}</p>
+                          <p className="mt-0.5 text-[13px] text-gray-500">
                             {template.line_items.length} line item{template.line_items.length !== 1 ? 's' : ''}
-                            {template.scope_of_work ? ' · Has scope' : ''}
+                            {template.scope_of_work ? ' -- Has scope' : ''}
                           </p>
                         </div>
                         <svg className="ml-3 h-5 w-5 shrink-0 text-gray-300" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
@@ -622,7 +910,7 @@ export default function NewQuotePage() {
               onClick={() => {
                 setStep('details');
               }}
-              className="w-full py-2 text-center text-sm text-gray-500 hover:text-gray-700 focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 rounded-lg"
+              className="w-full py-2 text-center text-[14px] text-gray-500 hover:text-gray-700 focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 rounded-lg"
             >
               Or build a quote manually
             </button>
@@ -631,10 +919,10 @@ export default function NewQuotePage() {
 
         {/* ========== STEP 1: Job Details ========== */}
         {step === 'details' && (
-          <div className="space-y-6">
+          <div className="step-enter space-y-6">
             <div>
-              <h2 className="mb-3 text-sm font-semibold text-gray-700">Job Photos</h2>
-              <PhotoUpload files={files} onFilesChange={handleFilesChange} photoUrls={photoUrls} />
+              <h2 className="mb-3 text-[15px] font-semibold text-gray-700">Job Photos</h2>
+              <PhotoUpload files={files} onFilesChange={handleFilesChange} photoUrls={photoUrls} uploading={uploadingPhotos} />
               {fieldErrors.photos && (
                 <p role="alert" className="mt-1.5 text-xs text-red-500 animate-shake">
                   {fieldErrors.photos}
@@ -643,7 +931,7 @@ export default function NewQuotePage() {
             </div>
 
             <div className="space-y-4">
-              <h2 className="text-sm font-semibold text-gray-700">Customer Info</h2>
+              <h2 className="text-[15px] font-semibold text-gray-700">Customer Info</h2>
 
               {/* Client search / picker */}
               {clients.length > 0 && (
@@ -653,11 +941,11 @@ export default function NewQuotePage() {
                       <svg className="h-4 w-4 text-brand-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
                       </svg>
-                      <span className="text-[15px] font-medium text-brand-700 flex-1 truncate">{customerName}</span>
+                      <span className="text-[16px] font-medium text-brand-700 flex-1 truncate">{customerName}</span>
                       <button
                         type="button"
                         onClick={deselectClient}
-                        className="flex h-6 w-6 items-center justify-center rounded-full text-brand-400 hover:bg-brand-100 hover:text-brand-600"
+                        className="flex h-11 w-11 items-center justify-center rounded-full text-brand-400 hover:bg-brand-100 hover:text-brand-600"
                         aria-label="Deselect client"
                       >
                         <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
@@ -681,17 +969,17 @@ export default function NewQuotePage() {
                         />
                       </div>
                       {showClientDropdown && filteredClients.length > 0 && (
-                        <ul className="absolute z-20 mt-1 max-h-52 w-full overflow-y-auto rounded-xl border border-gray-200 bg-white shadow-lg">
+                        <ul className="absolute z-20 mt-1 max-h-52 w-full overflow-y-auto rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-lg">
                           {filteredClients.slice(0, 20).map((c) => (
                             <li key={c.id}>
                               <button
                                 type="button"
                                 onClick={() => selectClient(c)}
-                                className="flex w-full flex-col gap-0.5 px-3 py-2.5 text-left hover:bg-gray-50 active:bg-gray-100"
+                                className="flex w-full min-h-[48px] flex-col gap-0.5 px-3 py-2.5 text-left hover:bg-gray-50 dark:hover:bg-gray-700 active:bg-gray-100 dark:active:bg-gray-600"
                               >
-                                <span className="text-[15px] font-medium text-gray-900">{c.name}</span>
+                                <span className="text-[16px] font-medium text-gray-900 dark:text-gray-100">{c.name}</span>
                                 <span className="text-[13px] text-gray-500">
-                                  {[c.phone, c.email].filter(Boolean).join(' · ')}
+                                  {[c.phone, c.email].filter(Boolean).join(' -- ')}
                                 </span>
                               </button>
                             </li>
@@ -699,7 +987,7 @@ export default function NewQuotePage() {
                         </ul>
                       )}
                       {showClientDropdown && clientSearch.trim() && filteredClients.length === 0 && (
-                        <div className="absolute z-20 mt-1 w-full rounded-xl border border-gray-200 bg-white px-3 py-3 shadow-lg">
+                        <div className="absolute z-20 mt-1 w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-3 shadow-lg">
                           <p className="text-[13px] text-gray-500">No clients found</p>
                         </div>
                       )}
@@ -707,9 +995,9 @@ export default function NewQuotePage() {
                   )}
 
                   <div className="flex items-center gap-3">
-                    <div className="h-px flex-1 bg-gray-200" />
+                    <div className="h-px flex-1 bg-gray-200 dark:bg-gray-700" />
                     <span className="text-xs text-gray-400">or enter manually</span>
-                    <div className="h-px flex-1 bg-gray-200" />
+                    <div className="h-px flex-1 bg-gray-200 dark:bg-gray-700" />
                   </div>
                 </>
               )}
@@ -829,27 +1117,19 @@ export default function NewQuotePage() {
               <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 010 3.75H5.625a1.875 1.875 0 010-3.75z" />
               </svg>
-              Quick Quote — Skip AI
+              Quick Quote -- Skip AI
             </button>
           </div>
         )}
 
         {/* ========== STEP 2: Generating ========== */}
         {step === 'generating' && (
-          <div className="step-enter flex flex-col items-center justify-center py-16 px-4 text-center" aria-live="polite">
-            <div className="relative mb-8">
-              {/* Animated ring */}
-              <div className="h-20 w-20 rounded-full border-4 border-gray-200">
-                <div className="h-full w-full rounded-full border-4 border-brand-600 border-t-transparent animate-spin" />
-              </div>
-            </div>
-            <AIProgressSteps />
-          </div>
+          <AIGeneratingView photoUrls={photoUrls} />
         )}
 
         {/* ========== STEP 3: Review & Edit ========== */}
         {step === 'review' && (
-          <div className="space-y-6 pb-24">
+          <div className="step-enter space-y-6 pb-24">
             {aiDescription && (
               <div className="card !bg-brand-50 !border-brand-200">
                 <div className="flex items-start gap-2">
@@ -857,9 +1137,9 @@ export default function NewQuotePage() {
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
                   </svg>
                   <div>
-                    <p className="text-sm font-medium text-brand-900">{aiDescription}</p>
+                    <p className="text-[15px] font-medium text-brand-900">{aiDescription}</p>
                     {estimatedDuration && (
-                      <p className="mt-1 text-xs text-brand-600">Estimated: {estimatedDuration}</p>
+                      <p className="mt-1 text-[13px] text-brand-600">Estimated: {estimatedDuration}</p>
                     )}
                   </div>
                 </div>
@@ -870,19 +1150,33 @@ export default function NewQuotePage() {
             {scopeOfWork && (
               <div className="card">
                 <p className="mb-2 text-xs font-medium uppercase tracking-wide text-gray-500">Scope of Work</p>
-                <p className="text-sm leading-relaxed text-gray-700">{scopeOfWork}</p>
+                <p className="text-[15px] leading-relaxed text-gray-700">{scopeOfWork}</p>
               </div>
             )}
 
             <div className="card">
-              <p className="text-xs font-medium uppercase tracking-wide text-gray-500">Customer</p>
-              <p className="mt-1 text-sm font-semibold text-gray-900">{customerName}</p>
-              {customerPhone && <p className="text-xs text-gray-500">{formatPhoneNumber(customerPhone)}</p>}
-              {customerEmail && <p className="text-xs text-gray-500">{customerEmail}</p>}
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-medium uppercase tracking-wide text-gray-500">Customer</p>
+                  <p className="mt-1 text-[15px] font-semibold text-gray-900 dark:text-gray-100">{customerName}</p>
+                  {customerPhone && <p className="text-[13px] text-gray-500">{formatPhoneNumber(customerPhone)}</p>}
+                  {customerEmail && <p className="text-[13px] text-gray-500">{customerEmail}</p>}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => { setStep('details'); setError(null); }}
+                  className="flex h-11 w-11 items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+                  aria-label="Edit customer details"
+                >
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" />
+                  </svg>
+                </button>
+              </div>
             </div>
 
             <div>
-              <h2 className="mb-3 text-sm font-semibold text-gray-700">Line Items</h2>
+              <h2 className="mb-3 text-[15px] font-semibold text-gray-700">Line Items</h2>
               <LineItemEditor lineItems={lineItems} onChange={(items) => { setLineItems(items); clearFieldError('lineItems'); }} />
               {fieldErrors.lineItems && (
                 <p role="alert" className="mt-1.5 text-xs text-red-500 animate-shake">
@@ -910,108 +1204,127 @@ export default function NewQuotePage() {
               />
             </div>
 
+            {/* Totals card */}
             <div className="card space-y-3">
               {/* Subtotal */}
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Subtotal</span>
-                <span className="text-sm font-semibold text-gray-900">
+                <span className="text-[15px] text-gray-600 dark:text-gray-400">Subtotal</span>
+                <span className="text-[15px] font-semibold text-gray-900 dark:text-gray-100">
                   ${subtotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                 </span>
               </div>
 
-              {/* Discount */}
-              <div className="border-t border-gray-100 pt-3 space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Discount</span>
-                  <div className="flex items-center gap-1.5">
-                    {(['none', 'amount', 'percent'] as const).map((type) => (
-                      <button
-                        key={type}
-                        type="button"
-                        onClick={() => { setDiscountType(type); if (type === 'none') setDiscountValue(''); }}
-                        className={`rounded-lg px-2 py-1 text-xs font-medium transition-colors ${
-                          discountType === type
-                            ? 'bg-brand-100 text-brand-700'
-                            : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
-                        }`}
-                      >
-                        {type === 'none' ? 'No Discount' : type === 'amount' ? '$ Amount' : '% Percent'}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                {discountType !== 'none' && (
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center rounded-lg border border-gray-200 px-2">
-                      {discountType === 'amount' && (
-                        <span className="text-xs text-gray-400 mr-1">$</span>
-                      )}
-                      <input
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        max={discountType === 'percent' ? 100 : undefined}
-                        value={discountValue}
-                        onChange={(e) => setDiscountValue(e.target.value)}
-                        placeholder="0"
-                        aria-label={`Discount ${discountType === 'amount' ? 'amount in dollars' : 'percentage'}`}
-                        className="w-20 border-0 bg-transparent p-1 text-sm text-gray-700 focus:outline-none focus:ring-0"
-                      />
-                      {discountType === 'percent' && (
-                        <span className="text-xs text-gray-400 ml-1">%</span>
-                      )}
+              {/* Tax & Discount -- collapsible */}
+              {!showTaxDiscount && (discountType === 'none' && !parsedTaxRate) && (
+                <button
+                  type="button"
+                  onClick={() => setShowTaxDiscount(true)}
+                  className="flex items-center gap-1.5 text-[13px] font-medium text-brand-600 hover:text-brand-700"
+                >
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                  </svg>
+                  Add tax or discount
+                </button>
+              )}
+
+              {(showTaxDiscount || discountType !== 'none' || parsedTaxRate > 0) && (
+                <>
+                  {/* Discount */}
+                  <div className="border-t border-gray-100 dark:border-gray-800 pt-3 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[14px] text-gray-600 dark:text-gray-400">Discount</span>
+                      <div className="flex items-center gap-1.5">
+                        {(['none', 'amount', 'percent'] as const).map((type) => (
+                          <button
+                            key={type}
+                            type="button"
+                            onClick={() => { setDiscountType(type); if (type === 'none') setDiscountValue(''); }}
+                            className={`rounded-lg px-2 py-1 text-xs font-medium transition-colors min-h-[32px] ${
+                              discountType === type
+                                ? 'bg-brand-100 dark:bg-brand-900/40 text-brand-700 dark:text-brand-300'
+                                : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
+                            }`}
+                          >
+                            {type === 'none' ? 'None' : type === 'amount' ? '$ Amt' : '%'}
+                          </button>
+                        ))}
+                      </div>
                     </div>
-                    {discountAmount > 0 && (
-                      <span className="text-sm font-medium text-red-500">
-                        -${discountAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                      </span>
+                    {discountType !== 'none' && (
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center rounded-lg border border-gray-200 dark:border-gray-700 px-2">
+                          {discountType === 'amount' && (
+                            <span className="text-xs text-gray-400 mr-1">$</span>
+                          )}
+                          <input
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            max={discountType === 'percent' ? 100 : undefined}
+                            value={discountValue}
+                            onChange={(e) => setDiscountValue(e.target.value)}
+                            placeholder="0"
+                            aria-label={`Discount ${discountType === 'amount' ? 'amount in dollars' : 'percentage'}`}
+                            className="w-20 border-0 bg-transparent p-1 text-[16px] text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-0"
+                          />
+                          {discountType === 'percent' && (
+                            <span className="text-xs text-gray-400 ml-1">%</span>
+                          )}
+                        </div>
+                        {discountAmount > 0 && (
+                          <span className="text-[15px] font-medium text-red-500">
+                            -${discountAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                          </span>
+                        )}
+                      </div>
                     )}
                   </div>
-                )}
-              </div>
 
-              {/* Tax */}
-              <div className="border-t border-gray-100 pt-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-gray-600">Tax</span>
-                    <div className="flex items-center rounded-lg border border-gray-200 px-1">
-                      <input
-                        type="number"
-                        min="0"
-                        max="100"
-                        step="0.01"
-                        value={taxRate}
-                        onChange={(e) => setTaxRate(e.target.value)}
-                        placeholder="0"
-                        aria-label="Tax rate percentage"
-                        className="w-12 border-0 bg-transparent p-1 text-center text-xs text-gray-700 focus:outline-none focus:ring-0"
-                      />
-                      <span className="text-xs text-gray-400">%</span>
+                  {/* Tax */}
+                  <div className="border-t border-gray-100 dark:border-gray-800 pt-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[14px] text-gray-600 dark:text-gray-400">Tax</span>
+                        <div className="flex items-center rounded-lg border border-gray-200 dark:border-gray-700 px-1">
+                          <input
+                            type="number"
+                            min="0"
+                            max="100"
+                            step="0.01"
+                            value={taxRate}
+                            onChange={(e) => setTaxRate(e.target.value)}
+                            placeholder="0"
+                            aria-label="Tax rate percentage"
+                            className="w-12 border-0 bg-transparent p-1 text-center text-[16px] text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-0"
+                          />
+                          <span className="text-xs text-gray-400">%</span>
+                        </div>
+                      </div>
+                      <span className="text-[15px] font-medium text-gray-700 dark:text-gray-300">
+                        ${taxAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                      </span>
                     </div>
                   </div>
-                  <span className="text-sm font-medium text-gray-700">
-                    ${taxAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                  </span>
-                </div>
-              </div>
+                </>
+              )}
 
               {/* Total */}
-              <div className="border-t border-gray-200 pt-3">
+              <div className="border-t border-gray-200 dark:border-gray-700 pt-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-semibold text-gray-900">Total</span>
-                  <span className="text-lg font-bold text-gray-900">
+                  <span className="text-[15px] font-semibold text-gray-900 dark:text-gray-100">Total</span>
+                  <span className="text-[20px] font-bold text-gray-900 dark:text-gray-100">
                     ${total.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                   </span>
                 </div>
               </div>
 
               {/* Deposit */}
-              <div className="border-t border-gray-100 pt-3">
+              <div className="border-t border-gray-100 dark:border-gray-800 pt-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm text-gray-600">Deposit</span>
-                    <div className="flex items-center rounded-lg border border-gray-200 px-1">
+                    <span className="text-[14px] text-gray-600 dark:text-gray-400">Deposit</span>
+                    <div className="flex items-center rounded-lg border border-gray-200 dark:border-gray-700 px-1">
                       <input
                         type="number"
                         min="0"
@@ -1019,7 +1332,7 @@ export default function NewQuotePage() {
                         value={depositPercent}
                         onChange={(e) => setDepositPercent(parseInt(e.target.value) || 0)}
                         aria-label="Deposit percentage"
-                        className="w-10 border-0 bg-transparent p-1 text-center text-xs text-gray-700 focus:outline-none focus:ring-0"
+                        className="w-10 border-0 bg-transparent p-1 text-center text-[16px] text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-0"
                       />
                       <span className="text-xs text-gray-400">%</span>
                     </div>
@@ -1033,16 +1346,22 @@ export default function NewQuotePage() {
 
             <div className="space-y-3 pb-4">
               <button
-                onClick={() => handleSaveQuote('sent')}
+                onClick={() => {
+                  const hasLineItem = lineItems.some(item => item.description?.trim());
+                  if (!hasLineItem) {
+                    setFieldErrors({ lineItems: 'Add at least one line item with a description' });
+                    return;
+                  }
+                  setFieldErrors({});
+                  setStep('send');
+                }}
                 disabled={saving || lineItems.length === 0}
-                className="btn-primary"
+                className="btn-primary flex items-center justify-center gap-2"
               >
-                {saving ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <Spinner size="md" />
-                    Sending...
-                  </span>
-                ) : 'Send Quote'}
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
+                </svg>
+                Continue to Send
               </button>
               <button
                 onClick={() => handleSaveQuote('draft')}
@@ -1058,35 +1377,67 @@ export default function NewQuotePage() {
               </button>
               <button
                 onClick={() => { setStep('details'); setError(null); setFieldErrors({}); }}
-                className="w-full py-2 text-center text-sm text-gray-500 hover:text-gray-700 rounded-lg focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
+                className="w-full py-2 text-center text-[14px] text-gray-500 hover:text-gray-700 rounded-lg focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
               >
                 Re-generate Quote
               </button>
             </div>
           </div>
         )}
+
+        {/* ========== STEP 4: Send ========== */}
+        {step === 'send' && (
+          <SendView
+            customerName={customerName}
+            customerPhone={customerPhone}
+            customerEmail={customerEmail}
+            total={total}
+            lineItemCount={lineItems.length}
+            sending={saving}
+            onSend={(method) => {
+              // For now all methods use the same send endpoint (which sends SMS if phone, email if email)
+              handleSaveQuote('sent');
+            }}
+            onSaveDraft={() => handleSaveQuote('draft')}
+            onBack={() => setStep('review')}
+          />
+        )}
       </main>
 
-      {/* Sticky footer with running total */}
+      {/* Sticky footer with running total -- review step only */}
       {step === 'review' && (
-        <div className="fixed bottom-0 left-0 right-0 z-30 border-t border-gray-200 bg-white/95 backdrop-blur-xl px-4 py-3 safe-area-bottom">
+        <div className="fixed bottom-0 left-0 right-0 z-30 border-t border-gray-200 dark:border-gray-800 bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl px-4 py-3 safe-area-bottom">
           <div className="mx-auto flex max-w-sm items-center justify-between">
             <div>
-              <p className="text-[12px] text-gray-500">Quote Total</p>
-              <p className="text-[20px] font-bold text-gray-900">
+              <p className="text-[12px] text-gray-500 dark:text-gray-400">Quote Total</p>
+              <p className="text-[20px] font-bold text-gray-900 dark:text-gray-100">
                 ${total.toLocaleString('en-US', { minimumFractionDigits: 2 })}
               </p>
             </div>
             <button
-              onClick={() => handleSaveQuote('sent')}
+              onClick={() => {
+                const hasLineItem = lineItems.some(item => item.description?.trim());
+                if (!hasLineItem) {
+                  setFieldErrors({ lineItems: 'Add at least one line item with a description' });
+                  return;
+                }
+                setFieldErrors({});
+                setStep('send');
+              }}
               disabled={saving || lineItems.length === 0}
-              className="rounded-xl bg-brand-600 px-6 py-3 text-[15px] font-semibold text-white active:bg-brand-700 disabled:opacity-50"
+              className="flex items-center gap-2 rounded-xl bg-brand-600 px-6 py-3 text-[15px] font-semibold text-white active:bg-brand-700 disabled:opacity-50"
             >
-              {saving ? 'Sending...' : 'Send Quote'}
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
+              </svg>
+              Send
             </button>
           </div>
         </div>
       )}
+
+      {/* Draft saved indicator */}
+      <DraftSavedIndicator show={draftSavedVisible} />
     </div>
     </PageTransition>
   );

@@ -9,6 +9,18 @@ export async function GET(request: NextRequest) {
   }
 
   const supabase = createClient();
+
+  // Require authentication and restrict to own reviews only.
+  // Public review widgets should use a dedicated public endpoint scoped
+  // to display-safe fields only.
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+  if (user.id !== contractorId) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  }
+
   const { data: reviews, error } = await supabase
     .from('reviews')
     .select('id, contractor_id, quote_id, customer_name, rating, comment, created_at')
@@ -26,7 +38,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   // Rate limit: 5 reviews per hour per IP
   const ip = request.headers.get('x-forwarded-for') || 'unknown';
-  if (!rateLimit(ip + ':reviews', 5, 3_600_000)) {
+  if (!(await rateLimit(ip + ':reviews', 5, 3_600_000))) {
     return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
   }
 

@@ -39,12 +39,14 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: '/favicon.ico', sizes: 'any' },
       { url: '/favicon.svg', type: 'image/svg+xml' },
+      { url: '/icon-96.png', type: 'image/png', sizes: '96x96' },
       { url: '/icon-192.png', type: 'image/png', sizes: '192x192' },
+      { url: '/icon-512.png', type: 'image/png', sizes: '512x512' },
     ],
     apple: [
       { url: '/apple-touch-icon.png', sizes: '180x180' },
+      { url: '/icon-152.png', sizes: '152x152' },
     ],
   },
   appleWebApp: {
@@ -91,7 +93,7 @@ export default function RootLayout({
           try { document.documentElement.classList.remove('dark'); } catch {}
         `}} />
       </head>
-      <body className="bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100 transition-colors">
+      <body className="bg-[#f2f2f7] dark:bg-gray-950 text-gray-900 dark:text-gray-100 transition-colors overscroll-none">
         <a
           href="#main-content"
           className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:rounded-lg focus:bg-brand-600 focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-white focus:shadow-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2"

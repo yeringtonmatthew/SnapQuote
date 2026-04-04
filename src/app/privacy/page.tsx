@@ -1,4 +1,11 @@
 import Link from 'next/link';
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Privacy Policy | SnapQuote',
+  description: 'How SnapQuote collects, uses, and protects your data. Read our privacy policy.',
+  alternates: { canonical: '/privacy' },
+};
 
 export default function PrivacyPage() {
   return (

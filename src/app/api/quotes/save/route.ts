@@ -91,7 +91,7 @@ export async function POST(request: Request) {
       quote_options: Array.isArray(quote_options) && quote_options.length > 0 ? quote_options : null,
       selected_option: null,
       status: status || 'draft',
-      pipeline_stage: pipeline_stage || undefined,
+      ...(pipeline_stage ? { pipeline_stage } : {}),
       client_id: client_id || null,
       sent_at: status === 'sent' ? new Date().toISOString() : null,
       expires_at: status === 'sent'
@@ -114,7 +114,7 @@ export async function POST(request: Request) {
       .eq('id', quote.client_id)
       .single();
 
-    const existingPhotos: string[] = (client as any)?.photos || [];
+    const existingPhotos: string[] = (client as { photos?: string[] } | null)?.photos || [];
     const newPhotos = photos.filter((p: string) => !existingPhotos.includes(p));
     if (newPhotos.length > 0) {
       await supabase

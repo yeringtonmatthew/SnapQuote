@@ -48,8 +48,8 @@ export function ScheduleJobSection({
 
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Something went wrong');
     } finally {
       setSaving(false);
     }
@@ -66,7 +66,7 @@ export function ScheduleJobSection({
 
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label htmlFor="schedule-date" className="block text-xs font-medium text-gray-600 mb-1">
+          <label htmlFor="schedule-date" className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
             Date
           </label>
           <input
@@ -74,11 +74,11 @@ export function ScheduleJobSection({
             type="date"
             value={date}
             onChange={(e) => setDate(e.target.value)}
-            className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-900 shadow-sm transition-all focus:border-brand-500 focus:ring-1 focus:ring-brand-500 focus:shadow-[0_0_0_3px_rgba(79,70,229,0.08)] focus:outline-none"
+            className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2.5 text-sm text-gray-900 dark:text-gray-100 shadow-sm transition-all focus:border-brand-500 focus:ring-1 focus:ring-brand-500 focus:shadow-[0_0_0_3px_rgba(79,70,229,0.08)] focus:outline-none"
           />
         </div>
         <div>
-          <label htmlFor="schedule-time" className="block text-xs font-medium text-gray-600 mb-1">
+          <label htmlFor="schedule-time" className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
             Time
           </label>
           <input
@@ -86,7 +86,7 @@ export function ScheduleJobSection({
             type="time"
             value={time}
             onChange={(e) => setTime(e.target.value)}
-            className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-900 shadow-sm transition-all focus:border-brand-500 focus:ring-1 focus:ring-brand-500 focus:shadow-[0_0_0_3px_rgba(79,70,229,0.08)] focus:outline-none"
+            className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2.5 text-sm text-gray-900 dark:text-gray-100 shadow-sm transition-all focus:border-brand-500 focus:ring-1 focus:ring-brand-500 focus:shadow-[0_0_0_3px_rgba(79,70,229,0.08)] focus:outline-none"
           />
         </div>
       </div>
@@ -101,7 +101,7 @@ export function ScheduleJobSection({
       )}
 
       {error && (
-        <p className="text-xs text-red-600 bg-red-50 rounded-lg px-3 py-2">{error}</p>
+        <p className="text-xs text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/30 rounded-lg px-3 py-2">{error}</p>
       )}
 
       <button

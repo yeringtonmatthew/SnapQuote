@@ -37,6 +37,9 @@ export async function POST(
     if (!text || typeof text !== 'string') {
       return NextResponse.json({ error: 'text is required' }, { status: 400 });
     }
+    if (text.length > 10_000) {
+      return NextResponse.json({ error: 'Note text exceeds maximum length of 10,000 characters' }, { status: 400 });
+    }
 
     const notes: Note[] = quote.job_notes || [];
     const now = new Date().toISOString();
@@ -73,6 +76,9 @@ export async function PATCH(
     const { note_id, text } = body;
     if (!note_id || !text || typeof text !== 'string') {
       return NextResponse.json({ error: 'note_id and text are required' }, { status: 400 });
+    }
+    if (text.length > 10_000) {
+      return NextResponse.json({ error: 'Note text exceeds maximum length of 10,000 characters' }, { status: 400 });
     }
 
     const notes: Note[] = quote.job_notes || [];

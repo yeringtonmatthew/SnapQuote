@@ -88,7 +88,7 @@ export default async function InvoicePage({
 
   const { data: profile } = await serviceClient
     .from('users')
-    .select('business_name, full_name, email, phone, logo_url, stripe_account_id, brand_color')
+    .select('business_name, full_name, email, business_email, phone, logo_url, stripe_account_id, brand_color')
     .eq('id', quote.contractor_id)
     .single();
 
@@ -113,6 +113,7 @@ export default async function InvoicePage({
     : 0;
 
   const businessName = profile?.business_name || profile?.full_name || 'Contractor';
+  const contractorEmail = profile?.business_email || profile?.email;
   const invoiceNumber = quote.quote_number
     ? formatInvoiceNumber(quote.quote_number)
     : `INV-${quote.id.slice(-6).toUpperCase()}`;
@@ -161,8 +162,8 @@ export default async function InvoicePage({
                 {profile?.full_name && profile?.business_name && (
                   <p className="text-sm text-gray-500">{profile.full_name}</p>
                 )}
-                {profile?.email && (
-                  <p className="text-sm text-gray-500">{profile.email}</p>
+                {contractorEmail && (
+                  <p className="text-sm text-gray-500">{contractorEmail}</p>
                 )}
                 {profile?.phone && (
                   <p className="text-sm text-gray-500">{formatPhoneNumber(profile.phone)}</p>
@@ -218,8 +219,8 @@ export default async function InvoicePage({
               {profile?.full_name && profile?.business_name && (
                 <p className="text-sm text-gray-600">{profile.full_name}</p>
               )}
-              {profile?.email && (
-                <p className="text-sm text-gray-600">{profile.email}</p>
+              {contractorEmail && (
+                <p className="text-sm text-gray-600">{contractorEmail}</p>
               )}
               {profile?.phone && (
                 <p className="text-sm text-gray-600">{formatPhoneNumber(profile.phone)}</p>
@@ -365,7 +366,7 @@ export default async function InvoicePage({
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-5 py-3 text-sm font-semibold text-gray-700 shadow-sm hover:bg-gray-50 transition-colors"
             >
-              <svg className="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+              <svg className="h-[18px] w-[18px]" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
               </svg>
               Download PDF
@@ -377,7 +378,7 @@ export default async function InvoicePage({
                 href={`/q/${quote.id}`}
                 className="inline-flex items-center gap-2 rounded-xl bg-gray-900 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-gray-800 transition-colors"
               >
-                <svg className="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                <svg className="h-[18px] w-[18px]" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z" />
                 </svg>
                 Pay Now

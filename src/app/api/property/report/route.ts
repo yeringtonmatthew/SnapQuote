@@ -11,7 +11,7 @@ export async function POST(req: NextRequest) {
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   // Rate limit: 20 per hour per user
-  if (!rateLimit(`property_report_${user.id}`, 20, 60 * 60 * 1000)) {
+  if (!(await rateLimit(`property_report_${user.id}`, 20, 60 * 60 * 1000))) {
     return NextResponse.json(
       { error: 'Rate limit exceeded. Maximum 20 property reports per hour.' },
       { status: 429 },

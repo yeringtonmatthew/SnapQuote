@@ -400,8 +400,8 @@ export function InvoicePDF({ quote, profile }: InvoicePDFProps) {
             {profile.full_name && profile.business_name && (
               <Text style={styles.partyDetail}>{profile.full_name}</Text>
             )}
-            {profile.email && (
-              <Text style={styles.partyDetail}>{profile.email}</Text>
+            {(profile.business_email || profile.email) && (
+              <Text style={styles.partyDetail}>{profile.business_email || profile.email}</Text>
             )}
           </View>
         </View>

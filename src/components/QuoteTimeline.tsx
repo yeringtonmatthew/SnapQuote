@@ -82,7 +82,7 @@ export function QuoteTimeline({ quote }: { quote: Quote }) {
   const currentIndex = getCurrentStepIndex(quote);
 
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-900">
+    <div className="rounded-2xl border border-gray-200/80 bg-white p-5 dark:border-gray-700/60 dark:bg-gray-900 shadow-sm">
       {/* Desktop: horizontal */}
       <div className="hidden sm:flex items-start justify-between">
         {steps.map((step, i) => {

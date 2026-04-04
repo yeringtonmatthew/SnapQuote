@@ -37,6 +37,9 @@ export async function POST(
     if (!text || typeof text !== 'string') {
       return NextResponse.json({ error: 'text is required' }, { status: 400 });
     }
+    if (text.length > 1_000) {
+      return NextResponse.json({ error: 'Task text exceeds maximum length of 1,000 characters' }, { status: 400 });
+    }
 
     const tasks: Task[] = quote.job_tasks || [];
     tasks.push({
@@ -82,7 +85,12 @@ export async function PATCH(
     if (!task) return NextResponse.json({ error: 'Task not found' }, { status: 404 });
 
     if (typeof done === 'boolean') task.done = done;
-    if (typeof text === 'string') task.text = text;
+    if (typeof text === 'string') {
+      if (text.length > 1_000) {
+        return NextResponse.json({ error: 'Task text exceeds maximum length of 1,000 characters' }, { status: 400 });
+      }
+      task.text = text;
+    }
 
     const { error } = await supabase
       .from('quotes')

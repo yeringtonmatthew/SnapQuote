@@ -9,15 +9,15 @@ export default function Error({ error, reset }: { error: Error; reset: () => voi
   }, [error]);
 
   return (
-    <div className="flex min-h-dvh flex-col items-center justify-center bg-[#f2f2f7] px-6">
+    <div className="flex min-h-dvh flex-col items-center justify-center bg-[#f2f2f7] dark:bg-gray-950 px-6">
       <div className="text-center">
-        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-red-100">
-          <svg className="h-7 w-7 text-red-600" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-red-100 dark:bg-red-950/40">
+          <svg className="h-7 w-7 text-red-600 dark:text-red-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
           </svg>
         </div>
-        <h1 className="text-[20px] font-bold text-gray-900">Something went wrong</h1>
-        <p className="mt-2 max-w-sm text-[14px] leading-relaxed text-gray-500">
+        <h1 className="text-[20px] font-bold text-gray-900 dark:text-white">Something went wrong</h1>
+        <p className="mt-2 max-w-sm text-[14px] leading-relaxed text-gray-500 dark:text-gray-400">
           We hit an unexpected error. This has been reported and we&apos;re looking into it.
         </p>
         <div className="mt-6 flex flex-col items-center gap-3">

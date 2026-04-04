@@ -1,10 +1,17 @@
 import { Suspense } from 'react';
 import { notFound } from 'next/navigation';
-import { createClient } from '@/lib/supabase/server';
+import { createClient as createServiceClient } from '@supabase/supabase-js';
 import { ReviewPrompt } from '@/components/ReviewPrompt';
 import { ConfettiOnMount } from '@/components/ConfettiOnMount';
 
 export const dynamic = 'force-dynamic';
+
+function getServiceClient() {
+  return createServiceClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+}
 
 const fmt = (n: number) =>
   '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -23,7 +30,7 @@ const methodLabel: Record<string, string> = {
 };
 
 export default async function ReceiptPage({ params }: { params: { id: string } }) {
-  const supabase = createClient();
+  const supabase = getServiceClient();
 
   const { data: quote } = await supabase
     .from('quotes')
@@ -35,7 +42,7 @@ export default async function ReceiptPage({ params }: { params: { id: string } }
 
   const { data: profile } = await supabase
     .from('users')
-    .select('business_name, full_name, email, logo_url')
+    .select('business_name, full_name, email, business_email, logo_url')
     .eq('id', quote.contractor_id)
     .single();
 

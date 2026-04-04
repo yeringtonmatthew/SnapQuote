@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { fireWebhook } from '@/lib/webhook';
+import { rateLimit } from '@/lib/rate-limit';
 import twilio from 'twilio';
 
 export async function POST(
@@ -11,6 +12,11 @@ export async function POST(
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  // Rate limit: 20 sends per hour per user to prevent SMS/email spam
+  if (!(await rateLimit(`send:${user.id}`, 20, 3_600_000))) {
+    return NextResponse.json({ error: 'Too many requests. Please wait before sending more quotes.' }, { status: 429 });
   }
 
   const { data: quote, error: quoteError } = await supabase
@@ -27,7 +33,7 @@ export async function POST(
   // Update status to sent + auto-advance pipeline
   const now = new Date();
   const expiresAt = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
-  const updateData: Record<string, any> = {
+  const updateData: Record<string, unknown> = {
     status: 'sent',
     sent_at: now.toISOString(),
     expires_at: expiresAt.toISOString(),
@@ -106,16 +112,28 @@ export async function POST(
   let emailError: string | undefined;
   if (quote.customer_email) {
     try {
-      const emailRes = await fetch(`${appUrl}/api/quotes/${params.id}/send-email`, {
-        method: 'POST',
-        headers: {
-          // Forward the auth cookie so the email route can authenticate
-          cookie: request.headers.get('cookie') || '',
-        },
-      });
-      if (!emailRes.ok) {
-        const emailData = await emailRes.json();
-        emailError = emailData.error || 'Email send failed';
+      // Only call the send-email sub-route when appUrl is the configured app URL.
+      // Fall back gracefully if the URL is not set rather than calling localhost
+      // in a context where that could route to an internal service.
+      const sendEmailUrl = process.env.NEXT_PUBLIC_APP_URL
+        ? `${process.env.NEXT_PUBLIC_APP_URL}/api/quotes/${params.id}/send-email`
+        : null;
+
+      if (!sendEmailUrl) {
+        emailError = 'NEXT_PUBLIC_APP_URL not configured — email skipped';
+      } else {
+        const emailRes = await fetch(sendEmailUrl, {
+          method: 'POST',
+          headers: {
+            // Forward the auth cookie so the email route can authenticate.
+            // Only sent to our own configured app origin.
+            cookie: request.headers.get('cookie') || '',
+          },
+        });
+        if (!emailRes.ok) {
+          const emailData = await emailRes.json();
+          emailError = emailData.error || 'Email send failed';
+        }
       }
     } catch (err) {
       console.error('[send] Email error:', err);

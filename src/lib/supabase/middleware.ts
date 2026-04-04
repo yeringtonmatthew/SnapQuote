@@ -38,7 +38,11 @@ export async function updateSession(request: NextRequest) {
 
   if (isProtected && !user) {
     const url = request.nextUrl.clone();
+    // Preserve the original destination so login can redirect the user back
+    // after authentication rather than always dropping them at /dashboard.
+    const originalPath = request.nextUrl.pathname + request.nextUrl.search;
     url.pathname = '/auth/login';
+    url.search = `?next=${encodeURIComponent(originalPath)}`;
     return NextResponse.redirect(url);
   }
 

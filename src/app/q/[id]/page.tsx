@@ -45,7 +45,7 @@ export async function generateMetadata({
 
   const { data: profile } = await serviceClient
     .from('users')
-    .select('business_name, full_name, email')
+    .select('business_name, full_name, email, business_email')
     .eq('id', quote.contractor_id)
     .single();
 
@@ -98,7 +98,7 @@ export default async function CustomerProposalPage({
 
   const { data: profile } = await serviceClient
     .from('users')
-    .select('business_name, full_name, email, phone, trade_type, logo_url, stripe_account_id, brand_color, show_reviews_on_quotes, google_rating, google_review_count')
+    .select('business_name, full_name, email, business_email, phone, trade_type, logo_url, stripe_account_id, brand_color, show_reviews_on_quotes, google_rating, google_review_count')
     .eq('id', quote.contractor_id)
     .single();
 
@@ -146,8 +146,8 @@ export default async function CustomerProposalPage({
     || (profile?.email ? profile.email.split('@')[0].replace(/[._-]/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()) : null)
     || 'Licensed Professional';
   const stripeEnabled = !!profile?.stripe_account_id;
-  const lineItems: any[] = quote.line_items || [];
-  const quoteOptions: any[] | null = quote.quote_options && Array.isArray(quote.quote_options) && quote.quote_options.length > 0 ? quote.quote_options : null;
+  const lineItems: { description: string; quantity: number; unit: string; unit_price: number; total: number }[] = quote.line_items || [];
+  const quoteOptions: { name: string; description: string; line_items: { description: string; quantity: number; unit: string; unit_price: number; total: number }[]; recommended?: boolean }[] | null = quote.quote_options && Array.isArray(quote.quote_options) && quote.quote_options.length > 0 ? quote.quote_options : null;
   const hasTiers = !!quoteOptions;
   const photos: string[] = quote.photos || [];
   const inspectionFindings: { photo_index: number; finding: string; severity: string; urgency_message: string }[] = quote.inspection_findings || [];
@@ -183,6 +183,7 @@ export default async function CustomerProposalPage({
   };
   const tradeLabel = (profile?.trade_type && tradeMap[profile.trade_type]) || 'Licensed Contractor';
   const contractorPhone = profile?.phone || null;
+  const contractorEmail = profile?.business_email || profile?.email || null;
 
   if (isCancelled) {
     return (
@@ -255,7 +256,7 @@ export default async function CustomerProposalPage({
           <div className="flex items-center gap-2" data-no-print>
             <CustomerShareButton quoteId={quote.id} />
             <PrintButton variant="icon" />
-            <DownloadPdfButton quoteId={params.id} />
+            {isContractor && <DownloadPdfButton quoteId={params.id} />}
             <span className="rounded-full bg-white/15 backdrop-blur-sm px-3 py-1 text-[11px] font-semibold text-white/80 tracking-wider uppercase">
               {quote.quote_number ? `Quote ${formatQuoteNumber(quote.quote_number)}` : 'Quote'}
             </span>
@@ -298,7 +299,7 @@ export default async function CustomerProposalPage({
             <div className="mt-6">
               <p className="text-[10px] font-semibold text-white/35 uppercase tracking-[0.2em] mb-1">Starting From</p>
               <p className="text-[48px] font-extrabold tracking-tight text-white leading-none">
-                {fmtShort(quoteOptions.length > 0 ? Math.min(...quoteOptions.map((o: any) => (o.line_items || []).reduce((s: number, i: any) => s + (Number(i.total) || 0), 0))) : 0)}
+                {fmtShort(quoteOptions.length > 0 ? Math.min(...quoteOptions.map((o) => (o.line_items || []).reduce((s: number, i: { total: number }) => s + (Number(i.total) || 0), 0))) : 0)}
               </p>
               <p className="text-[13px] font-medium text-white/50 mt-1">{quoteOptions.length} package options available</p>
             </div>
@@ -428,12 +429,12 @@ export default async function CustomerProposalPage({
                   {contractorPhone}
                 </a>
               )}
-              {profile?.email && (
-                <a href={`mailto:${profile.email}`} className="flex items-center gap-1.5 text-[13px] font-medium transition-opacity hover:opacity-70" style={{ color: brandColor }}>
+              {contractorEmail && (
+                <a href={`mailto:${contractorEmail}`} className="flex items-center gap-1.5 text-[13px] font-medium transition-opacity hover:opacity-70" style={{ color: brandColor }}>
                   <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
                   </svg>
-                  {profile.email}
+                  {contractorEmail}
                 </a>
               )}
             </div>
@@ -845,7 +846,7 @@ export default async function CustomerProposalPage({
             <span className="text-[11px] font-medium text-gray-400">{lineItems.length} item{lineItems.length !== 1 ? 's' : ''}</span>
           </div>
           <div className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/[0.04]">
-            {lineItems.map((item: any, i: number) => (
+            {lineItems.map((item, i: number) => (
               <div
                 key={i}
                 className={`flex items-start justify-between px-5 py-4 ${
@@ -1135,11 +1136,11 @@ export default async function CustomerProposalPage({
         {/* ══════════════════════════════════════════════
             14. REQUEST CHANGES
             ══════════════════════════════════════════════ */}
-        {!isExpired && profile?.email && (
+        {!isExpired && contractorEmail && (
           <div className="rounded-2xl bg-white px-5 py-4 shadow-sm ring-1 ring-black/[0.04] text-center" data-no-print>
             <p className="text-[13px] text-gray-400 mb-2.5">Have questions or need adjustments?</p>
             <a
-              href={`mailto:${profile.email}?subject=Question about Quote ${quote.quote_number ? formatQuoteNumber(quote.quote_number) : ''}&body=Hi ${profile?.full_name || businessName},%0D%0A%0D%0AI have a question about the quote for ${quote.job_address || 'my project'}:%0D%0A%0D%0A`}
+              href={`mailto:${contractorEmail}?subject=Question about Quote ${quote.quote_number ? formatQuoteNumber(quote.quote_number) : ''}&body=Hi ${profile?.full_name || businessName},%0D%0A%0D%0AI have a question about the quote for ${quote.job_address || 'my project'}:%0D%0A%0D%0A`}
               className="inline-flex items-center gap-2 rounded-xl border-2 border-gray-200 px-5 py-2.5 text-[14px] font-semibold text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-all press-scale"
             >
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
@@ -1172,9 +1173,9 @@ export default async function CustomerProposalPage({
                   Call Us
                 </a>
               )}
-              {profile?.email && (
+              {contractorEmail && (
                 <a
-                  href={`mailto:${profile.email}?subject=Question about my quote`}
+                  href={`mailto:${contractorEmail}?subject=Question about my quote`}
                   className="inline-flex items-center gap-1.5 rounded-xl border-2 border-gray-200 px-4 py-2 text-[13px] font-semibold text-gray-600 hover:bg-white transition-colors"
                 >
                   <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">

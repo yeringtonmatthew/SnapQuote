@@ -74,22 +74,22 @@ export default async function QuoteDetailPage({
 
   return (
     <PageTransition>
-    <div className="min-h-dvh bg-gray-50 pb-8">
+    <div className="min-h-dvh bg-[#f2f2f7] dark:bg-gray-950 pb-28 lg:pb-8">
       {/* Header */}
-      <header className="sticky top-0 z-10 border-b border-gray-200 bg-white px-4 py-3" data-no-print>
+      <header className="sticky top-0 z-10 border-b border-black/5 dark:border-white/5 bg-white/90 dark:bg-gray-900/90 backdrop-blur-xl px-5 pt-14 lg:pt-3 pb-3" data-no-print>
         <div className="mx-auto flex max-w-lg items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <Link
               href="/dashboard"
               aria-label="Back to dashboard"
-              className="flex h-9 w-9 items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
+              className="flex h-11 w-11 items-center justify-center rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
             >
               <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
               </svg>
             </Link>
             <div>
-              <h1 className="text-base font-bold text-gray-900">
+              <h1 className="text-base font-bold text-gray-900 dark:text-gray-100">
                 {quote.quote_number ? <span className="text-gray-500 font-medium">{formatQuoteNumber(quote.quote_number)}</span> : null}
                 {quote.quote_number ? ' ' : ''}{quote.customer_name}
               </h1>
@@ -145,7 +145,7 @@ export default async function QuoteDetailPage({
                   reminderSentAt={quote.reminder_sent_at}
                 />
               </div>
-              <div className="border-t border-gray-100 mt-1 pt-1">
+              <div className="border-t border-gray-100 dark:border-gray-800 mt-1 pt-1">
                 <div className="px-3 py-2">
                   <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">More</p>
                 </div>
@@ -174,7 +174,7 @@ export default async function QuoteDetailPage({
                   Download Invoice
                 </DropdownItem>
               )}
-              <div className="border-t border-gray-100 mt-1 pt-1">
+              <div className="border-t border-gray-100 dark:border-gray-800 mt-1 pt-1">
                 <ArchiveQuoteButton quoteId={quote.id} isArchived={!!quote.archived} />
               </div>
             </QuoteActionsDropdown>
@@ -182,19 +182,19 @@ export default async function QuoteDetailPage({
         </div>
       </header>
 
-      <main className="mx-auto max-w-lg space-y-4 px-4 pt-6">
+      <main className="mx-auto max-w-lg space-y-4 px-5 lg:px-8 pt-6">
 
         {/* Status Timeline */}
         <QuoteTimeline quote={quote} />
 
         {/* AI Summary */}
         {quote.ai_description && (
-          <div className="card !bg-brand-50 !border-brand-200">
+          <div className="card !bg-brand-50 dark:!bg-brand-950/30 !border-brand-200 dark:!border-brand-800">
             <div className="flex items-start gap-2">
               <svg className="mt-0.5 h-4 w-4 shrink-0 text-brand-600" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
               </svg>
-              <p className="text-sm font-medium text-brand-900">{quote.ai_description}</p>
+              <p className="text-sm font-medium text-brand-900 dark:text-brand-200">{quote.ai_description}</p>
             </div>
           </div>
         )}
@@ -202,15 +202,15 @@ export default async function QuoteDetailPage({
         {/* Scope of Work */}
         {quote.scope_of_work && (
           <div className="card">
-            <p className="mb-2 text-xs font-medium uppercase tracking-wide text-gray-500">Scope of Work</p>
-            <p className="text-sm leading-relaxed text-gray-700">{quote.scope_of_work}</p>
+            <p className="mb-2 text-[11px] font-semibold uppercase tracking-widest text-gray-400">Scope of Work</p>
+            <p className="text-sm leading-relaxed text-gray-700 dark:text-gray-300">{quote.scope_of_work}</p>
           </div>
         )}
 
         {/* Customer */}
         <div className="card">
-          <p className="text-xs font-medium uppercase tracking-wide text-gray-500">Customer</p>
-          <p className="mt-1 text-sm font-semibold text-gray-900">{quote.customer_name}</p>
+          <p className="text-[11px] font-semibold uppercase tracking-widest text-gray-400">Customer</p>
+          <p className="mt-1 text-sm font-semibold text-gray-900 dark:text-gray-100">{quote.customer_name}</p>
           {quote.customer_phone && (
             <a href={`tel:${quote.customer_phone}`} className="text-xs text-brand-600">
               {formatPhoneNumber(quote.customer_phone)}
@@ -239,22 +239,22 @@ export default async function QuoteDetailPage({
 
         {/* Line Items */}
         <div>
-          <h2 className="mb-2 text-sm font-semibold text-gray-700">Line Items</h2>
-          <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
-            {(quote.line_items || []).map((item: any, i: number) => (
+          <h2 className="mb-2 text-[11px] font-semibold uppercase tracking-widest text-gray-400">Line Items</h2>
+          <div className="overflow-hidden rounded-2xl bg-white dark:bg-gray-900 shadow-sm ring-1 ring-black/[0.04] dark:ring-white/[0.06]">
+            {(quote.line_items || []).map((item: { description: string; quantity: number; unit: string; unit_price: number; total: number }, i: number) => (
               <div
                 key={i}
-                className={`flex items-start justify-between px-4 py-3 ${
-                  i < (quote.line_items || []).length - 1 ? 'border-b border-gray-100' : ''
-                }`}
+                className={`flex items-start justify-between px-4 py-3.5 ${
+                  i < (quote.line_items || []).length - 1 ? 'border-b border-gray-100 dark:border-gray-800' : ''
+                } ${i % 2 === 1 ? 'bg-gray-50/40 dark:bg-gray-800/20' : ''}`}
               >
                 <div className="min-w-0 flex-1 pr-4">
-                  <p className="text-sm text-gray-900">{item.description}</p>
-                  <p className="mt-0.5 text-xs text-gray-400">
-                    {item.quantity} {item.unit} × ${Number(item.unit_price).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                  <p className="text-[14px] font-medium text-gray-900 dark:text-gray-100">{item.description}</p>
+                  <p className="mt-0.5 text-[12px] text-gray-400 dark:text-gray-500">
+                    {item.quantity} {item.unit} x ${Number(item.unit_price).toLocaleString('en-US', { minimumFractionDigits: 2 })}
                   </p>
                 </div>
-                <p className="shrink-0 text-sm font-semibold text-gray-900">
+                <p className="shrink-0 text-[14px] font-semibold text-gray-900 dark:text-gray-100 tabular-nums">
                   ${Number(item.total).toLocaleString('en-US', { minimumFractionDigits: 2 })}
                 </p>
               </div>
@@ -265,8 +265,8 @@ export default async function QuoteDetailPage({
         {/* Notes */}
         {quote.notes && (
           <div className="card">
-            <p className="mb-2 text-xs font-medium uppercase tracking-wide text-gray-500">Terms & Conditions</p>
-            <p className="text-sm leading-relaxed text-gray-600">{quote.notes}</p>
+            <p className="mb-2 text-[11px] font-semibold uppercase tracking-widest text-gray-400">Terms & Conditions</p>
+            <p className="text-sm leading-relaxed text-gray-600 dark:text-gray-400">{quote.notes}</p>
           </div>
         )}
 
@@ -276,16 +276,16 @@ export default async function QuoteDetailPage({
         </div>
 
         {/* Totals */}
-        <div className="card space-y-3">
+        <div className="card space-y-3 !shadow-sm">
           <div className="flex items-center justify-between">
-            <span className="text-sm text-gray-600">Subtotal</span>
-            <span className="text-sm font-semibold text-gray-900">
+            <span className="text-sm text-gray-600 dark:text-gray-400">Subtotal</span>
+            <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">
               ${subtotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}
             </span>
           </div>
           {hasDiscount && (
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">
+              <span className="text-sm text-gray-600 dark:text-gray-400">
                 Discount{quote.discount_percent != null && Number(quote.discount_percent) > 0 ? ` (${quote.discount_percent}%)` : ''}
               </span>
               <span className="text-sm font-medium text-red-500">
@@ -295,29 +295,29 @@ export default async function QuoteDetailPage({
           )}
           {hasTax && (
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Tax ({quote.tax_rate}%)</span>
-              <span className="text-sm font-medium text-gray-700">
+              <span className="text-sm text-gray-600 dark:text-gray-400">Tax ({quote.tax_rate}%)</span>
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                 ${taxAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
               </span>
             </div>
           )}
           {(hasDiscount || hasTax) && (
-            <div className="flex items-center justify-between border-t border-gray-200 pt-3">
-              <span className="text-sm font-semibold text-gray-900">Total</span>
-              <span className="text-lg font-bold text-gray-900">
+            <div className="flex items-center justify-between border-t border-gray-200 dark:border-gray-700 pt-3">
+              <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">Total</span>
+              <span className="text-lg font-bold text-gray-900 dark:text-gray-100">
                 ${quoteTotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}
               </span>
             </div>
           )}
-          <div className="flex items-center justify-between border-t border-gray-100 pt-3">
-            <span className="text-sm text-gray-600">Deposit ({quote.deposit_percent}%)</span>
+          <div className="flex items-center justify-between border-t border-gray-100 dark:border-gray-800 pt-3">
+            <span className="text-sm text-gray-600 dark:text-gray-400">Deposit ({quote.deposit_percent}%)</span>
             <span className="text-lg font-bold text-brand-600">
               ${deposit.toLocaleString('en-US', { minimumFractionDigits: 2 })}
             </span>
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-sm text-gray-500">Balance due on completion</span>
-            <span className="text-sm font-medium text-gray-500">
+            <span className="text-sm text-gray-500 dark:text-gray-400">Balance due on completion</span>
+            <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
               ${balance.toLocaleString('en-US', { minimumFractionDigits: 2 })}
             </span>
           </div>
@@ -326,7 +326,7 @@ export default async function QuoteDetailPage({
         {/* Photos */}
         {quote.photos && quote.photos.length > 0 && (
           <div>
-            <h2 className="mb-2 text-sm font-semibold text-gray-700">Photos</h2>
+            <h2 className="mb-2 text-[11px] font-semibold uppercase tracking-widest text-gray-400">Photos</h2>
             <PhotoGallery photos={quote.photos} quoteId={quote.id} />
           </div>
         )}
@@ -334,9 +334,9 @@ export default async function QuoteDetailPage({
         {/* Send / Share */}
         {(quote.status === 'draft' || quote.status === 'sent') && (
           <div className="card space-y-3" data-no-print>
-            <p className="text-xs font-medium uppercase tracking-wide text-gray-500">Send to Customer</p>
+            <p className="text-[11px] font-semibold uppercase tracking-widest text-gray-400">Send to Customer</p>
             {!quote.customer_phone && !quote.customer_email && (
-              <p className="text-xs text-amber-600 bg-amber-50 rounded-lg px-3 py-2">
+              <p className="text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 rounded-lg px-3 py-2">
                 Add a phone number or email to send the quote. You can also copy the link below.
               </p>
             )}
@@ -363,8 +363,8 @@ export default async function QuoteDetailPage({
         {(quote.customer_signature || quote.customer_signed_name) && (
           <div className="card">
             <div className="flex items-center justify-between mb-3">
-              <p className="text-xs font-medium uppercase tracking-wide text-gray-500">Customer Signature</p>
-              <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2.5 py-1 text-[11px] font-semibold text-green-700">
+              <p className="text-[11px] font-semibold uppercase tracking-widest text-gray-400">Customer Signature</p>
+              <span className="inline-flex items-center gap-1 rounded-full bg-green-100 dark:bg-green-950/40 px-2.5 py-1 text-[11px] font-semibold text-green-700 dark:text-green-400">
                 <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
                 </svg>
@@ -372,7 +372,7 @@ export default async function QuoteDetailPage({
               </span>
             </div>
             {quote.customer_signature && (
-              <div className="rounded-xl border border-gray-100 bg-gray-50 overflow-hidden mb-2">
+              <div className="rounded-xl border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800 overflow-hidden mb-2">
                 <img
                   src={quote.customer_signature}
                   alt="Customer signature"
@@ -382,7 +382,7 @@ export default async function QuoteDetailPage({
               </div>
             )}
             {quote.customer_signed_name && (
-              <p className="text-sm font-semibold text-gray-900">{quote.customer_signed_name}</p>
+              <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{quote.customer_signed_name}</p>
             )}
             {quote.approved_at && (
               <p className="text-xs text-gray-400 mt-0.5">

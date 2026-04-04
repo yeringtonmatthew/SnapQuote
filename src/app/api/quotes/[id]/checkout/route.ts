@@ -8,7 +8,11 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   const ip = request.headers.get('x-forwarded-for') || 'unknown';
-  if (!rateLimit(ip, 10, 60_000)) {
+  if (!(await rateLimit(ip, 10, 60_000))) {
+    return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+  }
+  // Secondary rate limit keyed by quote ID to prevent IP rotation from bypassing the limit
+  if (!(await rateLimit(`checkout:${params.id}`, 20, 60_000))) {
     return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
   }
 
@@ -17,12 +21,19 @@ export async function GET(
 
   const { data: quote } = await supabase
     .from('quotes')
-    .select('id, customer_name, deposit_amount, status, contractor_id')
+    .select('id, customer_name, deposit_amount, status, contractor_id, expires_at')
     .eq('id', params.id)
     .single();
 
   if (!quote) {
     return NextResponse.json({ error: 'Quote not found' }, { status: 404 });
+  }
+
+  if (quote.expires_at && new Date(quote.expires_at) < new Date()) {
+    return NextResponse.json(
+      { error: 'This quote has expired. Please contact the contractor for an updated quote.' },
+      { status: 400 }
+    );
   }
 
   if (quote.status === 'deposit_paid') {

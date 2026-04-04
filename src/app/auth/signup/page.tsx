@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
@@ -14,14 +14,29 @@ interface FieldErrors {
   password?: string;
 }
 
+function getPasswordStrength(pw: string): 0 | 1 | 2 | 3 {
+  if (!pw) return 0;
+  let score = 0;
+  if (pw.length >= 8) score++;
+  if (/[a-z]/.test(pw) && /[A-Z]/.test(pw)) score++;
+  if (/[0-9]/.test(pw) || /[^a-zA-Z0-9]/.test(pw)) score++;
+  return score as 0 | 1 | 2 | 3;
+}
+
+const strengthLabels = ['', 'Weak', 'Medium', 'Strong'];
+const strengthColors = ['', 'bg-red-500', 'bg-yellow-500', 'bg-green-500'];
+
 export default function SignupPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
+
+  const passwordStrength = useMemo(() => getPasswordStrength(password), [password]);
 
   function validate(): boolean {
     const errors: FieldErrors = {};
@@ -83,12 +98,12 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="flex min-h-dvh flex-col justify-center px-6 py-12">
-      <div className="mx-auto w-full max-w-sm">
+    <div className="flex min-h-dvh flex-col justify-center px-6 py-12 bg-white dark:bg-gray-950">
+      <div className="mx-auto w-full max-w-sm animate-fade-up">
         {/* Header */}
         <div className="text-center">
           <SnapQuoteLogo size="lg" variant="mark" className="justify-center" />
-          <h1 className="mt-4 text-2xl font-bold text-gray-900">
+          <h1 className="mt-4 text-2xl font-bold text-gray-900 dark:text-gray-100">
             Create your account
           </h1>
           <p className="mt-1 text-[15px] text-gray-500">
@@ -104,17 +119,17 @@ export default function SignupPage() {
         {/* Divider */}
         <div className="relative mt-6">
           <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-gray-200" />
+            <div className="w-full border-t border-gray-200 dark:border-gray-800" />
           </div>
           <div className="relative flex justify-center text-sm">
-            <span className="bg-white px-4 text-gray-400">or</span>
+            <span className="bg-white dark:bg-gray-950 px-4 text-gray-400">or</span>
           </div>
         </div>
 
         {/* Form */}
         <form onSubmit={handleSignup} className="mt-6 space-y-5" noValidate>
           {error && (
-            <div role="alert" className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600">
+            <div role="alert" className="rounded-xl bg-red-50 dark:bg-red-950/40 px-4 py-3 text-sm text-red-600 dark:text-red-400">
               {error}
             </div>
           )}
@@ -128,6 +143,7 @@ export default function SignupPage() {
               placeholder="John Smith"
               className="input-field"
               autoComplete="name"
+              autoFocus
             />
           </FormField>
 
@@ -144,15 +160,59 @@ export default function SignupPage() {
           </FormField>
 
           <FormField label="Password" required error={fieldErrors.password} htmlFor="password">
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => { setPassword(e.target.value); setFieldErrors(prev => { const n = {...prev}; delete n.password; return n; }); }}
-              placeholder="At least 6 characters"
-              className="input-field"
-              autoComplete="new-password"
-            />
+            <div className="relative">
+              <input
+                id="password"
+                type={showPassword ? 'text' : 'password'}
+                value={password}
+                onChange={(e) => { setPassword(e.target.value); setFieldErrors(prev => { const n = {...prev}; delete n.password; return n; }); }}
+                placeholder="At least 6 characters"
+                className="input-field pr-11"
+                autoComplete="new-password"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                tabIndex={-1}
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+              >
+                {showPassword ? (
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
+                    <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24" />
+                    <line x1="1" y1="1" x2="23" y2="23" />
+                  </svg>
+                ) : (
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                    <circle cx="12" cy="12" r="3" />
+                  </svg>
+                )}
+              </button>
+            </div>
+            {password && (
+              <div className="mt-2">
+                <div className="flex gap-1.5">
+                  {[1, 2, 3].map((seg) => (
+                    <div
+                      key={seg}
+                      className={`h-1 flex-1 rounded-full transition-colors duration-300 ${
+                        seg <= passwordStrength
+                          ? strengthColors[passwordStrength]
+                          : 'bg-gray-200 dark:bg-gray-700'
+                      }`}
+                    />
+                  ))}
+                </div>
+                <p className={`mt-1 text-xs ${
+                  passwordStrength === 1 ? 'text-red-500' :
+                  passwordStrength === 2 ? 'text-yellow-600 dark:text-yellow-400' :
+                  passwordStrength === 3 ? 'text-green-600 dark:text-green-400' : ''
+                }`}>
+                  {strengthLabels[passwordStrength]}
+                </p>
+              </div>
+            )}
           </FormField>
 
           <button type="submit" disabled={loading} className="btn-primary">

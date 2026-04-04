@@ -1,4 +1,5 @@
 import { isAllowedWebhookUrl } from '@/lib/validate-url';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 /**
  * Fire a webhook notification to the user's configured webhook URL.
@@ -9,7 +10,7 @@ import { isAllowedWebhookUrl } from '@/lib/validate-url';
  * with a consistent { event, timestamp, data } envelope.
  */
 export async function fireWebhook(
-  supabase: any,
+  supabase: SupabaseClient,
   userId: string,
   event: string,
   data: Record<string, unknown>

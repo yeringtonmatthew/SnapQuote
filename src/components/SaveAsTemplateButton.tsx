@@ -1,9 +1,10 @@
 'use client';
 
 import { useState } from 'react';
+import type { LineItem } from '@/types/database';
 
 interface Props {
-  lineItems: any[];
+  lineItems: LineItem[];
   notes: string | null;
   scopeOfWork: string | null;
 }

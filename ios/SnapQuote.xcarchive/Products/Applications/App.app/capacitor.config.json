@@ -1,0 +1,45 @@
+{
+	"appId": "dev.snapquote.app",
+	"appName": "SnapQuote",
+	"webDir": "out",
+	"server": {
+		"url": "https://snapquote.dev",
+		"cleartext": false,
+		"allowNavigation": [
+			"snapquote.dev",
+			"*.supabase.co",
+			"*.stripe.com",
+			"js.stripe.com",
+			"accounts.google.com"
+		]
+	},
+	"ios": {
+		"backgroundColor": "#ffffff",
+		"contentInset": "automatic",
+		"preferredContentMode": "mobile",
+		"scrollEnabled": true,
+		"allowsLinkPreview": false,
+		"scheme": "SnapQuote",
+		"limitsNavigationsToAppBoundDomains": true
+	},
+	"plugins": {
+		"SplashScreen": {
+			"launchAutoHide": true,
+			"launchShowDuration": 2000,
+			"backgroundColor": "#ffffff",
+			"showSpinner": false,
+			"androidScaleType": "CENTER_CROP",
+			"splashFullScreen": false,
+			"splashImmersive": false
+		},
+		"Keyboard": {
+			"resize": "body",
+			"resizeOnFullScreen": true
+		},
+		"StatusBar": {
+			"style": "LIGHT",
+			"backgroundColor": "#ffffff"
+		}
+	},
+	"packageClassList": []
+}

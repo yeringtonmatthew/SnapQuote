@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
-import QuoteList from '@/components/QuoteList';
+// QuoteList moved to /pipeline — dashboard shows compact recent quotes
 import RevenueChart from '@/components/RevenueChart';
 import InstallPrompt from '@/components/InstallPrompt';
 import ExportDropdown from '@/components/ExportDropdown';
@@ -9,6 +9,9 @@ import { NotificationBell } from '@/components/NotificationBell';
 import { DashboardThemeToggle } from '@/components/DashboardThemeToggle';
 import DashboardPullToRefresh from '@/components/DashboardPullToRefresh';
 import DashboardStats from '@/components/DashboardStats';
+import SmartActionsBar from '@/components/SmartActionsBar';
+import RecentActivity from '@/components/RecentActivity';
+import QuickActions from '@/components/QuickActions';
 import PageTransition from '@/components/PageTransition';
 import BottomNav from '@/components/BottomNav';
 import DesktopSidebar from '@/components/DesktopSidebar';
@@ -71,7 +74,6 @@ export default async function DashboardPage() {
   // ── Fetch today's calendar events (gracefully handle if table doesn't exist) ──
   let todayEvents: Record<string, unknown>[] = [];
   try {
-    // Fetch today's events with quote and client joins
     const { data, error } = await supabase
       .from('events')
       .select(`
@@ -107,7 +109,6 @@ export default async function DashboardPage() {
         };
       });
     } else if (error) {
-      // Fallback: try 'events' table
       const { data: evData } = await supabase
         .from('events')
         .select(`
@@ -138,7 +139,7 @@ export default async function DashboardPage() {
       }
     }
   } catch {
-    // Events table may not exist yet — that's fine
+    // Events table may not exist yet
   }
 
   // ── Also include quotes with scheduled_date = today (backcompat) ──
@@ -146,7 +147,6 @@ export default async function DashboardPage() {
   const activeQuotes = allQuotes.filter(q => !q.archived);
 
   const quotesScheduledToday = activeQuotes.filter(q => q.scheduled_date === todayStr);
-  // Merge into today's events (avoid duplicates by quote_id)
   const eventQuoteIds = new Set(todayEvents.map(e => e.quote_id).filter(Boolean));
   const extraScheduleEvents = quotesScheduledToday
     .filter(q => !eventQuoteIds.has(q.id))
@@ -180,6 +180,10 @@ export default async function DashboardPage() {
 
   const depositsToCollect = activeQuotes.filter(
     q => q.status === 'approved' && !q.paid_at
+  );
+
+  const collectableAmount = depositsToCollect.reduce(
+    (sum, q) => sum + Number(q.deposit_amount || q.total || q.subtotal || 0), 0
   );
 
   const jobsToSchedule = activeQuotes.filter(
@@ -221,6 +225,12 @@ export default async function DashboardPage() {
   const pendingQuotes = activeQuotes.filter(q => q.status === 'sent' || q.status === 'approved');
   const pendingValue = pendingQuotes.reduce((sum, q) => sum + Number(q.total ?? q.subtotal), 0);
 
+  // ── Average Quote Value ──────────────────────────
+  const quotesWithTotal = activeQuotes.filter(q => q.total && Number(q.total) > 0);
+  const avgQuoteValue = quotesWithTotal.length > 0
+    ? Math.round(quotesWithTotal.reduce((sum, q) => sum + Number(q.total), 0) / quotesWithTotal.length)
+    : 0;
+
   // ── Trend calculations: this month vs last month ──
   const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString();
   const endOfLastMonth = startOfMonth;
@@ -258,8 +268,7 @@ export default async function DashboardPage() {
     }
   }
 
-  const hasActionableQuotes = activeQuotes.some(q => q.status === 'sent' || q.status === 'approved');
-  const defaultFilter = hasActionableQuotes ? 'Sent' : 'All';
+  // Dashboard shows compact recent quotes — full list is on /pipeline
 
   // ── Smart Action Engine ──────────────────────────
   const smartActions = getTopActions(activeQuotes as unknown as Quote[], 5, now);
@@ -284,8 +293,17 @@ export default async function DashboardPage() {
   // ── Scheduling Intelligence ─────────────────────
   const schedulingInsights = getSchedulingInsights(activeQuotes as unknown as Quote[], now);
 
-  // ── Today's Focus — powered by Smart Action Engine ──────────
-  const topFocusItems = smartActions;
+  // ── Recent Activity — last 8 quotes ──────────────
+  const recentQuotes = activeQuotes.slice(0, 8).map(q => ({
+    id: q.id,
+    customer_name: q.customer_name,
+    total: Number(q.total ?? q.subtotal ?? 0),
+    status: q.status,
+    created_at: q.created_at,
+    sent_at: q.sent_at,
+    approved_at: q.approved_at,
+    paid_at: q.paid_at,
+  }));
 
   // ── Stage badge helpers ──────────────────────────
   const stageBadge = (stage: string) => {
@@ -299,6 +317,9 @@ export default async function DashboardPage() {
     return info;
   };
 
+  // ── Today's date formatted ──────────────────────
+  const todayFormatted = now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+
   return (
     <PageTransition>
     <DesktopSidebar active="home" />
@@ -309,23 +330,16 @@ export default async function DashboardPage() {
       <header className="sticky top-0 z-10 bg-[#f2f2f7]/90 dark:bg-gray-950/90 backdrop-blur-xl border-b border-black/5 dark:border-white/5 px-5 pt-14 lg:pt-6 pb-4">
         <div className="mx-auto max-w-7xl flex items-center justify-between">
           <div>
-            <p className="text-[12px] text-gray-500 dark:text-gray-400 font-medium">{greeting}</p>
-            <h1 className="text-[22px] font-bold tracking-tight text-gray-900 dark:text-gray-100">{firstName}</h1>
+            <p className="text-[12px] text-gray-400 dark:text-gray-500 font-medium">{todayFormatted}</p>
+            <h1 className="text-[28px] font-bold tracking-tight text-gray-900 dark:text-gray-100 leading-tight">
+              {greeting}, {firstName}
+            </h1>
           </div>
           <div className="flex items-center gap-2">
-            <Link
-              href="/quotes/new"
-              className="flex items-center gap-1.5 rounded-full bg-brand-600 px-4 py-2 text-[13px] font-semibold text-white shadow-sm press-scale transition-colors focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
-            >
-              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-              </svg>
-              New Quote
-            </Link>
             <DashboardThemeToggle />
             <NotificationBell />
             <ExportDropdown />
-            <Link href="/settings" aria-label="Settings" className="flex h-9 w-9 items-center justify-center rounded-full bg-white dark:bg-gray-800 shadow-sm border border-gray-100 dark:border-gray-700 focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2">
+            <Link href="/settings" aria-label="Settings" className="flex h-11 w-11 items-center justify-center rounded-full bg-white dark:bg-gray-800 shadow-sm ring-1 ring-black/[0.04] dark:ring-white/[0.06] focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2">
               {profile?.logo_url ? (
                 <img src={profile.logo_url} alt="Your business logo" className="h-full w-full rounded-full object-cover" />
               ) : (
@@ -338,37 +352,60 @@ export default async function DashboardPage() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-7xl px-4 pt-5 space-y-5 lg:px-8 lg:grid lg:grid-cols-[1fr_380px] lg:gap-8 lg:space-y-0 lg:auto-rows-min">
+      <main className="mx-auto max-w-7xl px-5 pt-5 space-y-6 lg:px-8 lg:grid lg:grid-cols-[1fr_380px] lg:gap-8 lg:space-y-0 lg:auto-rows-min">
 
         {/* ══════════════════════════════════════════
-            0. SMART ACTIONS — "What to do right now"
+            0. SMART ACTIONS BAR — Horizontal scroll on mobile
             ══════════════════════════════════════════ */}
-        {topFocusItems.length > 0 && (
-          <div className="lg:col-start-1">
-            <DoThisNow
-              actions={topFocusItems}
-              leadScores={leadScoreMap}
+        {hasAttentionItems && (
+          <div className="lg:col-span-2">
+            <SmartActionsBar
+              awaitingCount={awaitingResponse.length}
+              depositsCount={depositsToCollect.length}
+              collectableAmount={collectableAmount}
+              todayJobsCount={allTodayEvents.length}
+              followUpCount={followUpNeeded.length}
+              jobsToScheduleCount={jobsToSchedule.length}
             />
           </div>
         )}
 
         {/* ══════════════════════════════════════════
-            1. TODAY'S SCHEDULE
+            1. STATS CARDS — Big numbers that pop
             ══════════════════════════════════════════ */}
-        <section className="lg:col-start-2 lg:row-start-1">
+        <div className="lg:col-start-1">
+          <DashboardStats
+            monthlyRevenue={monthlyRevenue}
+            quotesSentCount={quotesSentCount}
+            approvalRate={approvalRate}
+            pendingValue={pendingValue}
+            pendingCount={pendingQuotes.length}
+            revenueTrend={revenueTrend}
+            sentTrend={sentTrend}
+            avgQuoteValue={avgQuoteValue}
+          />
+        </div>
+
+        {/* ══════════════════════════════════════════
+            2. TODAY'S SCHEDULE
+            ══════════════════════════════════════════ */}
+        <section className="lg:col-start-2 lg:row-start-2 lg:row-span-2">
           <div className="flex items-center justify-between mb-3 px-1">
             <div className="flex items-center gap-2">
-              <h2 className="text-[11px] font-semibold uppercase tracking-widest text-gray-400">
-                Today&apos;s Schedule
+              <svg className="h-4 w-4 text-blue-500" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
+              </svg>
+              <h2 className="text-[13px] font-semibold text-gray-900 dark:text-gray-100">
+                Today
               </h2>
               {allTodayEvents.length > 0 && (
-                <span className="inline-flex items-center justify-center h-5 min-w-[20px] rounded-full bg-brand-600 px-1.5 text-[10px] font-bold text-white">
+                <span className="inline-flex items-center justify-center h-5 min-w-[20px] rounded-full bg-blue-600 px-1.5 text-[10px] font-bold text-white">
                   {allTodayEvents.length}
                 </span>
               )}
             </div>
-            <Link href="/schedule" className="text-[12px] font-medium text-brand-600 dark:text-brand-400">
-              View Full Schedule &rarr;
+            <Link href="/schedule" className="text-[12px] font-medium text-brand-600 dark:text-brand-400 active:opacity-70 transition-opacity">
+              Full Schedule
             </Link>
           </div>
 
@@ -379,52 +416,41 @@ export default async function DashboardPage() {
                 const colors = getEventColor(eventType);
                 const quoteId = event.quote_id as string | null;
                 const address = typeof event.job_address === 'string' ? event.job_address : '';
-                const cardClass = `rounded-2xl bg-white dark:bg-gray-900 shadow-sm ring-1 ring-black/[0.04] dark:ring-white/[0.06] border-l-[3px] ${colors.border} overflow-hidden`;
 
                 return (
-                  <div key={event.id as string} className={cardClass}>
-                    {/* Main card — links to job detail */}
+                  <div key={event.id as string} className={`rounded-2xl bg-white dark:bg-gray-900 shadow-sm ring-1 ring-black/[0.04] dark:ring-white/[0.06] border-l-[3px] ${colors.border} overflow-hidden`}>
                     {quoteId ? (
-                      <Link href={`/jobs/${quoteId}`} className="block px-4 pt-3 pb-2 active:bg-gray-50 dark:active:bg-gray-800 transition-colors">
-                        <div className="flex items-start gap-3">
-                          <div className="flex flex-col items-center pt-0.5">
-                            <span className={`h-2 w-2 rounded-full ${colors.dot}`} />
+                      <Link href={`/jobs/${quoteId}`} className="block px-4 pt-3.5 pb-2.5 active:bg-gray-50 dark:active:bg-gray-800 transition-colors">
+                        <div className="flex items-center gap-3">
+                          <div className="flex flex-col items-center">
+                            <span className={`h-2.5 w-2.5 rounded-full ${colors.dot}`} />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2">
-                              <span className="text-[13px] font-semibold text-gray-900 dark:text-gray-100 truncate">
-                                {(event.customer_name as string) || (event.title as string)}
-                              </span>
-                              <span className="text-[11px] text-gray-400 dark:text-gray-500 whitespace-nowrap">
-                                {formatTime(event.start_time as string | null)}
-                              </span>
-                            </div>
+                            <p className="text-[14px] font-semibold text-gray-900 dark:text-gray-100 truncate">
+                              {(event.customer_name as string) || (event.title as string)}
+                            </p>
                           </div>
-                          <svg className="h-4 w-4 text-gray-300 dark:text-gray-600 flex-shrink-0 mt-1" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" aria-hidden="true">
+                          <span className="text-[12px] font-medium text-gray-400 dark:text-gray-500 tabular-nums whitespace-nowrap">
+                            {formatTime(event.start_time as string | null)}
+                          </span>
+                          <svg className="h-4 w-4 text-gray-300 dark:text-gray-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" aria-hidden="true">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
                           </svg>
                         </div>
                       </Link>
                     ) : (
-                      <div className="px-4 pt-3 pb-2">
-                        <div className="flex items-start gap-3">
-                          <div className="flex flex-col items-center pt-0.5">
-                            <span className={`h-2 w-2 rounded-full ${colors.dot}`} />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2">
-                              <span className="text-[13px] font-semibold text-gray-900 dark:text-gray-100 truncate">
-                                {(event.customer_name as string) || (event.title as string)}
-                              </span>
-                              <span className="text-[11px] text-gray-400 dark:text-gray-500 whitespace-nowrap">
-                                {formatTime(event.start_time as string | null)}
-                              </span>
-                            </div>
-                          </div>
+                      <div className="px-4 pt-3.5 pb-2.5">
+                        <div className="flex items-center gap-3">
+                          <span className={`h-2.5 w-2.5 rounded-full ${colors.dot}`} />
+                          <p className="text-[14px] font-semibold text-gray-900 dark:text-gray-100 truncate flex-1">
+                            {(event.customer_name as string) || (event.title as string)}
+                          </p>
+                          <span className="text-[12px] font-medium text-gray-400 dark:text-gray-500 tabular-nums whitespace-nowrap">
+                            {formatTime(event.start_time as string | null)}
+                          </span>
                         </div>
                       </div>
                     )}
-                    {/* Address — separate link to Google Maps */}
                     {address && (
                       <a
                         href={`https://maps.google.com/?q=${encodeURIComponent(address)}`}
@@ -444,109 +470,61 @@ export default async function DashboardPage() {
               })}
             </div>
           ) : (
-            <div className="rounded-2xl bg-white dark:bg-gray-900 shadow-sm ring-1 ring-black/[0.04] dark:ring-white/[0.06] px-5 py-6 text-center">
-              <svg className="mx-auto h-8 w-8 text-gray-300 dark:text-gray-600 mb-2" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
-              </svg>
-              <p className="text-[13px] text-gray-400 dark:text-gray-500">Nothing scheduled today</p>
-              <Link href="/schedule" className="inline-block mt-2 text-[12px] font-medium text-brand-600 dark:text-brand-400">
-                Open Schedule &rarr;
+            <div className="rounded-2xl bg-white dark:bg-gray-900 shadow-sm ring-1 ring-black/[0.04] dark:ring-white/[0.06] px-5 py-8 text-center">
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-gray-100 dark:bg-gray-800 mb-3">
+                <svg className="h-6 w-6 text-gray-400 dark:text-gray-500" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
+                </svg>
+              </div>
+              <p className="text-[14px] font-medium text-gray-500 dark:text-gray-400">No jobs scheduled today</p>
+              <Link href="/schedule" className="inline-flex items-center gap-1.5 mt-3 rounded-full bg-brand-600 px-4 py-2 text-[13px] font-semibold text-white shadow-sm active:scale-[0.97] transition-all">
+                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                </svg>
+                Schedule a Job
               </Link>
             </div>
           )}
         </section>
 
         {/* ══════════════════════════════════════════
-            2. NEEDS ATTENTION
+            3. DO THIS NOW — Smart Actions
             ══════════════════════════════════════════ */}
-        {hasAttentionItems && (
-          <section className="lg:col-start-2">
-            <h2 className="mb-3 px-1 text-[11px] font-semibold uppercase tracking-widest text-gray-400">
-              Needs Attention
-            </h2>
-            <div className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4 scrollbar-none lg:flex-wrap lg:mx-0 lg:px-0 lg:gap-3">
-              {awaitingResponse.length > 0 && (
-                <Link
-                  href="/pipeline?stage=quote_sent"
-                  className="flex-shrink-0 flex items-center gap-2.5 rounded-2xl bg-white dark:bg-gray-900 shadow-sm ring-1 ring-black/[0.04] dark:ring-white/[0.06] px-4 py-3 active:bg-gray-50 dark:active:bg-gray-800 transition-colors"
-                >
-                  <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-amber-50 dark:bg-amber-900/20">
-                    <svg className="h-4 w-4 text-amber-600 dark:text-amber-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" aria-hidden="true">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                  </div>
-                  <div>
-                    <p className="text-[15px] font-bold text-gray-900 dark:text-gray-100">{awaitingResponse.length}</p>
-                    <p className="text-[11px] text-gray-500 dark:text-gray-400 whitespace-nowrap">Awaiting reply</p>
-                  </div>
-                </Link>
-              )}
-
-              {depositsToCollect.length > 0 && (
-                <Link
-                  href="/pipeline?stage=deposit_collected"
-                  className="flex-shrink-0 flex items-center gap-2.5 rounded-2xl bg-white dark:bg-gray-900 shadow-sm ring-1 ring-black/[0.04] dark:ring-white/[0.06] px-4 py-3 active:bg-gray-50 dark:active:bg-gray-800 transition-colors"
-                >
-                  <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-50 dark:bg-emerald-900/20">
-                    <svg className="h-4 w-4 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" aria-hidden="true">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z" />
-                    </svg>
-                  </div>
-                  <div>
-                    <p className="text-[15px] font-bold text-gray-900 dark:text-gray-100">{depositsToCollect.length}</p>
-                    <p className="text-[11px] text-gray-500 dark:text-gray-400 whitespace-nowrap">Deposits to collect</p>
-                  </div>
-                </Link>
-              )}
-
-              {jobsToSchedule.length > 0 && (
-                <Link
-                  href="/schedule"
-                  className="flex-shrink-0 flex items-center gap-2.5 rounded-2xl bg-white dark:bg-gray-900 shadow-sm ring-1 ring-black/[0.04] dark:ring-white/[0.06] px-4 py-3 active:bg-gray-50 dark:active:bg-gray-800 transition-colors"
-                >
-                  <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-50 dark:bg-blue-900/20">
-                    <svg className="h-4 w-4 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" aria-hidden="true">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
-                    </svg>
-                  </div>
-                  <div>
-                    <p className="text-[15px] font-bold text-gray-900 dark:text-gray-100">{jobsToSchedule.length}</p>
-                    <p className="text-[11px] text-gray-500 dark:text-gray-400 whitespace-nowrap">Jobs to schedule</p>
-                  </div>
-                </Link>
-              )}
-
-              {followUpNeeded.length > 0 && (
-                <Link
-                  href="/pipeline?stage=quote_sent"
-                  className="flex-shrink-0 flex items-center gap-2.5 rounded-2xl bg-white dark:bg-gray-900 shadow-sm ring-1 ring-black/[0.04] dark:ring-white/[0.06] px-4 py-3 active:bg-gray-50 dark:active:bg-gray-800 transition-colors"
-                >
-                  <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-orange-50 dark:bg-orange-900/20">
-                    <svg className="h-4 w-4 text-orange-600 dark:text-orange-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" aria-hidden="true">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
-                    </svg>
-                  </div>
-                  <div>
-                    <p className="text-[15px] font-bold text-gray-900 dark:text-gray-100">{followUpNeeded.length}</p>
-                    <p className="text-[11px] text-gray-500 dark:text-gray-400 whitespace-nowrap">Follow up needed</p>
-                  </div>
-                </Link>
-              )}
-            </div>
-          </section>
+        {smartActions.length > 0 && (
+          <div className="lg:col-start-1">
+            <DoThisNow
+              actions={smartActions}
+              leadScores={leadScoreMap}
+            />
+          </div>
         )}
 
         {/* ══════════════════════════════════════════
-            3. ACTIVE JOBS
+            4. QUICK ACTIONS — Big tap targets
+            ══════════════════════════════════════════ */}
+        <div className="lg:col-start-1">
+          <h2 className="mb-3 px-1 text-[11px] font-semibold uppercase tracking-widest text-gray-400">
+            Quick Actions
+          </h2>
+          <QuickActions />
+        </div>
+
+        {/* ══════════════════════════════════════════
+            5. ACTIVE JOBS
             ══════════════════════════════════════════ */}
         {activeJobs.length > 0 && (
           <section className="lg:col-start-1">
             <div className="flex items-center justify-between mb-3 px-1">
-              <h2 className="text-[11px] font-semibold uppercase tracking-widest text-gray-400">
-                Active Jobs
-              </h2>
-              <Link href="/jobs" className="text-[12px] font-medium text-brand-600 dark:text-brand-400">
-                View All &rarr;
+              <div className="flex items-center gap-2">
+                <svg className="h-4 w-4 text-emerald-500" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M11.42 15.17l-5.1-5.1m0 0L12 4.37m-5.68 5.7h15.08" />
+                </svg>
+                <h2 className="text-[13px] font-semibold text-gray-900 dark:text-gray-100">
+                  Active Jobs
+                </h2>
+              </div>
+              <Link href="/jobs" className="text-[12px] font-medium text-brand-600 dark:text-brand-400 active:opacity-70 transition-opacity">
+                View All
               </Link>
             </div>
             <div className="space-y-2">
@@ -564,7 +542,7 @@ export default async function DashboardPage() {
                   <Link
                     key={job.id}
                     href={`/jobs/${job.id}`}
-                    className="block rounded-2xl bg-white dark:bg-gray-900 shadow-sm ring-1 ring-black/[0.04] dark:ring-white/[0.06] px-4 py-3 active:bg-gray-50 dark:active:bg-gray-800 transition-colors"
+                    className="block rounded-2xl bg-white dark:bg-gray-900 shadow-sm ring-1 ring-black/[0.04] dark:ring-white/[0.06] px-4 py-3.5 active:bg-gray-50 dark:active:bg-gray-800 transition-all min-h-[56px]"
                   >
                     <div className="flex items-center justify-between gap-3">
                       <div className="min-w-0 flex-1">
@@ -585,7 +563,7 @@ export default async function DashboardPage() {
                           <div className="flex items-center gap-1.5">
                             <div className="w-12 h-1.5 rounded-full bg-gray-100 dark:bg-gray-800 overflow-hidden">
                               <div
-                                className="h-full rounded-full bg-brand-500 transition-all"
+                                className="h-full rounded-full bg-brand-500 transition-all duration-500"
                                 style={{ width: `${progress}%` }}
                               />
                             </div>
@@ -606,22 +584,33 @@ export default async function DashboardPage() {
           </section>
         )}
 
-        {/* ── Stats ──────────────────────────────── */}
-        <div className="lg:col-start-2">
-          <DashboardStats
-            monthlyRevenue={monthlyRevenue}
-            quotesSentCount={quotesSentCount}
-            approvalRate={approvalRate}
-            pendingValue={pendingValue}
-            pendingCount={pendingQuotes.length}
-            revenueTrend={revenueTrend}
-            sentTrend={sentTrend}
-          />
-        </div>
+        {/* ══════════════════════════════════════════
+            6. RECENT ACTIVITY — Last quotes with status pills
+            ══════════════════════════════════════════ */}
+        {recentQuotes.length > 0 && (
+          <section className="lg:col-start-2">
+            <div className="flex items-center justify-between mb-3 px-1">
+              <div className="flex items-center gap-2">
+                <svg className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <h2 className="text-[13px] font-semibold text-gray-900 dark:text-gray-100">
+                  Recent Activity
+                </h2>
+              </div>
+              <Link href="/quotes" className="text-[12px] font-medium text-brand-600 dark:text-brand-400 active:opacity-70 transition-opacity">
+                All Quotes
+              </Link>
+            </div>
+            <RecentActivity quotes={recentQuotes} />
+          </section>
+        )}
 
-        {/* ── Revenue Intelligence ───────────────── */}
+        {/* ══════════════════════════════════════════
+            7. REVENUE INTELLIGENCE
+            ══════════════════════════════════════════ */}
         {activeQuotes.length > 0 && (
-          <div className="lg:col-start-2">
+          <div className="lg:col-start-1">
             <RevenueIntelligenceCard
               totalPipeline={revenueIntel.totalPipeline}
               atRiskRevenue={revenueIntel.atRiskRevenue}
@@ -638,7 +627,9 @@ export default async function DashboardPage() {
           </div>
         )}
 
-        {/* ── Scheduling Intelligence ───────────────── */}
+        {/* ══════════════════════════════════════════
+            8. SCHEDULING INTELLIGENCE
+            ══════════════════════════════════════════ */}
         {schedulingInsights.length > 0 && (
           <section className="lg:col-start-2">
             <h2 className="mb-3 px-1 text-[11px] font-semibold uppercase tracking-widest text-gray-400">
@@ -683,9 +674,11 @@ export default async function DashboardPage() {
           </section>
         )}
 
-        {/* ── Revenue Chart ────────────────────────── */}
+        {/* ══════════════════════════════════════════
+            9. REVENUE CHART
+            ══════════════════════════════════════════ */}
         {hasPaidQuotes && (
-          <div className="lg:col-start-2">
+          <div className="lg:col-start-1">
             {/* Mobile: collapsible */}
             <details className="lg:hidden rounded-2xl bg-white dark:bg-gray-900 shadow-sm ring-1 ring-black/[0.04] dark:ring-white/[0.06] overflow-hidden">
               <summary className="flex cursor-pointer items-center justify-between px-5 py-4 [&::-webkit-details-marker]:hidden [&::marker]:hidden list-none">
@@ -710,15 +703,13 @@ export default async function DashboardPage() {
           </div>
         )}
 
-        {/* ── Quotes ─────────────────────────────── */}
+        {/* ══════════════════════════════════════════
+            10. RECENT QUOTES — Compact preview, not full list
+            ══════════════════════════════════════════ */}
         <div className="lg:col-start-1 min-w-0">
-          <h2 className="mb-3 px-1 text-[11px] font-semibold uppercase tracking-widest text-gray-500 dark:text-gray-400">
-            Recent Quotes
-          </h2>
-
           {!quotes || quotes.length === 0 ? (
-            <div className="rounded-2xl bg-white dark:bg-gray-900 p-6 shadow-sm border border-gray-100 dark:border-gray-800 text-center space-y-4">
-              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-brand-50">
+            <div className="rounded-2xl bg-white dark:bg-gray-900 p-8 shadow-sm ring-1 ring-black/[0.04] dark:ring-white/[0.06] text-center space-y-4">
+              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-brand-50 dark:bg-brand-900/20">
                 <svg className="h-8 w-8 text-brand-600" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" />
                   <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18.75 10.5h.008v.008h-.008V10.5z" />
@@ -753,7 +744,79 @@ export default async function DashboardPage() {
               </div>
             </div>
           ) : (
-            <QuoteList quotes={quotes} defaultFilter={defaultFilter} />
+            <>
+              <div className="flex items-center justify-between mb-3 px-1">
+                <h2 className="text-[11px] font-semibold uppercase tracking-widest text-gray-500 dark:text-gray-400">
+                  Recent Quotes
+                </h2>
+                <Link href="/pipeline" className="text-[12px] font-medium text-brand-600 dark:text-brand-400 active:opacity-70 transition-opacity">
+                  View All
+                </Link>
+              </div>
+              <div className="space-y-2">
+                {activeQuotes.filter(q => !q.archived && q.status !== 'draft').slice(0, 5).map((quote) => {
+                  const thumb = quote.photos?.[0];
+                  const statusColor: Record<string, string> = {
+                    sent: 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-300',
+                    approved: 'bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-300',
+                    deposit_paid: 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-300',
+                    cancelled: 'bg-red-100 text-red-500 dark:bg-red-900/30 dark:text-red-300',
+                    draft: 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400',
+                  };
+                  const statusLabel: Record<string, string> = {
+                    draft: 'Draft', sent: 'Sent', approved: 'Approved', deposit_paid: 'Paid', cancelled: 'Cancelled',
+                  };
+                  return (
+                    <Link
+                      key={quote.id}
+                      href={`/quotes/${quote.id}`}
+                      className="flex items-center gap-3 rounded-2xl bg-white dark:bg-gray-900 px-4 py-3 shadow-sm ring-1 ring-black/[0.04] dark:ring-white/[0.06] active:bg-gray-50 dark:active:bg-gray-800 transition-all min-h-[64px]"
+                    >
+                      <div className="h-12 w-12 shrink-0 overflow-hidden rounded-xl bg-gray-100 dark:bg-gray-800">
+                        {thumb ? (
+                          <img src={thumb} alt="" className="h-full w-full object-cover" />
+                        ) : (
+                          <div className="flex h-full w-full items-center justify-center">
+                            <svg className="h-5 w-5 text-gray-300 dark:text-gray-600" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+                            </svg>
+                          </div>
+                        )}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-[14px] font-semibold text-gray-900 dark:text-gray-100">
+                          {quote.customer_name}
+                        </p>
+                        <p className="text-[12px] text-gray-400 dark:text-gray-500 truncate mt-0.5">
+                          {quote.scope_of_work || quote.ai_description || 'No description'}
+                        </p>
+                      </div>
+                      <div className="shrink-0 text-right">
+                        <p className="text-[15px] font-bold text-gray-900 dark:text-gray-100 tabular-nums">
+                          ${Number(quote.total ?? quote.subtotal).toLocaleString('en-US', { maximumFractionDigits: 0 })}
+                        </p>
+                        <span className={`mt-0.5 inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold ${statusColor[quote.status] || 'bg-gray-100 text-gray-500'}`}>
+                          {statusLabel[quote.status] || quote.status}
+                        </span>
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+              {activeQuotes.filter(q => !q.archived && q.status !== 'draft').length > 5 && (
+                <div className="flex justify-center pt-4">
+                  <Link
+                    href="/pipeline"
+                    className="inline-flex items-center gap-2 rounded-xl bg-white dark:bg-gray-900 px-5 py-3 text-[13px] font-semibold text-gray-700 dark:text-gray-300 ring-1 ring-black/[0.04] dark:ring-white/[0.06] shadow-sm active:scale-[0.97] transition-all min-h-[44px]"
+                  >
+                    View All Quotes
+                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                    </svg>
+                  </Link>
+                </div>
+              )}
+            </>
           )}
         </div>
       </main>

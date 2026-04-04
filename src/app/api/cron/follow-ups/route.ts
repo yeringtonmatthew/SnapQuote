@@ -47,7 +47,7 @@ interface Quote {
   subtotal: number;
   sent_at: string;
   status: string;
-  job_notes: any[] | null;
+  job_notes: { id: string; text: string; created_at: string; updated_at: string }[] | null;
 }
 
 interface Contractor {
@@ -160,7 +160,7 @@ async function sendFollowUp({
     });
 
     // Add system note to job_notes
-    const existingNotes: any[] = quote.job_notes || [];
+    const existingNotes: { id: string; text: string; created_at: string; updated_at: string }[] = quote.job_notes || [];
     const systemNote = {
       id: crypto.randomUUID(),
       text: `[Auto] Follow-up #${followUpNumber} sent via ${channel.toUpperCase()}`,

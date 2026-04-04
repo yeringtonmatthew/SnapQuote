@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ predictions: [] });
   }
 
-  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+  const apiKey = process.env.GOOGLE_MAPS_SERVER_KEY || process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
   if (!apiKey) {
     return NextResponse.json({ predictions: [] });
   }
@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
     }
 
     return NextResponse.json({
-      predictions: (data.predictions || []).slice(0, 5).map((p: any) => ({
+      predictions: (data.predictions || []).slice(0, 5).map((p: { description: string; place_id: string }) => ({
         description: p.description,
         place_id: p.place_id,
       })),

@@ -4,13 +4,10 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 
 type Tool = 'pen' | 'arrow' | 'text';
 
-interface Annotation {
-  type: 'pen' | 'arrow' | 'text';
-  // pen: array of {x,y} points
-  // arrow: {startX, startY, endX, endY}
-  // text: {x, y, text}
-  data: any;
-}
+type Annotation =
+  | { type: 'pen'; data: { x: number; y: number }[] }
+  | { type: 'arrow'; data: { startX: number; startY: number; endX: number; endY: number } }
+  | { type: 'text'; data: { x: number; y: number; text: string } };
 
 interface PhotoAnnotatorProps {
   imageUrl: string;
@@ -122,7 +119,7 @@ export default function PhotoAnnotator({ imageUrl, onDone, onCancel }: PhotoAnno
     ctx.lineJoin = 'round';
 
     if (ann.type === 'pen') {
-      const points = ann.data as { x: number; y: number }[];
+      const points = ann.data;
       if (points.length < 2) return;
       ctx.beginPath();
       ctx.moveTo(points[0].x, points[0].y);
@@ -288,7 +285,7 @@ export default function PhotoAnnotator({ imageUrl, onDone, onCancel }: PhotoAnno
 
     for (const ann of annotations) {
       if (ann.type === 'pen') {
-        const points = ann.data as { x: number; y: number }[];
+        const points = ann.data;
         if (points.length < 2) continue;
         ctx.beginPath();
         ctx.moveTo(points[0].x * scaleX, points[0].y * scaleY);

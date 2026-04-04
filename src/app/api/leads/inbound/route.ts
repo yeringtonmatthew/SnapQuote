@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
   }
 
   // Rate limit: 60 leads per hour per source
-  if (!rateLimit(`lead_source_${leadSource.id}`, 60, 60 * 60 * 1000)) {
+  if (!(await rateLimit(`lead_source_${leadSource.id}`, 60, 60 * 60 * 1000))) {
     return NextResponse.json(
       { error: 'Rate limit exceeded. Maximum 60 leads per hour per source.' },
       { status: 429 },

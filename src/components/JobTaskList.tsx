@@ -102,22 +102,24 @@ export function JobTaskList({ quoteId, tasks: initialTasks }: JobTaskListProps) 
   }
 
   return (
-    <div>
+    <div className="rounded-2xl bg-white dark:bg-gray-900 shadow-sm ring-1 ring-black/[0.04] dark:ring-white/[0.06] overflow-hidden">
       {/* Progress bar + counter */}
       {totalCount > 0 && (
-        <div className="mb-4">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-[13px] font-medium text-gray-900 dark:text-gray-100 tabular-nums">
-              {completedCount} of {totalCount}
+        <div className="px-4 pt-4 pb-3 border-b border-gray-100/80 dark:border-gray-800/60">
+          <div className="flex items-center justify-between mb-2.5">
+            <span className="text-[13px] font-semibold text-gray-900 dark:text-gray-100 tabular-nums">
+              {completedCount} of {totalCount} complete
             </span>
-            <span className="text-[12px] text-gray-400 dark:text-gray-500 tabular-nums">
+            <span className={`text-[12px] font-bold tabular-nums ${
+              pct === 100 ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-400 dark:text-gray-500'
+            }`}>
               {pct}%
             </span>
           </div>
-          <div className="h-1 w-full rounded-full bg-gray-100 dark:bg-gray-800 overflow-hidden">
+          <div className="h-1.5 w-full rounded-full bg-gray-100 dark:bg-gray-800 overflow-hidden">
             <div
               className={`h-full rounded-full transition-all duration-500 ease-out ${
-                completedCount > 0 ? 'bg-emerald-500' : 'bg-gray-200 dark:bg-gray-700'
+                pct === 100 ? 'bg-emerald-500' : completedCount > 0 ? 'bg-brand-500' : 'bg-gray-200 dark:bg-gray-700'
               }`}
               style={{ width: `${pct}%` }}
             />
@@ -126,20 +128,22 @@ export function JobTaskList({ quoteId, tasks: initialTasks }: JobTaskListProps) 
       )}
 
       {/* Task list */}
-      <div className="space-y-0.5">
+      <div className="divide-y divide-gray-50 dark:divide-gray-800/40">
         {sorted.map((task) => (
           <div
             key={task.id}
-            className="group flex items-center gap-3 rounded-lg px-1.5 py-2 -mx-1.5 transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/40"
+            className={`group flex items-center gap-3 px-4 py-3 transition-all duration-200 hover:bg-gray-50/50 dark:hover:bg-gray-800/20 ${
+              task.done ? 'opacity-60' : ''
+            }`}
           >
             {/* Checkbox */}
             <button
               type="button"
               onClick={() => handleToggle(task.id)}
-              className={`flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-md border transition-all duration-200 ${
+              className={`flex h-[20px] w-[20px] shrink-0 items-center justify-center rounded-full border-2 transition-all duration-200 ${
                 task.done
-                  ? 'border-emerald-500 bg-emerald-500'
-                  : 'border-gray-300 bg-white hover:border-gray-400 dark:border-gray-600 dark:bg-gray-800 dark:hover:border-gray-500'
+                  ? 'border-emerald-500 bg-emerald-500 animate-check-spring'
+                  : 'border-gray-300 bg-white hover:border-brand-400 dark:border-gray-600 dark:bg-gray-800 dark:hover:border-brand-500'
               }`}
               aria-label={task.done ? 'Mark incomplete' : 'Mark complete'}
             >
@@ -165,7 +169,7 @@ export function JobTaskList({ quoteId, tasks: initialTasks }: JobTaskListProps) 
             <button
               type="button"
               onClick={() => handleDelete(task.id)}
-              className="opacity-100 md:opacity-0 md:group-hover:opacity-100 p-0.5 text-gray-300 hover:text-red-500 transition-all duration-150 shrink-0"
+              className="opacity-100 md:opacity-0 md:group-hover:opacity-100 flex h-8 w-8 items-center justify-center rounded-full text-gray-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition-all duration-150 shrink-0"
               aria-label="Delete task"
             >
               <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
@@ -177,24 +181,36 @@ export function JobTaskList({ quoteId, tasks: initialTasks }: JobTaskListProps) 
       </div>
 
       {/* Add task input */}
-      <div className="flex items-center gap-2 mt-3 pt-3 border-t border-gray-100/80 dark:border-gray-800/60">
-        <svg className="h-[18px] w-[18px] shrink-0 text-gray-300 dark:text-gray-600" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-        </svg>
+      <div className="flex items-center gap-3 px-4 py-3 border-t border-gray-100/80 dark:border-gray-800/60">
+        <button
+          type="button"
+          onClick={handleAdd}
+          disabled={!newTask.trim() || submitting}
+          className={`flex h-[20px] w-[20px] shrink-0 items-center justify-center rounded-full border-2 transition-all duration-200 ${
+            newTask.trim()
+              ? 'border-brand-500 bg-brand-500 text-white'
+              : 'border-gray-200 dark:border-gray-700 text-gray-300 dark:text-gray-600'
+          }`}
+          aria-label="Add task"
+        >
+          <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+          </svg>
+        </button>
         <input
           type="text"
           value={newTask}
           onChange={(e) => setNewTask(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
           placeholder="Add a task..."
-          className="flex-1 border-0 bg-transparent px-0 py-1.5 text-[14px] text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-0 dark:text-gray-100 dark:placeholder-gray-600"
+          className="flex-1 border-0 bg-transparent px-0 py-1 text-base text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-0 dark:text-gray-100 dark:placeholder-gray-600"
         />
         {newTask.trim() && (
           <button
             type="button"
             onClick={handleAdd}
             disabled={submitting}
-            className="text-[13px] font-medium text-brand-600 hover:text-brand-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed dark:text-brand-400 dark:hover:text-brand-300"
+            className="rounded-lg bg-brand-600 px-3 py-1 text-[12px] font-semibold text-white transition-colors hover:bg-brand-700 disabled:opacity-40 disabled:cursor-not-allowed press-scale"
           >
             Add
           </button>

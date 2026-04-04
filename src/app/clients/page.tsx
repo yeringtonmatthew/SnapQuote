@@ -1,5 +1,4 @@
 import { redirect } from 'next/navigation';
-import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import BottomNav from '@/components/BottomNav';
 import DesktopSidebar from '@/components/DesktopSidebar';
@@ -13,12 +12,15 @@ export default async function ClientsPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect('/auth/login');
 
-  // Fetch all clients
-  const { data: clients } = await supabase
+  const PAGE_SIZE = 50;
+
+  // Fetch first page of clients
+  const { data: clients, count: totalCount } = await supabase
     .from('clients')
-    .select('*')
+    .select('*', { count: 'exact' })
     .eq('user_id', user.id)
-    .order('name', { ascending: true });
+    .order('name', { ascending: true })
+    .range(0, PAGE_SIZE - 1);
 
   // Fetch quote counts + revenue per client
   const { data: quotes } = await supabase
@@ -42,10 +44,12 @@ export default async function ClientsPage() {
     total_revenue: statsMap[c.id]?.revenue || 0,
   }));
 
+  const totalClients = totalCount ?? enrichedClients.length;
+
   return (
     <PageTransition>
       <DesktopSidebar active="clients" />
-      <div className="min-h-dvh bg-[#f2f2f7] dark:bg-gray-950 pb-24 lg:pb-8 lg:pl-[220px]">
+      <div className="min-h-dvh bg-[#f2f2f7] dark:bg-gray-950 pb-28 lg:pb-8 lg:pl-[220px]">
         {/* Header */}
         <header className="sticky top-0 z-10 bg-[#f2f2f7]/90 dark:bg-gray-950/90 backdrop-blur-xl border-b border-black/5 dark:border-white/5 px-5 pt-14 lg:pt-6 pb-4">
           <div className="mx-auto max-w-7xl flex items-center justify-between">
@@ -53,16 +57,16 @@ export default async function ClientsPage() {
               <h1 className="text-[28px] font-bold tracking-tight text-gray-900 dark:text-gray-100">
                 Clients
               </h1>
-              {enrichedClients.length > 0 && (
+              {totalClients > 0 && (
                 <p className="text-[13px] text-gray-500 dark:text-gray-400 mt-0.5">
-                  {enrichedClients.length} client{enrichedClients.length !== 1 ? 's' : ''}
+                  {totalClients} client{totalClients !== 1 ? 's' : ''}
                 </p>
               )}
             </div>
           </div>
         </header>
 
-        <ClientsListContent clients={enrichedClients} />
+        <ClientsListContent initialClients={enrichedClients} totalClients={totalClients} pageSize={PAGE_SIZE} />
 
         <BottomNav active="clients" />
       </div>

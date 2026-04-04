@@ -36,7 +36,7 @@ export async function PATCH(request: Request) {
             .select('photos')
             .eq('id', q.client_id)
             .single();
-          const existingPhotos: string[] = (client as any)?.photos || [];
+          const existingPhotos: string[] = (client as { photos?: string[] } | null)?.photos || [];
           const newPhotos = q.photos.filter((p: string) => !existingPhotos.includes(p));
           if (newPhotos.length > 0) {
             await supabase

@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { StarRating } from './StarRating';
 import EmptyState from '@/components/EmptyState';
+import RequestQuoteForm from './RequestQuoteForm';
 import type { Metadata } from 'next';
 
 export const dynamic = 'force-dynamic';
@@ -32,9 +33,29 @@ export async function generateMetadata({
   const name = contractor.business_name || 'Contractor';
   const trade = tradeLabels[contractor.trade_type || 'other'] || 'Contractor';
 
+  const description = contractor.profile_bio || `Request a quote from ${name}, a trusted ${trade.toLowerCase()}.`;
+  const ogParams = new URLSearchParams({
+    title: name,
+    subtitle: trade,
+  });
+  const ogUrl = `https://snapquote.dev/api/og?${ogParams.toString()}`;
+
   return {
     title: `${name} - ${trade} | SnapQuote`,
-    description: contractor.profile_bio || `Request a quote from ${name}, a trusted ${trade.toLowerCase()}.`,
+    description,
+    alternates: { canonical: `/p/${params.slug}` },
+    openGraph: {
+      title: `${name} - ${trade}`,
+      description,
+      url: `https://snapquote.dev/p/${params.slug}`,
+      type: 'profile',
+      images: [{ url: ogUrl, width: 1200, height: 630 }],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `${name} - ${trade}`,
+      description,
+    },
   };
 }
 
@@ -47,7 +68,7 @@ export default async function PublicProfilePage({
 
   const { data: contractor } = await supabase
     .from('users')
-    .select('id, business_name, full_name, trade_type, logo_url, profile_bio, email')
+    .select('id, business_name, full_name, trade_type, logo_url, profile_bio, email, business_email')
     .eq('profile_slug', params.slug)
     .eq('profile_public', true)
     .single();
@@ -62,6 +83,7 @@ export default async function PublicProfilePage({
     .limit(20);
 
   const businessName = contractor.business_name || contractor.full_name || 'Contractor';
+  const contractorEmail = contractor.business_email || contractor.email;
   const trade = tradeLabels[contractor.trade_type || 'other'] || 'Contractor';
   const reviewList = reviews || [];
   const avgRating =
@@ -69,8 +91,49 @@ export default async function PublicProfilePage({
       ? Math.round((reviewList.reduce((sum, r) => sum + r.rating, 0) / reviewList.length) * 10) / 10
       : 0;
 
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'LocalBusiness',
+    name: businessName,
+    description: contractor.profile_bio || `${trade} services`,
+    url: `https://snapquote.dev/p/${params.slug}`,
+    ...(contractor.logo_url ? { image: contractor.logo_url } : {}),
+    ...(contractorEmail ? { email: contractorEmail } : {}),
+    ...(avgRating > 0
+      ? {
+          aggregateRating: {
+            '@type': 'AggregateRating',
+            ratingValue: avgRating,
+            reviewCount: reviewList.length,
+            bestRating: 5,
+            worstRating: 1,
+          },
+        }
+      : {}),
+    ...(reviewList.length > 0
+      ? {
+          review: reviewList.slice(0, 5).map((r) => ({
+            '@type': 'Review',
+            author: { '@type': 'Person', name: r.customer_name },
+            reviewRating: {
+              '@type': 'Rating',
+              ratingValue: r.rating,
+              bestRating: 5,
+              worstRating: 1,
+            },
+            ...(r.comment ? { reviewBody: r.comment } : {}),
+            datePublished: r.created_at,
+          })),
+        }
+      : {}),
+  };
+
   return (
     <div className="min-h-dvh bg-[#f2f2f7]">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       {/* Hero */}
       <div className="relative overflow-hidden bg-gradient-to-br from-[#1c1c1e] to-[#2c3e50]">
         <div className="absolute inset-0 opacity-10">
@@ -122,11 +185,11 @@ export default async function PublicProfilePage({
       <div className="sticky top-0 z-20 bg-[#f2f2f7]/80 px-4 py-3 backdrop-blur-xl border-b border-black/5">
         <div className="mx-auto max-w-lg">
           <a
-            href={`mailto:${contractor.email}?subject=Quote Request from SnapQuote`}
+            href="#request-quote"
             className="btn-primary flex items-center justify-center gap-2"
           >
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
             </svg>
             Request a Quote
           </a>
@@ -202,6 +265,16 @@ export default async function PublicProfilePage({
             />
           </div>
         )}
+
+        {/* Request a Quote form */}
+        <div id="request-quote" className="scroll-mt-20">
+          <div className="flex items-center px-1 mb-3">
+            <p className="text-[11px] font-semibold uppercase tracking-widest text-gray-400">
+              Get a Free Quote
+            </p>
+          </div>
+          <RequestQuoteForm slug={params.slug} businessName={businessName} />
+        </div>
 
         {/* Footer */}
         <div className="flex items-center justify-between px-1 pt-2">

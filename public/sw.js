@@ -1,17 +1,15 @@
 // SnapQuote Service Worker — offline-capable PWA
 // Cache-first for static assets, network-first for pages/API, background sync for failed POSTs.
 
-const CACHE_VERSION = 1;
+const CACHE_VERSION = 2;
 const CACHE_NAME = `snapquote-v${CACHE_VERSION}`;
 const RUNTIME_CACHE = `snapquote-runtime-v${CACHE_VERSION}`;
 
 // App shell routes to pre-cache on install
+// Only cache public pages — protected routes redirect to login and can't be cached reliably
 const APP_SHELL = [
   '/',
-  '/dashboard',
-  '/quotes/new',
-  '/schedule',
-  '/settings',
+  '/auth/login',
 ];
 
 // Static asset extensions that use cache-first
@@ -153,8 +151,8 @@ self.addEventListener('fetch', (event) => {
   event.respondWith(
     fetch(request)
       .then((response) => {
-        // Cache successful GET responses for offline fallback
-        if (response.ok) {
+        // Only cache successful (non-redirect) GET responses for offline fallback
+        if (response.ok && !response.redirected) {
           const clone = response.clone();
           caches.open(RUNTIME_CACHE).then((cache) => cache.put(request, clone));
         }

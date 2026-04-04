@@ -51,7 +51,7 @@ export default async function JobDetailPage({
       <div className="lg:pl-[220px]">
         <JobDetailContent
           quote={quoteWithDefaults}
-          profile={profile}
+          profile={profile as import('@/types/database').User}
           brandColor={profile?.brand_color || '#4f46e5'}
         />
       </div>

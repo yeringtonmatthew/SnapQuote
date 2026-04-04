@@ -92,7 +92,7 @@ function getScheduleNudge(
     return {
       label: 'Schedule',
       classes:
-        'bg-indigo-50 text-indigo-600 ring-1 ring-indigo-200/60',
+        'bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 ring-1 ring-indigo-200/60 dark:ring-indigo-800/40',
     };
   }
   return null;
@@ -149,11 +149,16 @@ export default function PipelineCard({
   // Use onQuickActions if provided, else fall back to onStageChange
   const handleMenuTap = onQuickActions || onStageChange;
 
+  // Days in current stage
+  const daysInStage = Math.floor(
+    (Date.now() - new Date(lastTouchTime).getTime()) / (1000 * 60 * 60 * 24),
+  );
+
   return (
     <div className="relative group">
       <Link
         href={`/jobs/${quote.id}`}
-        className="flex items-start gap-3 rounded-xl bg-white dark:bg-gray-900 p-3 ring-1 ring-black/[0.04] dark:ring-white/[0.06] press-scale transition-all duration-150 hover:shadow-sm"
+        className={`flex items-start gap-3 rounded-xl bg-white dark:bg-gray-900 p-3 border-l-[3px] stage-border-${quote.pipeline_stage} shadow-[0_1px_3px_rgba(0,0,0,0.04),0_1px_2px_rgba(0,0,0,0.02)] dark:shadow-none ring-1 ring-black/[0.04] dark:ring-white/[0.06] transition-all duration-200 hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] hover:-translate-y-[1px] active:scale-[0.98] active:shadow-sm`}
         draggable={false}
       >
         {/* Thumbnail / Initial Avatar */}
@@ -161,11 +166,11 @@ export default function PipelineCard({
           <img
             src={thumb}
             alt=""
-            className="h-10 w-10 shrink-0 rounded-xl object-cover bg-gray-100"
+            className="h-10 w-10 shrink-0 rounded-full object-cover bg-gray-100 ring-2 ring-white dark:ring-gray-900"
           />
         ) : (
           <div
-            className={`h-10 w-10 shrink-0 rounded-xl flex items-center justify-center text-[13px] font-semibold ${avatarClasses}`}
+            className={`h-10 w-10 shrink-0 rounded-full flex items-center justify-center text-[13px] font-bold ring-2 ring-white dark:ring-gray-900 ${avatarClasses}`}
           >
             {initial}
           </div>
@@ -258,8 +263,8 @@ export default function PipelineCard({
 
             {/* In-progress task progress mini bar */}
             {quote.pipeline_stage === 'in_progress' && totalTasks > 0 && doneTasks < totalTasks && (
-              <span className="inline-flex items-center gap-1.5 rounded-md bg-indigo-50 px-1.5 py-0.5 text-[11px] font-medium text-indigo-600 tabular-nums">
-                <span className="relative h-1 w-5 rounded-full bg-indigo-200 overflow-hidden">
+              <span className="inline-flex items-center gap-1.5 rounded-md bg-indigo-50 dark:bg-indigo-950/40 px-1.5 py-0.5 text-[11px] font-medium text-indigo-600 dark:text-indigo-400 tabular-nums">
+                <span className="relative h-1 w-5 rounded-full bg-indigo-200 dark:bg-indigo-800 overflow-hidden">
                   <span
                     className="absolute inset-y-0 left-0 rounded-full bg-indigo-500 transition-all duration-300"
                     style={{ width: `${progress}%` }}
@@ -269,11 +274,18 @@ export default function PipelineCard({
               </span>
             )}
 
+            {/* Days in stage */}
+            {daysInStage > 0 && (
+              <span className="inline-flex items-center gap-1 rounded-md bg-gray-50 dark:bg-gray-800 px-1.5 py-0.5 text-[10px] font-medium text-gray-400 dark:text-gray-500 tabular-nums">
+                {daysInStage}d
+              </span>
+            )}
+
             {/* Spacer pushes relative time to the right */}
             <span className="flex-1" />
 
-            <span className="text-[11px] text-gray-300 dark:text-gray-600 tabular-nums">
-              Last: {relativeTime(lastTouchTime)}
+            <span className="text-[10px] text-gray-300 dark:text-gray-600 tabular-nums">
+              {relativeTime(lastTouchTime)}
             </span>
             <span className={`text-[10px] font-semibold tabular-nums ${temperatureStyles[leadScore.temperature].text}`}>
               {temperatureStyles[leadScore.temperature].icon} {leadScore.score}
@@ -290,7 +302,7 @@ export default function PipelineCard({
             e.stopPropagation();
             handleMenuTap(quote.id, quote.pipeline_stage);
           }}
-          className="absolute top-2.5 right-2.5 flex h-6 w-6 items-center justify-center rounded-full bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm ring-1 ring-black/[0.04] dark:ring-white/[0.06] opacity-100 md:opacity-0 md:group-hover:opacity-100 focus:opacity-100 transition-opacity press-scale"
+          className="absolute top-1.5 right-1.5 flex h-8 w-8 items-center justify-center rounded-full bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm ring-1 ring-black/[0.04] dark:ring-white/[0.06] opacity-100 md:opacity-0 md:group-hover:opacity-100 focus:opacity-100 transition-opacity press-scale"
           aria-label="Quick actions"
         >
           <svg

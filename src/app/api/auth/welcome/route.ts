@@ -13,7 +13,7 @@ export async function POST(request: Request) {
   }
 
   // Rate limit: 3 per hour per user
-  if (!rateLimit(user.id + ':welcome', 3, 3_600_000)) {
+  if (!(await rateLimit(user.id + ':welcome', 3, 3_600_000))) {
     return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
   }
 
@@ -34,6 +34,23 @@ export async function POST(request: Request) {
 
   if (!email) {
     return NextResponse.json({ error: 'Email is required' }, { status: 400 });
+  }
+
+  // Validate that the supplied email belongs to the authenticated user.
+  // This prevents an attacker from using this endpoint to send emails to
+  // arbitrary third-party addresses.
+  if (typeof email !== 'string' || email.trim().toLowerCase() !== user.email?.toLowerCase()) {
+    return NextResponse.json({ error: 'Email does not match authenticated user' }, { status: 403 });
+  }
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email.trim()) || email.length > 254) {
+    return NextResponse.json({ error: 'Invalid email address' }, { status: 400 });
+  }
+
+  // Validate name length
+  if (name !== undefined && (typeof name !== 'string' || name.length > 200)) {
+    return NextResponse.json({ error: 'Invalid name' }, { status: 400 });
   }
 
   const greeting = name ? `Welcome aboard, ${escapeHtml(name)}!` : 'Welcome!';

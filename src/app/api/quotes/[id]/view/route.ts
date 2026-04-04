@@ -8,8 +8,13 @@ export async function POST(
   _request: Request,
   { params }: { params: { id: string } }
 ) {
+  // Rate-limit by quote ID (not just IP) to prevent notification spam regardless of IP rotation
+  if (!(await rateLimit(`view:${params.id}`, 3, 60_000))) {
+    // Return success silently — don't reveal the limit to callers
+    return NextResponse.json({ success: true, already_tracked: true });
+  }
   const ip = _request.headers.get('x-forwarded-for') || 'unknown';
-  if (!rateLimit(ip, 10, 60_000)) {
+  if (!(await rateLimit(ip, 10, 60_000))) {
     return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
   }
 

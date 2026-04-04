@@ -35,6 +35,20 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Invalid photo index' }, { status: 400 });
   }
 
+  // Validate the annotated_image is a safe raster image data URL before processing.
+  // Only allow JPEG/PNG/WebP data URLs to prevent storage of HTML, SVG, or arbitrary binaries.
+  if (typeof annotated_image !== 'string') {
+    return NextResponse.json({ error: 'annotated_image must be a string' }, { status: 400 });
+  }
+  const ALLOWED_IMAGE_PREFIX = /^data:image\/(jpeg|png|webp);base64,/;
+  if (!ALLOWED_IMAGE_PREFIX.test(annotated_image)) {
+    return NextResponse.json({ error: 'annotated_image must be a JPEG, PNG, or WebP data URL' }, { status: 400 });
+  }
+  // Cap at ~10MB encoded (~7.5MB decoded) to prevent memory exhaustion
+  if (annotated_image.length > 10_000_000) {
+    return NextResponse.json({ error: 'Image too large (max ~7.5 MB)' }, { status: 400 });
+  }
+
   // Decode base64 and upload to Supabase storage
   // The annotated_image comes as a data URL: "data:image/jpeg;base64,..."
   const base64Data = annotated_image.replace(/^data:image\/\w+;base64,/, '');

@@ -160,6 +160,52 @@ export default function ClientProfileContent({ client, quotes, totalRevenue, tot
   const [noteText, setNoteText] = useState('');
   const [savingNote, setSavingNote] = useState(false);
   const [generatingReport, setGeneratingReport] = useState(false);
+  const [tags, setTags] = useState<string[]>(client.tags || []);
+  const [newTag, setNewTag] = useState('');
+  const [showTagInput, setShowTagInput] = useState(false);
+
+  const TAG_COLORS = [
+    'bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300',
+    'bg-violet-50 text-violet-700 dark:bg-violet-950/40 dark:text-violet-300',
+    'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300',
+    'bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300',
+    'bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300',
+    'bg-cyan-50 text-cyan-700 dark:bg-cyan-950/40 dark:text-cyan-300',
+  ];
+
+  const getTagColor = (tag: string) => {
+    let hash = 0;
+    for (let i = 0; i < tag.length; i++) hash = tag.charCodeAt(i) + ((hash << 5) - hash);
+    return TAG_COLORS[Math.abs(hash) % TAG_COLORS.length];
+  };
+
+  const handleAddTag = async () => {
+    const tag = newTag.trim().toLowerCase();
+    if (!tag || tags.includes(tag)) { setNewTag(''); return; }
+    const updatedTags = [...tags, tag];
+    setTags(updatedTags);
+    setNewTag('');
+    setShowTagInput(false);
+    try {
+      await fetch(`/api/clients/${client.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tags: updatedTags }),
+      });
+    } catch { /* silent */ }
+  };
+
+  const handleRemoveTag = async (tag: string) => {
+    const updatedTags = tags.filter((t) => t !== tag);
+    setTags(updatedTags);
+    try {
+      await fetch(`/api/clients/${client.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tags: updatedTags }),
+      });
+    } catch { /* silent */ }
+  };
 
   const handleSave = async () => {
     setSaving(true);
@@ -437,6 +483,61 @@ export default function ClientProfileContent({ client, quotes, totalRevenue, tot
               </div>
             );
           })()}
+
+          {/* Tags */}
+          <div className="rounded-2xl bg-white dark:bg-gray-900 ring-1 ring-black/[0.04] dark:ring-white/[0.06] px-4 py-3">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Tags</p>
+              <button
+                onClick={() => setShowTagInput(!showTagInput)}
+                className="text-[11px] font-semibold text-brand-600 dark:text-brand-400 press-scale min-h-[28px] min-w-[44px] flex items-center justify-end"
+              >
+                {showTagInput ? 'Done' : '+ Add'}
+              </button>
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {tags.map((tag) => (
+                <span
+                  key={tag}
+                  className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold ${getTagColor(tag)}`}
+                >
+                  {tag}
+                  <button
+                    onClick={() => handleRemoveTag(tag)}
+                    className="ml-0.5 rounded-full hover:bg-black/5 dark:hover:bg-white/10 p-0.5 min-h-[20px] min-w-[20px] flex items-center justify-center"
+                    aria-label={`Remove tag ${tag}`}
+                  >
+                    <svg className="h-2.5 w-2.5" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </span>
+              ))}
+              {tags.length === 0 && !showTagInput && (
+                <p className="text-[12px] text-gray-400 dark:text-gray-500">No tags yet</p>
+              )}
+            </div>
+            {showTagInput && (
+              <div className="flex gap-2 mt-2">
+                <input
+                  type="text"
+                  placeholder="e.g. VIP, repeat, commercial"
+                  value={newTag}
+                  onChange={(e) => setNewTag(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') handleAddTag(); }}
+                  autoFocus
+                  className="flex-1 rounded-lg bg-gray-50 dark:bg-gray-800 px-3 py-2 text-[13px] text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-brand-500 min-h-[36px]"
+                />
+                <button
+                  onClick={handleAddTag}
+                  disabled={!newTag.trim()}
+                  className="shrink-0 rounded-lg bg-brand-600 px-3 py-2 text-[12px] font-semibold text-white disabled:opacity-50 press-scale min-h-[36px]"
+                >
+                  Add
+                </button>
+              </div>
+            )}
+          </div>
 
           {/* Inline notes */}
           <div className="rounded-2xl bg-white dark:bg-gray-900 ring-1 ring-black/[0.04] dark:ring-white/[0.06] overflow-hidden">

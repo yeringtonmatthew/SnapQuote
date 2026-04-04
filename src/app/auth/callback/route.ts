@@ -1,10 +1,25 @@
 import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
 
+/**
+ * Validate that a redirect destination is a safe relative path on this origin.
+ * Rejects absolute URLs (http://, //) and anything that is not a leading-slash
+ * path, preventing open-redirect attacks where an attacker crafts a callback
+ * URL with next=https://evil.com.
+ */
+function safeRedirectPath(next: string | null, fallback = '/dashboard'): string {
+  if (!next) return fallback;
+  // Must start with a single '/' and must NOT start with '//'
+  if (next.startsWith('/') && !next.startsWith('//') && !next.includes('://')) {
+    return next;
+  }
+  return fallback;
+}
+
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get('code');
-  const next = searchParams.get('next') ?? '/dashboard';
+  const next = safeRedirectPath(searchParams.get('next'));
 
   if (code) {
     const supabase = createClient();

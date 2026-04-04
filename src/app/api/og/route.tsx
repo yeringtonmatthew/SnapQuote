@@ -4,10 +4,21 @@ export const runtime = 'edge';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const title = searchParams.get('title') || 'SnapQuote';
-  const subtitle =
-    searchParams.get('subtitle') || 'AI-Powered Quotes for Contractors';
-  const amount = searchParams.get('amount');
+
+  // Sanitize and length-cap all user-supplied query parameters.
+  // These are rendered into an OG image via React JSX — while React escapes
+  // HTML in string children, unbounded inputs can still cause layout abuse
+  // and oversized parameters waste CPU on the edge runtime.
+  const rawTitle = searchParams.get('title') || 'SnapQuote';
+  const rawSubtitle = searchParams.get('subtitle') || 'AI-Powered Quotes for Contractors';
+  const rawAmount = searchParams.get('amount');
+
+  const title = rawTitle.slice(0, 120);
+  const subtitle = rawSubtitle.slice(0, 160);
+  // amount must look like a dollar value — only allow digits, commas, dots, and a leading $
+  const amount = rawAmount && /^\$?[\d,]+(\.\d{1,2})?$/.test(rawAmount.trim())
+    ? rawAmount.trim().slice(0, 20)
+    : null;
 
   return new ImageResponse(
     (

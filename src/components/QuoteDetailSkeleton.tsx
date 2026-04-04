@@ -2,9 +2,9 @@ import { Skeleton } from '@/components/ui/Skeleton';
 
 export function QuoteDetailSkeleton() {
   return (
-    <div className="min-h-dvh bg-gray-50 pb-8">
+    <div className="min-h-dvh bg-gray-50 dark:bg-gray-950 pb-8">
       {/* Header */}
-      <header className="sticky top-0 z-10 border-b border-gray-200 bg-white px-4 py-3">
+      <header className="sticky top-0 z-10 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 px-4 py-3">
         <div className="mx-auto flex max-w-lg items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <Skeleton className="h-9 w-9 rounded-lg" />
@@ -23,7 +23,7 @@ export function QuoteDetailSkeleton() {
 
       <main className="mx-auto max-w-lg space-y-4 px-4 pt-6">
         {/* AI Summary card */}
-        <div className="rounded-2xl bg-white p-4 shadow-sm border border-gray-100 space-y-2">
+        <div className="rounded-2xl bg-white dark:bg-gray-900 p-4 shadow-sm border border-gray-100 dark:border-gray-800 space-y-2">
           <div className="flex items-start gap-2">
             <Skeleton className="h-4 w-4 shrink-0 rounded" />
             <div className="flex-1 space-y-2">
@@ -34,7 +34,7 @@ export function QuoteDetailSkeleton() {
         </div>
 
         {/* Scope of Work card */}
-        <div className="rounded-2xl bg-white p-4 shadow-sm border border-gray-100 space-y-2">
+        <div className="rounded-2xl bg-white dark:bg-gray-900 p-4 shadow-sm border border-gray-100 dark:border-gray-800 space-y-2">
           <Skeleton className="h-3 w-24" />
           <Skeleton className="h-4 w-full" />
           <Skeleton className="h-4 w-5/6" />
@@ -42,7 +42,7 @@ export function QuoteDetailSkeleton() {
         </div>
 
         {/* Customer info card */}
-        <div className="rounded-2xl bg-white p-4 shadow-sm border border-gray-100 space-y-2">
+        <div className="rounded-2xl bg-white dark:bg-gray-900 p-4 shadow-sm border border-gray-100 dark:border-gray-800 space-y-2">
           <Skeleton className="h-3 w-16" />
           <Skeleton className="h-4 w-40" />
           <Skeleton className="h-3 w-28" />
@@ -51,12 +51,12 @@ export function QuoteDetailSkeleton() {
         {/* Line items */}
         <div>
           <Skeleton className="mb-2 h-4 w-20" />
-          <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
+          <div className="overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
             {[1, 2, 3].map((i) => (
               <div
                 key={i}
                 className={`flex items-start justify-between px-4 py-3 ${
-                  i < 3 ? 'border-b border-gray-100' : ''
+                  i < 3 ? 'border-b border-gray-100 dark:border-gray-800' : ''
                 }`}
               >
                 <div className="min-w-0 flex-1 pr-4 space-y-2">
@@ -70,12 +70,12 @@ export function QuoteDetailSkeleton() {
         </div>
 
         {/* Totals card */}
-        <div className="rounded-2xl bg-white p-4 shadow-sm border border-gray-100 space-y-3">
+        <div className="rounded-2xl bg-white dark:bg-gray-900 p-4 shadow-sm border border-gray-100 dark:border-gray-800 space-y-3">
           <div className="flex items-center justify-between">
             <Skeleton className="h-4 w-16" />
             <Skeleton className="h-6 w-24" />
           </div>
-          <div className="flex items-center justify-between border-t border-gray-100 pt-3">
+          <div className="flex items-center justify-between border-t border-gray-100 dark:border-gray-800 pt-3">
             <Skeleton className="h-4 w-24" />
             <Skeleton className="h-6 w-24" />
           </div>

@@ -64,6 +64,7 @@ export interface User {
   auto_follow_up: boolean;
   follow_up_templates: string[];
   show_reviews_on_quotes: boolean;
+  business_email: string | null;
   google_place_id: string | null;
   google_rating: number | null;
   google_review_count: number | null;

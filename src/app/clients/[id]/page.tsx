@@ -44,7 +44,7 @@ export default async function ClientProfilePage({
   return (
     <PageTransition>
       <DesktopSidebar active="clients" />
-      <div className="min-h-dvh bg-[#f2f2f7] dark:bg-gray-950 pb-24 lg:pb-8 lg:pl-[220px]">
+      <div className="min-h-dvh bg-[#f2f2f7] dark:bg-gray-950 pb-28 lg:pb-8 lg:pl-[220px]">
         <ClientProfileContent
           client={client}
           quotes={clientQuotes}

@@ -43,15 +43,21 @@ export async function POST(
     }
   }
 
+  // If a custom amount was provided (e.g. full payment or balance), update deposit_amount
+  const updatePayload: Record<string, unknown> = {
+    status: 'deposit_paid',
+    paid_at: new Date().toISOString(),
+    payment_method,
+    payment_note: payment_note || null,
+    pipeline_stage: 'deposit_collected',
+  };
+  if (amount !== undefined && amount !== null) {
+    updatePayload.deposit_amount = amount;
+  }
+
   const { data: updated, error } = await supabase
     .from('quotes')
-    .update({
-      status: 'deposit_paid',
-      paid_at: new Date().toISOString(),
-      payment_method,
-      payment_note: payment_note || null,
-      pipeline_stage: 'deposit_collected',
-    })
+    .update(updatePayload)
     .eq('id', params.id)
     .select()
     .single();

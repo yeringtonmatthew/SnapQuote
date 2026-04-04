@@ -22,7 +22,11 @@ type Quote = {
   photos?: string[];
   expires_at?: string | null;
   archived?: boolean;
-  [key: string]: any;
+  created_at: string;
+  paid_at?: string | null;
+  sent_at?: string | null;
+  approved_at?: string | null;
+  internal_notes?: string | null;
 };
 
 const statusColors: Record<string, string> = {
@@ -249,7 +253,7 @@ export default function QuoteList({ quotes, defaultFilter = 'All' }: { quotes: Q
             placeholder="Search quotes..."
             aria-label="Search quotes"
             data-shortcut-search
-            className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 pl-9 text-sm placeholder:text-gray-500 focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500"
+            className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 px-3 py-2 pl-9 text-base text-gray-900 dark:text-gray-100 placeholder:text-gray-500 focus:border-brand-500 focus:bg-white dark:focus:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-500"
           />
         </div>
         {/* Sort dropdown */}
@@ -261,7 +265,7 @@ export default function QuoteList({ quotes, defaultFilter = 'All' }: { quotes: Q
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as SortOption)}
             aria-label="Sort quotes"
-            className="appearance-none rounded-xl border border-gray-200 bg-gray-50 py-2 pl-7 pr-7 text-xs font-medium text-gray-600 focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:focus:bg-gray-700"
+            className="appearance-none rounded-xl border border-gray-200 bg-gray-50 py-2 pl-7 pr-7 text-base font-medium text-gray-600 focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:focus:bg-gray-700"
           >
             {SORT_OPTIONS.map((opt) => (
               <option key={opt.value} value={opt.value}>
@@ -315,7 +319,7 @@ export default function QuoteList({ quotes, defaultFilter = 'All' }: { quotes: Q
             className={`shrink-0 rounded-full px-3 py-1 text-xs font-medium transition-all press-scale focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 ${
               activeFilter === filter
                 ? 'bg-brand-600 text-white'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700'
             }`}
           >
             {filter}
@@ -330,7 +334,7 @@ export default function QuoteList({ quotes, defaultFilter = 'All' }: { quotes: Q
 
       {/* Quote Cards */}
       {filtered.length === 0 ? (
-        <div className="rounded-2xl bg-white dark:bg-gray-900 shadow-sm">
+        <div className="rounded-2xl bg-white dark:bg-gray-900 shadow-sm ring-1 ring-black/[0.04] dark:ring-white/[0.06]">
           {quotes.length === 0 ? (
             <EmptyState
               icon={
@@ -413,8 +417,8 @@ export default function QuoteList({ quotes, defaultFilter = 'All' }: { quotes: Q
 
                 {/* Info */}
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-[15px] font-semibold text-gray-900">
-                    {quote.quote_number ? <span className="text-gray-500 font-medium">{formatQuoteNumber(quote.quote_number)}</span> : null}
+                  <p className="truncate text-[15px] font-semibold text-gray-900 dark:text-gray-100">
+                    {quote.quote_number ? <span className="text-gray-500 dark:text-gray-400 font-medium">{formatQuoteNumber(quote.quote_number)}</span> : null}
                     {quote.quote_number ? ' ' : ''}{quote.customer_name}
                   </p>
                   <p className="mt-0.5 flex items-center gap-1 truncate text-[12px] text-gray-500">
@@ -439,7 +443,7 @@ export default function QuoteList({ quotes, defaultFilter = 'All' }: { quotes: Q
 
                 {/* Right */}
                 <div className="shrink-0 text-right">
-                  <p className="text-[16px] font-bold text-gray-900 tabular-nums">
+                  <p className="text-[16px] font-bold text-gray-900 dark:text-gray-100 tabular-nums">
                     ${Number(quote.subtotal).toLocaleString('en-US', { minimumFractionDigits: 0 })}
                   </p>
                   {isArchivedView ? (
@@ -476,7 +480,7 @@ export default function QuoteList({ quotes, defaultFilter = 'All' }: { quotes: Q
                 <div key={quote.id} className="animate-list-item" style={staggerStyle}>
                 <button
                   onClick={() => toggleSelect(quote.id)}
-                  className="flex w-full items-center gap-4 rounded-2xl bg-white px-4 py-3.5 shadow-sm hover-lift press-scale text-left focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
+                  className="flex w-full items-center gap-4 rounded-2xl bg-white dark:bg-gray-900 px-4 py-3.5 shadow-sm ring-1 ring-black/[0.04] dark:ring-white/[0.06] hover-lift press-scale text-left focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
                 >
                   {cardContent}
                 </button>
@@ -489,7 +493,7 @@ export default function QuoteList({ quotes, defaultFilter = 'All' }: { quotes: Q
               <SwipeableCard id={quote.id} actions={getSwipeActions(quote)}>
               <Link
                 href={`/quotes/${quote.id}`}
-                className="group/card relative flex items-center gap-4 rounded-2xl bg-white px-4 py-3.5 shadow-sm hover-lift press-scale overflow-hidden focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
+                className="group/card relative flex items-center gap-4 rounded-2xl bg-white dark:bg-gray-900 px-4 py-3.5 shadow-sm ring-1 ring-black/[0.04] dark:ring-white/[0.06] hover-lift press-scale overflow-hidden focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
               >
                 {cardContent}
                 {/* Desktop hover archive button */}

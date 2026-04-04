@@ -98,10 +98,10 @@ export function CollectPaymentButton({
 
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm p-4 animate-modal-backdrop">
-          <div className="w-full max-w-lg rounded-3xl bg-white p-6 space-y-5 max-h-[90dvh] overflow-y-auto animate-modal-content">
+          <div className="w-full max-w-lg rounded-3xl bg-white dark:bg-gray-900 p-6 space-y-5 max-h-[90dvh] overflow-y-auto animate-modal-content">
             <div>
-              <h2 className="text-[20px] font-bold text-gray-900">Collect Payment</h2>
-              <p className="text-[14px] text-gray-500 mt-0.5">Record a cash or check payment</p>
+              <h2 className="text-[20px] font-bold text-gray-900 dark:text-gray-100">Collect Payment</h2>
+              <p className="text-[14px] text-gray-500 dark:text-gray-400 mt-0.5">Record a cash or check payment</p>
             </div>
 
             {/* Payment type */}
@@ -115,17 +115,17 @@ export function CollectPaymentButton({
                 ].map((opt) => (
                   <button
                     key={opt.key}
-                    onClick={() => { haptic('light'); setPaymentType(opt.key as any); }}
+                    onClick={() => { haptic('light'); setPaymentType(opt.key as 'deposit' | 'balance' | 'full'); }}
                     className={`rounded-xl border-2 px-3 py-2.5 text-center transition-colors ${
                       paymentType === opt.key
-                        ? 'border-brand-600 bg-brand-50'
-                        : 'border-gray-200 bg-white'
+                        ? 'border-brand-600 bg-brand-50 dark:bg-brand-950/30'
+                        : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800'
                     }`}
                   >
                     <p className={`text-[11px] font-semibold uppercase tracking-wide ${paymentType === opt.key ? 'text-brand-600' : 'text-gray-400'}`}>
                       {opt.label}
                     </p>
-                    <p className={`text-[15px] font-bold mt-0.5 ${paymentType === opt.key ? 'text-brand-700' : 'text-gray-900'}`}>
+                    <p className={`text-[15px] font-bold mt-0.5 ${paymentType === opt.key ? 'text-brand-700 dark:text-brand-300' : 'text-gray-900 dark:text-gray-100'}`}>
                       {fmt(opt.amount)}
                     </p>
                   </button>
@@ -144,15 +144,15 @@ export function CollectPaymentButton({
                 ].map((m) => (
                   <button
                     key={m.key}
-                    onClick={() => { haptic('light'); setMethod(m.key as any); }}
+                    onClick={() => { haptic('light'); setMethod(m.key as 'cash' | 'check' | 'card'); }}
                     className={`rounded-xl border-2 px-3 py-3 text-center transition-colors ${
                       method === m.key
-                        ? 'border-brand-600 bg-brand-50'
-                        : 'border-gray-200 bg-white'
+                        ? 'border-brand-600 bg-brand-50 dark:bg-brand-950/30'
+                        : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800'
                     }`}
                   >
                     <p className="text-2xl">{m.icon}</p>
-                    <p className={`text-[13px] font-semibold mt-1 ${method === m.key ? 'text-brand-700' : 'text-gray-700'}`}>
+                    <p className={`text-[13px] font-semibold mt-1 ${method === m.key ? 'text-brand-700 dark:text-brand-300' : 'text-gray-700 dark:text-gray-300'}`}>
                       {m.label}
                     </p>
                   </button>
@@ -175,14 +175,14 @@ export function CollectPaymentButton({
             )}
 
             {/* Summary */}
-            <div className="rounded-2xl bg-gray-50 px-4 py-3 flex items-center justify-between">
+            <div className="rounded-2xl bg-gray-50 dark:bg-gray-800 px-4 py-3 flex items-center justify-between">
               <div>
-                <p className="text-[13px] text-gray-500">Recording payment of</p>
-                <p className="text-[22px] font-bold text-gray-900">{fmt(amount)}</p>
+                <p className="text-[13px] text-gray-500 dark:text-gray-400">Recording payment of</p>
+                <p className="text-[22px] font-bold text-gray-900 dark:text-gray-100">{fmt(amount)}</p>
               </div>
               <div className="text-right">
                 <p className="text-[12px] text-gray-400">via</p>
-                <p className="text-[15px] font-semibold text-gray-700 capitalize">{method}</p>
+                <p className="text-[15px] font-semibold text-gray-700 dark:text-gray-300 capitalize">{method}</p>
               </div>
             </div>
 

@@ -1,3 +1,4 @@
+import type { SupabaseClient } from '@supabase/supabase-js';
 import Anthropic from '@anthropic-ai/sdk';
 
 const getClient = () => {
@@ -79,7 +80,7 @@ Keep the entire report under 500 words. Be specific and practical, not generic. 
 }
 
 export async function generatePropertyReportForClient(
-  supabase: { from: (table: string) => any },
+  supabase: SupabaseClient,
   clientId: string,
   address: string,
   userId: string,

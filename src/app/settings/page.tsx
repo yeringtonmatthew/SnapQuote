@@ -29,19 +29,19 @@ export default async function SettingsPage({
 
   return (
     <PageTransition>
-    <div className="min-h-dvh bg-gray-50 dark:bg-gray-950 pb-24">
-      <header className="sticky top-0 z-10 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 px-4 py-3">
+    <div className="min-h-dvh bg-[#f2f2f7] dark:bg-gray-950 pb-24">
+      <header className="sticky top-0 z-10 bg-[#f2f2f7]/90 dark:bg-gray-950/90 backdrop-blur-xl border-b border-black/5 dark:border-white/5 px-5 pt-14 lg:pt-6 pb-4">
         <div className="mx-auto max-w-lg flex items-center gap-3">
           <Link
             href="/dashboard"
-            className="flex h-9 w-9 items-center justify-center rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+            className="flex h-11 w-11 items-center justify-center rounded-xl text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
           >
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
             </svg>
           </Link>
           <div>
-            <h1 className="text-lg font-bold text-gray-900 dark:text-gray-100">Settings</h1>
+            <h1 className="text-[22px] font-bold text-gray-900 dark:text-gray-100">Settings</h1>
             <p className="text-xs text-gray-500 dark:text-gray-400">Your business profile</p>
           </div>
         </div>

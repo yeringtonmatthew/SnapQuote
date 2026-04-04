@@ -1,4 +1,11 @@
 import Link from 'next/link';
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Terms and Conditions | SnapQuote',
+  description: 'Terms and conditions for using SnapQuote, the AI-powered quoting tool for contractors.',
+  alternates: { canonical: '/terms' },
+};
 
 export default function TermsPage() {
   return (

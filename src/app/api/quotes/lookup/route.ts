@@ -5,7 +5,7 @@ import { rateLimit } from '@/lib/rate-limit';
 export async function POST(request: Request) {
   try {
     const ip = request.headers.get('x-forwarded-for') || 'unknown';
-    if (!rateLimit(ip, 5, 60_000)) {
+    if (!(await rateLimit(ip, 5, 60_000))) {
       return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
     }
     const body = await request.json();
@@ -16,6 +16,22 @@ export async function POST(request: Request) {
         { error: 'Please provide a phone number or email address' },
         { status: 400 }
       );
+    }
+
+    // Validate types and lengths to prevent oversized LIKE patterns
+    if (phone !== undefined) {
+      if (typeof phone !== 'string' || phone.length > 30) {
+        return NextResponse.json({ error: 'Invalid phone number' }, { status: 400 });
+      }
+    }
+    if (email !== undefined) {
+      if (typeof email !== 'string' || email.length > 254) {
+        return NextResponse.json({ error: 'Invalid email address' }, { status: 400 });
+      }
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email.trim())) {
+        return NextResponse.json({ error: 'Invalid email address format' }, { status: 400 });
+      }
     }
 
     const supabase = createClient();
@@ -71,11 +87,11 @@ export async function POST(request: Request) {
       ])
     );
 
+    // Return minimal fields only — do not expose financial amounts or customer names
+    // to prevent enumeration of other contractors' customer data
     const results = quotes.map((q) => ({
       id: q.id,
-      customer_name: q.customer_name,
       business_name: contractorMap.get(q.contractor_id) || 'Contractor',
-      subtotal: q.subtotal,
       status: q.status,
       created_at: q.created_at,
       expires_at: q.expires_at,

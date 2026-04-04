@@ -237,16 +237,58 @@ export default function PipelineBoard({ columns: initialColumns }: PipelineBoard
     [stagePickerQuoteId, stagePickerCurrentStage, moveQuote],
   );
 
+  // ── Global filter pills ──
+  type QuickFilter = 'all' | 'this_week' | 'high_value' | 'needs_follow_up';
+  const [quickFilter, setQuickFilter] = useState<QuickFilter>('all');
+
+  const filterQuote = useCallback(
+    (q: PipelineCardProps['quote'], filter: QuickFilter): boolean => {
+      if (filter === 'all') return true;
+      if (filter === 'high_value') return Number(q.total) >= 5000;
+      if (filter === 'this_week') {
+        const now = Date.now();
+        const weekAgo = now - 7 * 24 * 60 * 60 * 1000;
+        return new Date(q.created_at).getTime() >= weekAgo;
+      }
+      if (filter === 'needs_follow_up') {
+        if (q.pipeline_stage !== 'quote_sent') return false;
+        const sentDate = q.sent_at || q.created_at;
+        const daysSince = (Date.now() - new Date(sentDate).getTime()) / (1000 * 60 * 60 * 24);
+        return daysSince > 3;
+      }
+      return true;
+    },
+    [],
+  );
+
+  // Apply global filter to get display columns
+  const displayColumns = useMemo(
+    () =>
+      columns.map((col) => ({
+        ...col,
+        quotes: col.quotes.filter((q) => filterQuote(q, quickFilter)),
+      })),
+    [columns, quickFilter, filterQuote],
+  );
+
+  // Filter pill definitions
+  const FILTER_PILLS: { key: QuickFilter; label: string }[] = [
+    { key: 'all', label: 'All' },
+    { key: 'this_week', label: 'This Week' },
+    { key: 'high_value', label: 'High Value' },
+    { key: 'needs_follow_up', label: 'Follow Up' },
+  ];
+
   const scrollRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState(
     // Start on the first column that has jobs
-    Math.max(0, columns.findIndex((c) => c.quotes.length > 0)),
+    Math.max(0, displayColumns.findIndex((c) => c.quotes.length > 0)),
   );
 
   // Precompute column totals for pills
   const columnTotals = useMemo(
-    () => columns.map((col) => col.quotes.reduce((s, q) => s + Number(q.total), 0)),
-    [columns],
+    () => displayColumns.map((col) => col.quotes.reduce((s, q) => s + Number(q.total), 0)),
+    [displayColumns],
   );
 
   const scrollToColumn = useCallback((index: number) => {
@@ -267,17 +309,39 @@ export default function PipelineBoard({ columns: initialColumns }: PipelineBoard
     if (!scrollRef.current) return;
     const container = scrollRef.current;
     const scrollLeft = container.scrollLeft;
-    const colWidth = container.scrollWidth / columns.length;
+    const colWidth = container.scrollWidth / displayColumns.length;
     const idx = Math.round(scrollLeft / colWidth);
-    setActiveIndex(Math.min(idx, columns.length - 1));
-  }, [columns.length]);
+    setActiveIndex(Math.min(idx, displayColumns.length - 1));
+  }, [displayColumns.length]);
 
   return (
     <>
+      {/* Quick filter pills */}
+      <div className="px-4 mb-3">
+        <div className="flex gap-1.5 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+          {FILTER_PILLS.map((pill) => {
+            const isActive = quickFilter === pill.key;
+            return (
+              <button
+                key={pill.key}
+                onClick={() => setQuickFilter(pill.key)}
+                className={`shrink-0 rounded-lg px-3 py-1.5 text-[12px] font-semibold transition-all duration-200 press-scale ${
+                  isActive
+                    ? 'bg-brand-600 text-white shadow-sm'
+                    : 'bg-white/80 dark:bg-gray-800/60 text-gray-500 dark:text-gray-400 ring-1 ring-black/[0.04] dark:ring-white/[0.06] hover:bg-white dark:hover:bg-gray-800'
+                }`}
+              >
+                {pill.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       {/* Tappable stage pills -- horizontally scrollable */}
       <div className="overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] mb-3">
         <div className="flex gap-1.5 px-4" style={{ width: 'max-content' }}>
-          {columns.map((col, i) => {
+          {displayColumns.map((col, i) => {
             const isActive = activeIndex === i;
             const count = col.quotes.length;
             const total = columnTotals[i];
@@ -315,7 +379,7 @@ export default function PipelineBoard({ columns: initialColumns }: PipelineBoard
         onScroll={handleScroll}
       >
         <div ref={scrollRef} className="flex gap-3 px-4 pb-4" style={{ width: 'max-content' }}>
-          {columns.map((col) => {
+          {displayColumns.map((col) => {
             // Apply sub-filters
             const isScheduled = col.stage === 'job_scheduled';
             let filteredQuotes = col.quotes;
@@ -338,8 +402,8 @@ export default function PipelineBoard({ columns: initialColumns }: PipelineBoard
                 key={col.stage}
                 className={`w-[72vw] min-w-[260px] max-w-[320px] snap-start flex flex-col rounded-2xl transition-all duration-200 ${
                   isDragOver
-                    ? 'ring-2 ring-brand-500/40 bg-brand-50/40 dark:bg-brand-950/20 shadow-[0_0_16px_-4px_rgba(59,130,246,0.2)]'
-                    : 'ring-0 ring-transparent'
+                    ? 'ring-2 ring-brand-500/40 bg-brand-50/50 dark:bg-brand-950/20 shadow-[0_0_20px_-4px_rgba(99,102,241,0.25)] animate-drag-pulse'
+                    : 'ring-0 ring-transparent bg-transparent'
                 }`}
                 onDragOver={(e) => handleDragOver(e, col.stage)}
                 onDragLeave={handleDragLeave}
@@ -403,12 +467,13 @@ export default function PipelineBoard({ columns: initialColumns }: PipelineBoard
                       <span className="text-[13px] font-medium">Add your first lead</span>
                     </button>
                   ) : (
-                    filteredQuotes.map((quote) => (
+                    filteredQuotes.map((quote, qi) => (
                       <div
                         key={quote.id}
                         draggable
                         onDragStart={(e) => handleDragStart(e, quote.id)}
-                        className="cursor-grab active:cursor-grabbing"
+                        className="cursor-grab active:cursor-grabbing animate-card-enter"
+                        style={{ animationDelay: `${qi * 30}ms` }}
                       >
                         <PipelineCard
                           quote={quote}
