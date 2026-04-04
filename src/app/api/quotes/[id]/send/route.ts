@@ -2,7 +2,8 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { fireWebhook } from '@/lib/webhook';
 import { rateLimit } from '@/lib/rate-limit';
-import twilio from 'twilio';
+// Twilio import disabled — A2P 10DLC campaign pending. Re-enable when approved.
+// import twilio from 'twilio';
 
 export async function POST(
   request: Request,

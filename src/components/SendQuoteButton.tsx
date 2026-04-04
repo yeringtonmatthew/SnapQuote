@@ -56,9 +56,10 @@ export function SendQuoteButton({
     setShowOptions(false);
     try {
       const res = await fetch(`/api/quotes/${quoteId}/send`, { method: 'POST' });
-      const data = await res.json();
       if (!res.ok) {
-        toast({ message: getUserMessage(data.error || 'Failed to send'), type: 'error' });
+        let errorMsg = 'Failed to send';
+        try { const data = await res.json(); errorMsg = data.error || errorMsg; } catch {}
+        toast({ message: getUserMessage(errorMsg), type: 'error' });
         return;
       }
       haptic('medium');
@@ -66,6 +67,8 @@ export function SendQuoteButton({
       setSent(true);
       toast({ message: 'Quote emailed to customer', type: 'success' });
       router.refresh();
+    } catch (err) {
+      toast({ message: 'Something went wrong. Please try again.', type: 'error' });
     } finally {
       setSending(false);
     }
