@@ -16,7 +16,10 @@ export default function Home() {
     description:
       'AI-powered quoting tool for contractors. Send professional proposals in 60 seconds from your iPhone.',
     url: 'https://snapquote.dev',
-    offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+    offers: [
+      { '@type': 'Offer', name: 'Starter', price: '29', priceCurrency: 'USD', billingPeriod: 'P1M' },
+      { '@type': 'Offer', name: 'Pro', price: '79', priceCurrency: 'USD', billingPeriod: 'P1M' },
+    ],
   };
 
   return (
