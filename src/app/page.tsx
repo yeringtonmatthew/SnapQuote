@@ -100,7 +100,7 @@ export default function Home() {
                   href="/auth/signup"
                   className="group relative overflow-hidden rounded-full bg-brand-600 px-10 py-4 text-center text-[17px] font-semibold text-white shadow-lg shadow-brand-600/25 transition-all hover:shadow-xl hover:shadow-brand-600/30 hover:brightness-110 active:scale-[0.97]"
                 >
-                  Start Free — No Card Required
+                  Start 14-Day Free Trial
                 </Link>
                 <a
                   href="#how-it-works"
@@ -121,7 +121,7 @@ export default function Home() {
                     <p className="text-[15px] font-semibold -mt-0.5">App Store</p>
                   </div>
                 </a>
-                <p className="text-[13px] text-gray-400">Free forever &middot; 10 quotes/month</p>
+                <p className="text-[13px] text-gray-400">14-day free trial &middot; No card required</p>
               </div>
             </div>
 
@@ -479,23 +479,23 @@ export default function Home() {
           </ScrollFadeIn>
 
           <div className="mx-auto mt-16 grid max-w-4xl gap-6 sm:grid-cols-2">
-            {/* Free */}
+            {/* Starter */}
             <ScrollFadeIn delay={0}>
               <div className="flex h-full flex-col rounded-3xl bg-white p-8 sm:p-10 shadow-sm ring-1 ring-gray-200/80 transition-all hover:shadow-md">
-                <h3 className="text-[18px] font-bold text-gray-900">Free</h3>
+                <h3 className="text-[18px] font-bold text-gray-900">Starter</h3>
                 <p className="mt-1 text-[14px] text-gray-500">Everything to get started</p>
                 <p className="mt-8 flex items-baseline gap-1">
-                  <span className="text-[52px] font-bold tracking-tight text-gray-900">$0</span>
+                  <span className="text-[52px] font-bold tracking-tight text-gray-900">$29</span>
                   <span className="text-[15px] text-gray-400">/mo</span>
                 </p>
-                <p className="mt-1.5 text-[13px] text-gray-400">No credit card required</p>
+                <p className="mt-1.5 text-[13px] text-gray-400">14-day free trial &middot; No card required</p>
                 <ul className="mt-10 space-y-4 flex-1">
                   {[
-                    '10 quotes per month',
+                    '25 quotes per month',
                     'AI quote generation',
                     'SMS & email delivery',
-                    'Stripe payments',
-                    'E-signatures',
+                    'Online payments',
+                    'E-signatures & PDF',
                     'iOS & web app',
                   ].map((item) => (
                     <li key={item} className="flex items-center gap-3 text-[14px] text-gray-600">
@@ -508,7 +508,7 @@ export default function Home() {
                   href="/auth/signup"
                   className="mt-10 block rounded-full border-2 border-gray-200 bg-white py-3.5 text-center text-[15px] font-semibold text-gray-900 transition-all hover:border-gray-300 hover:shadow-sm active:scale-[0.97]"
                 >
-                  Get Started Free
+                  Start Free Trial
                 </Link>
               </div>
             </ScrollFadeIn>
@@ -523,18 +523,18 @@ export default function Home() {
                 <h3 className="text-[18px] font-bold text-white">Pro</h3>
                 <p className="mt-1 text-[14px] text-gray-400">For contractors ready to scale</p>
                 <p className="mt-8 flex items-baseline gap-1">
-                  <span className="text-[52px] font-bold tracking-tight text-white">$49</span>
+                  <span className="text-[52px] font-bold tracking-tight text-white">$79</span>
                   <span className="text-[15px] text-gray-500">/mo</span>
                 </p>
-                <p className="mt-1.5 text-[13px] text-gray-500">$39/mo billed annually &mdash; save 20%</p>
+                <p className="mt-1.5 text-[13px] text-gray-500">$63/mo billed annually &mdash; save 20%</p>
                 <ul className="mt-10 space-y-4 flex-1">
                   {[
                     'Unlimited quotes',
-                    'Unlimited team members',
-                    'Custom branding & logo',
+                    'Everything in Starter',
                     'Good / Better / Best tiers',
                     'Automated follow-ups',
                     'CRM pipeline',
+                    'Custom branding & logo',
                     'Job scheduling',
                     'Priority support',
                   ].map((item) => (
@@ -631,7 +631,7 @@ export default function Home() {
 
           <ScrollFadeIn delay={160}>
             <p className="mx-auto mt-6 max-w-lg text-[18px] leading-relaxed text-gray-400">
-              Join hundreds of contractors sending proposals in seconds, not hours. Free to start. No credit card.
+              Join hundreds of contractors sending proposals in seconds, not hours. Try free for 14 days.
             </p>
           </ScrollFadeIn>
 
@@ -641,7 +641,7 @@ export default function Home() {
                 href="/auth/signup"
                 className="rounded-full bg-white px-12 py-4.5 text-[17px] font-semibold text-gray-900 shadow-xl shadow-white/10 transition-all hover:bg-gray-100 active:scale-[0.97]"
               >
-                Get Started Free
+                Start Free Trial
               </Link>
               <a
                 href="https://apps.apple.com/app/snapquote"

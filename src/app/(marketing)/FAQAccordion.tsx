@@ -4,9 +4,9 @@ import { useState } from 'react';
 
 const faqs = [
   {
-    question: 'Is SnapQuote really free?',
+    question: 'How much does SnapQuote cost?',
     answer:
-      'Yes. You get 10 free quotes every month, forever. No credit card required, no trial period, no catch. When you need unlimited quotes and advanced features like custom branding and automated follow-ups, upgrade to Pro for $49/month.',
+      'Plans start at $29/month for Starter (25 quotes) or $79/month for Pro (unlimited quotes + automation). Every plan starts with a 14-day free trial — no credit card required. One closed job pays for years of SnapQuote.',
   },
   {
     question: 'How does the AI generate quotes?',
