@@ -68,45 +68,11 @@ export async function POST(
     url: proposalUrl,
   });
 
-  // Send SMS if Twilio is configured AND phone number exists
-  const sid = process.env.TWILIO_ACCOUNT_SID;
-  const token = process.env.TWILIO_AUTH_TOKEN;
-  const from = process.env.TWILIO_PHONE_NUMBER;
-  const messagingServiceSid = process.env.TWILIO_MESSAGING_SERVICE_SID;
-
-  if (sid && token && (from || messagingServiceSid) && quote.customer_phone) {
-    try {
-      const client = twilio(sid!, token!);
-      const { data: profile } = await supabase
-        .from('users')
-        .select('business_name, full_name')
-        .eq('id', user.id)
-        .single();
-
-      const businessName = profile?.business_name || profile?.full_name || 'Licensed Professional';
-      const message = `Hi ${quote.customer_name}, ${businessName} sent you a quote for $${Number(quote.total ?? quote.subtotal).toLocaleString('en-US', { minimumFractionDigits: 2 })}. View and approve here: ${proposalUrl}`;
-
-      // Normalize to E.164 format (+1XXXXXXXXXX for US numbers)
-      const digits = quote.customer_phone?.replace(/\D/g, '') ?? '';
-      const toNumber = digits.startsWith('1') ? `+${digits}` : `+1${digits}`;
-
-      // Prefer Messaging Service (required for A2P 10DLC), fall back to direct number
-      const _msg = await client.messages.create({
-        body: message,
-        ...(messagingServiceSid ? { messagingServiceSid } : { from }),
-        to: toNumber,
-      });
-      // SMS sent successfully
-    } catch (smsError) {
-      console.error('[send] SMS error:', smsError);
-      // Don't fail the whole request if SMS fails — status was already updated
-      return NextResponse.json({
-        success: true,
-        smsError: smsError instanceof Error ? smsError.message : 'SMS failed',
-        proposalUrl,
-      });
-    }
-  }
+  // Twilio SMS disabled — A2P 10DLC campaign pending carrier approval.
+  // SMS is handled via native device messaging (sms: URI) in the frontend.
+  // Re-enable this block once the A2P campaign status changes to "approved"
+  // in Twilio Console > Messaging > Regulatory Compliance > Campaigns.
+  // TODO: Re-enable Twilio SMS after A2P approval
 
   // Send email if customer_email exists (fire-and-forget, don't block on failure)
   let emailError: string | undefined;
