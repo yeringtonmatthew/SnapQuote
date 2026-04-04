@@ -22,6 +22,7 @@ import { ShareButton } from '@/components/ShareButton';
 import { PrintButton } from '@/components/PrintButton';
 import { QuoteActionsDropdown, DropdownItem } from '@/components/QuoteActionsDropdown';
 import { ArchiveQuoteButton } from '@/components/ArchiveQuoteButton';
+import { SMSShareButton } from '@/components/SMSShareButton';
 
 const statusColors: Record<string, string> = {
   draft: 'bg-gray-100 text-gray-700',
@@ -56,6 +57,13 @@ export default async function QuoteDetailPage({
     .single();
 
   if (!quote) notFound();
+
+  const { data: profile } = await supabase
+    .from('users')
+    .select('business_name, full_name')
+    .eq('id', user.id)
+    .single();
+  const businessName = profile?.business_name || profile?.full_name || 'us';
 
   const subtotal = Number(quote.subtotal);
   const quoteTotal = Number(quote.total ?? quote.subtotal);
@@ -107,6 +115,12 @@ export default async function QuoteDetailPage({
               currentStatus={quote.status}
               paymentMethod={quote.payment_method}
             />
+            {quote.customer_phone && (
+              <SMSShareButton
+                phone={quote.customer_phone}
+                message={`Hi ${quote.customer_name}, ${businessName} sent you a quote for $${Number(quote.total ?? quote.subtotal).toLocaleString('en-US', { minimumFractionDigits: 2 })}. View and approve here: ${process.env.NEXT_PUBLIC_APP_URL || 'https://snapquote.dev'}/q/${quote.id}`}
+              />
+            )}
             <ShareButton
               url={`${process.env.NEXT_PUBLIC_BASE_URL || ''}/q/${quote.id}`}
               title={`Quote for ${quote.customer_name}`}
