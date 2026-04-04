@@ -76,6 +76,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning className={cn("font-sans", inter.variable)}>
       <head>
+        <meta name="google-site-verification" content="rBkPmUVQTkBYWNVh7wRQmPIzQ45PPTd7icDW8AFwqBI" />
         {/* Apple splash screens for common iOS devices */}
         <link rel="apple-touch-startup-image" href="/icon-512.png" media="(device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3)" />
         <link rel="apple-touch-startup-image" href="/icon-512.png" media="(device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3)" />
