@@ -16,10 +16,7 @@ export default function Home() {
     description:
       'AI-powered quoting tool for contractors. Send professional proposals in 60 seconds from your iPhone.',
     url: 'https://snapquote.dev',
-    offers: [
-      { '@type': 'Offer', name: 'Starter', price: '29', priceCurrency: 'USD', billingPeriod: 'P1M' },
-      { '@type': 'Offer', name: 'Pro', price: '79', priceCurrency: 'USD', billingPeriod: 'P1M' },
-    ],
+    offers: { '@type': 'Offer', price: '79', priceCurrency: 'USD', billingPeriod: 'P1M', description: '14-day free trial' },
   };
 
   return (
@@ -481,64 +478,31 @@ export default function Home() {
             </div>
           </ScrollFadeIn>
 
-          <div className="mx-auto mt-16 grid max-w-4xl gap-6 sm:grid-cols-2">
-            {/* Starter */}
+          <div className="mx-auto mt-16 max-w-lg">
             <ScrollFadeIn delay={0}>
-              <div className="flex h-full flex-col rounded-3xl bg-white p-8 sm:p-10 shadow-sm ring-1 ring-gray-200/80 transition-all hover:shadow-md">
-                <h3 className="text-[18px] font-bold text-gray-900">Starter</h3>
-                <p className="mt-1 text-[14px] text-gray-500">Everything to get started</p>
-                <p className="mt-8 flex items-baseline gap-1">
-                  <span className="text-[52px] font-bold tracking-tight text-gray-900">$29</span>
-                  <span className="text-[15px] text-gray-400">/mo</span>
-                </p>
-                <p className="mt-1.5 text-[13px] text-gray-400">14-day free trial &middot; No card required</p>
-                <ul className="mt-10 space-y-4 flex-1">
-                  {[
-                    '25 quotes per month',
-                    'AI quote generation',
-                    'SMS & email delivery',
-                    'Online payments',
-                    'E-signatures & PDF',
-                    'iOS & web app',
-                  ].map((item) => (
-                    <li key={item} className="flex items-center gap-3 text-[14px] text-gray-600">
-                      <svg className="h-5 w-5 shrink-0 text-brand-600" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
-                      {item}
-                    </li>
-                  ))}
-                </ul>
-                <Link
-                  href="/auth/signup"
-                  className="mt-10 block rounded-full border-2 border-gray-200 bg-white py-3.5 text-center text-[15px] font-semibold text-gray-900 transition-all hover:border-gray-300 hover:shadow-sm active:scale-[0.97]"
-                >
-                  Start Free Trial
-                </Link>
-              </div>
-            </ScrollFadeIn>
-
-            {/* Pro */}
-            <ScrollFadeIn delay={80}>
-              <div className="relative flex h-full flex-col rounded-3xl bg-gray-900 p-8 sm:p-10 shadow-2xl shadow-gray-900/20 ring-1 ring-gray-800">
-                {/* Badge */}
+              <div className="relative flex flex-col rounded-3xl bg-gray-900 p-8 sm:p-10 shadow-2xl shadow-gray-900/20 ring-1 ring-gray-800">
                 <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-full bg-brand-500 px-5 py-1.5 text-[12px] font-bold text-white shadow-lg shadow-brand-500/30">
-                  Most Popular
+                  14-Day Free Trial
                 </div>
-                <h3 className="text-[18px] font-bold text-white">Pro</h3>
-                <p className="mt-1 text-[14px] text-gray-400">For contractors ready to scale</p>
-                <p className="mt-8 flex items-baseline gap-1">
-                  <span className="text-[52px] font-bold tracking-tight text-white">$79</span>
-                  <span className="text-[15px] text-gray-500">/mo</span>
-                </p>
-                <p className="mt-1.5 text-[13px] text-gray-500">$63/mo billed annually &mdash; save 20%</p>
+                <div className="text-center">
+                  <p className="mt-4 flex items-baseline justify-center gap-1">
+                    <span className="text-[52px] font-bold tracking-tight text-white">$79</span>
+                    <span className="text-[15px] text-gray-500">/mo</span>
+                  </p>
+                  <p className="mt-1.5 text-[13px] text-gray-500">$63/mo billed annually &mdash; save 20%</p>
+                  <p className="mt-1 text-[13px] text-gray-400">No card required to start</p>
+                </div>
                 <ul className="mt-10 space-y-4 flex-1">
                   {[
                     'Unlimited quotes',
-                    'Everything in Starter',
-                    'Good / Better / Best tiers',
-                    'Automated follow-ups',
-                    'CRM pipeline',
+                    'AI-powered quote generation',
+                    'SMS & email delivery',
+                    'Online payments & e-signatures',
+                    'Good / Better / Best pricing tiers',
+                    'Automated follow-up sequences',
+                    'CRM pipeline & scheduling',
                     'Custom branding & logo',
-                    'Job scheduling',
+                    'iOS & web app',
                     'Priority support',
                   ].map((item) => (
                     <li key={item} className="flex items-center gap-3 text-[14px] text-gray-300">

@@ -6,7 +6,7 @@ const faqs = [
   {
     question: 'How much does SnapQuote cost?',
     answer:
-      'Plans start at $29/month for Starter (25 quotes) or $79/month for Pro (unlimited quotes + automation). Every plan starts with a 14-day free trial — no credit card required. One closed job pays for years of SnapQuote.',
+      '$79/month gets you everything — unlimited quotes, AI generation, automated follow-ups, pipeline, payments, the works. Every account starts with a 14-day free trial, no credit card required. One closed job pays for years of SnapQuote.',
   },
   {
     question: 'How does the AI generate quotes?',
