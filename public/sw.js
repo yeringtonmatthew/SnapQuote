@@ -1,7 +1,7 @@
 // SnapQuote Service Worker — offline-capable PWA
 // Cache-first for static assets, network-first for pages/API, background sync for failed POSTs.
 
-const CACHE_VERSION = 2;
+const CACHE_VERSION = 3;
 const CACHE_NAME = `snapquote-v${CACHE_VERSION}`;
 const RUNTIME_CACHE = `snapquote-runtime-v${CACHE_VERSION}`;
 
