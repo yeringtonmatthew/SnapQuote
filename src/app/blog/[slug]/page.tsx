@@ -46,6 +46,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
+const categoryColors: Record<string, string> = {
+  Sales: 'bg-blue-50 text-blue-700 ring-blue-200/60',
+  Tools: 'bg-purple-50 text-purple-700 ring-purple-200/60',
+  Business: 'bg-emerald-50 text-emerald-700 ring-emerald-200/60',
+};
+
 /** Convert simple markdown to HTML. Handles headings, bold, lists, paragraphs. */
 function markdownToHtml(md: string): string {
   const lines = md.split('\n');
@@ -174,7 +180,7 @@ export default async function BlogArticlePage({ params }: PageProps) {
         {/* Article Header */}
         <header className="mb-10">
           <div className="flex items-center gap-3 mb-4">
-            <span className="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-0.5 text-[11px] font-semibold text-blue-700 ring-1 ring-blue-200/60">
+            <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold ring-1 ${categoryColors[article.category] || 'bg-gray-50 text-gray-700 ring-gray-200/60'}`}>
               {article.category}
             </span>
             <span className="text-[13px] text-gray-400">
@@ -216,7 +222,7 @@ export default async function BlogArticlePage({ params }: PageProps) {
             prose-li:text-[15px] prose-li:leading-[1.8] prose-li:text-gray-600
             prose-strong:text-gray-900 prose-strong:font-semibold
             prose-ul:my-4 prose-ul:pl-6
-            prose-a:text-blue-600 prose-a:no-underline hover:prose-a:underline"
+            prose-a:text-brand-600 prose-a:no-underline hover:prose-a:underline"
           dangerouslySetInnerHTML={{ __html: contentHtml }}
         />
 
@@ -260,6 +266,12 @@ export default async function BlogArticlePage({ params }: PageProps) {
               </span>
             </div>
             <nav aria-label="Footer" className="flex items-center gap-6">
+              <Link
+                href="/blog"
+                className="text-[13px] text-gray-400 transition hover:text-gray-600"
+              >
+                Blog
+              </Link>
               <Link
                 href="/privacy"
                 className="text-[13px] text-gray-400 transition hover:text-gray-600"

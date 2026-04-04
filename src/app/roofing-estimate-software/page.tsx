@@ -93,6 +93,15 @@ export default function RoofingEstimateSoftware() {
             <div className="absolute top-0 left-1/2 -translate-x-1/2 h-[600px] w-[900px] rounded-full bg-gradient-to-b from-blue-100/50 via-blue-50/25 to-transparent blur-[100px]" />
           </div>
           <div className="relative mx-auto max-w-4xl px-6 py-20 sm:py-28 text-center">
+            <Link
+              href="/"
+              className="inline-flex items-center gap-1.5 text-[13px] font-medium text-gray-400 transition-colors hover:text-gray-600 mb-8"
+            >
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+              </svg>
+              Home
+            </Link>
             <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl lg:text-6xl">
               The Fastest Roofing Estimate Software on the Market
             </h1>
@@ -104,7 +113,7 @@ export default function RoofingEstimateSoftware() {
             <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link
                 href="/auth/signup"
-                className="rounded-full bg-blue-600 px-8 py-3.5 text-[15px] font-semibold text-white shadow-sm transition-all hover:bg-blue-700 active:scale-[0.97]"
+                className="rounded-full bg-brand-600 px-8 py-3.5 text-[15px] font-semibold text-white shadow-lg shadow-brand-600/25 transition-all hover:brightness-110 active:scale-[0.97]"
               >
                 Start 14-Day Free Trial
               </Link>
@@ -158,11 +167,13 @@ export default function RoofingEstimateSoftware() {
           <div className="mt-8 inline-block rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
             <p className="text-5xl font-bold text-gray-900">$79<span className="text-lg font-normal text-gray-500">/mo</span></p>
             <p className="mt-2 text-gray-500">14-day free trial. Cancel anytime.</p>
-            <ul className="mt-6 space-y-2 text-left text-sm text-gray-600">
-              <li>Unlimited AI-powered quotes</li>
-              <li>Professional PDF proposals</li>
-              <li>Client portal with e-signatures</li>
-              <li>iOS app for quoting in the field</li>
+            <ul className="mt-6 space-y-3 text-left text-sm text-gray-600">
+              {['Unlimited AI-powered quotes', 'Professional PDF proposals', 'Client portal with e-signatures', 'iOS app for quoting in the field'].map((item) => (
+                <li key={item} className="flex items-center gap-2.5">
+                  <svg className="h-[18px] w-[18px] shrink-0 text-brand-600" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+                  {item}
+                </li>
+              ))}
             </ul>
           </div>
         </section>
@@ -177,13 +188,30 @@ export default function RoofingEstimateSoftware() {
             </p>
             <Link
               href="/auth/signup"
-              className="mt-8 inline-flex rounded-full bg-blue-600 px-8 py-3.5 text-[15px] font-semibold text-white shadow-sm transition-all hover:bg-blue-700 active:scale-[0.97]"
+              className="mt-8 inline-flex rounded-full bg-brand-600 px-8 py-3.5 text-[15px] font-semibold text-white shadow-lg shadow-brand-600/25 transition-all hover:brightness-110 active:scale-[0.97]"
             >
               Start 14-Day Free Trial
             </Link>
           </div>
         </section>
       </main>
+
+      <footer className="border-t border-gray-100 bg-white py-10">
+        <div className="mx-auto max-w-6xl px-6">
+          <div className="flex flex-col items-center gap-6 sm:flex-row sm:justify-between">
+            <div className="flex items-center gap-4">
+              <SnapQuoteLogo size="xs" />
+              <span className="text-[13px] text-gray-400">&copy; 2026 SnapQuote</span>
+            </div>
+            <nav aria-label="Footer" className="flex items-center gap-6">
+              <Link href="/blog" className="text-[13px] text-gray-400 transition hover:text-gray-600">Blog</Link>
+              <Link href="/privacy" className="text-[13px] text-gray-400 transition hover:text-gray-600">Privacy</Link>
+              <Link href="/terms" className="text-[13px] text-gray-400 transition hover:text-gray-600">Terms</Link>
+              <a href="mailto:support@snapquote.dev" className="text-[13px] text-gray-400 transition hover:text-gray-600">Support</a>
+            </nav>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }

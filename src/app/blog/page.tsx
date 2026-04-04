@@ -117,7 +117,7 @@ export default function BlogIndex() {
               </div>
 
               {/* Title */}
-              <h2 className="text-[17px] font-semibold leading-snug text-gray-900 group-hover:text-blue-600 transition-colors">
+              <h2 className="text-[17px] font-semibold leading-snug text-gray-900 group-hover:text-brand-600 transition-colors">
                 {article.title}
               </h2>
 
@@ -139,7 +139,7 @@ export default function BlogIndex() {
                   })}
                 </time>
                 <svg
-                  className="h-4 w-4 text-gray-300 transition-transform group-hover:translate-x-1 group-hover:text-blue-500"
+                  className="h-4 w-4 text-gray-300 transition-transform group-hover:translate-x-1 group-hover:text-brand-500"
                   fill="none"
                   viewBox="0 0 24 24"
                   strokeWidth={2}

@@ -59,15 +59,24 @@ export default function SnapQuoteVsJobber() {
       </nav>
 
       <main className="mx-auto max-w-4xl px-6 py-16 sm:py-24">
+        <Link
+          href="/"
+          className="inline-flex items-center gap-1.5 text-[13px] font-medium text-gray-400 transition-colors hover:text-gray-600 mb-8"
+        >
+          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+          </svg>
+          Home
+        </Link>
+
         {/* Header */}
         <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl">
           SnapQuote vs Jobber
         </h1>
         <p className="mt-6 text-lg leading-relaxed text-gray-600">
-          Jobber is a full field service management platform — scheduling, dispatching, invoicing, CRM, the works.
-          It does a lot of things. But if your biggest bottleneck is quoting, Jobber&apos;s quote builder is just a
-          small piece of a much larger (and more expensive) platform. SnapQuote does one thing and does it
-          better than anyone: getting professional quotes to clients in 60 seconds using AI.
+          Jobber does a lot of things — scheduling, dispatching, invoicing, CRM. But if your bottleneck is
+          quoting, you don&apos;t need all that. SnapQuote does one thing better than anyone: professional
+          AI-powered quotes in 60 seconds.
         </p>
 
         {/* Comparison Table */}
@@ -144,7 +153,7 @@ export default function SnapQuoteVsJobber() {
         </section>
 
         {/* Bottom Line */}
-        <section className="mt-16 rounded-2xl bg-gray-50 p-8 sm:p-10">
+        <section className="mt-16 rounded-2xl bg-brand-50 border border-brand-100 p-8 sm:p-10">
           <h2 className="text-2xl font-bold text-gray-900">The Bottom Line</h2>
           <p className="mt-4 text-gray-600 leading-relaxed">
             Jobber is a great all-in-one platform if you need scheduling, dispatching, invoicing, and CRM in one
@@ -163,12 +172,29 @@ export default function SnapQuoteVsJobber() {
           </p>
           <Link
             href="/auth/signup"
-            className="mt-8 inline-flex rounded-full bg-blue-600 px-8 py-3.5 text-[15px] font-semibold text-white shadow-sm transition-all hover:bg-blue-700 active:scale-[0.97]"
+            className="mt-8 inline-flex rounded-full bg-brand-600 px-8 py-3.5 text-[15px] font-semibold text-white shadow-lg shadow-brand-600/25 transition-all hover:brightness-110 active:scale-[0.97]"
           >
             Try SnapQuote Free for 14 Days
           </Link>
         </section>
       </main>
+
+      <footer className="border-t border-gray-100 bg-white py-10">
+        <div className="mx-auto max-w-6xl px-6">
+          <div className="flex flex-col items-center gap-6 sm:flex-row sm:justify-between">
+            <div className="flex items-center gap-4">
+              <SnapQuoteLogo size="xs" />
+              <span className="text-[13px] text-gray-400">&copy; 2026 SnapQuote</span>
+            </div>
+            <nav aria-label="Footer" className="flex items-center gap-6">
+              <Link href="/blog" className="text-[13px] text-gray-400 transition hover:text-gray-600">Blog</Link>
+              <Link href="/privacy" className="text-[13px] text-gray-400 transition hover:text-gray-600">Privacy</Link>
+              <Link href="/terms" className="text-[13px] text-gray-400 transition hover:text-gray-600">Terms</Link>
+              <a href="mailto:support@snapquote.dev" className="text-[13px] text-gray-400 transition hover:text-gray-600">Support</a>
+            </nav>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }

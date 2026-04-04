@@ -98,7 +98,7 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="flex min-h-dvh flex-col justify-center px-6 py-12 bg-white dark:bg-gray-950">
+    <main className="flex min-h-dvh flex-col justify-center px-6 py-12 bg-white dark:bg-gray-950">
       <div className="mx-auto w-full max-w-sm animate-fade-up">
         {/* Header */}
         <div className="text-center">
@@ -262,6 +262,6 @@ export default function SignupPage() {
           </Link>
         </p>
       </div>
-    </div>
+    </main>
   );
 }
