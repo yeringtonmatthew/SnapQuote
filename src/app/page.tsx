@@ -606,7 +606,7 @@ export default function Home() {
             <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
               <Link
                 href="/auth/signup"
-                className="rounded-full bg-white px-12 py-4.5 text-[17px] font-semibold text-gray-900 shadow-xl shadow-white/10 transition-all hover:bg-gray-100 active:scale-[0.97]"
+                className="rounded-full bg-white px-12 py-[18px] text-[17px] font-semibold text-gray-900 shadow-xl shadow-white/10 transition-all hover:bg-gray-100 active:scale-[0.97]"
               >
                 Start Free Trial
               </Link>

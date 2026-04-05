@@ -598,7 +598,7 @@ export default async function DashboardPage() {
                   Recent Activity
                 </h2>
               </div>
-              <Link href="/quotes" className="text-[12px] font-medium text-brand-600 dark:text-brand-400 active:opacity-70 transition-opacity">
+              <Link href="/pipeline" className="text-[12px] font-medium text-brand-600 dark:text-brand-400 active:opacity-70 transition-opacity">
                 All Quotes
               </Link>
             </div>

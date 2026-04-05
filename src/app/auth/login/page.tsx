@@ -134,6 +134,7 @@ function LoginForm() {
               placeholder="john@smithplumbing.com"
               className="input-field"
               autoComplete="email"
+              autoFocus
             />
           </FormField>
 
@@ -175,7 +176,7 @@ function LoginForm() {
           <div className="text-right">
             <Link
               href="/auth/reset-password"
-              className="inline-block py-2 text-[13px] font-medium text-brand-600 hover:text-brand-500 focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 rounded"
+              className="inline-block min-h-[44px] py-2 text-[13px] font-medium text-brand-600 hover:text-brand-500 focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 rounded"
             >
               Forgot Password?
             </Link>

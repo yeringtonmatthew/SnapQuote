@@ -148,7 +148,23 @@
       "Bash(killall SystemUIServer)",
       "Bash(defaults read:*)",
       "Bash(top -l 1 -n 1)",
-      "Bash(memory_pressure)"
+      "Bash(memory_pressure)",
+      "Bash(npm run:*)",
+      "Bash(export PATH=\"/Users/mattyerington/.nvm/versions/node/v24.14.0/bin:$PATH\" __NEW_LINE_d5679d01efb03054__ openclaw agent --agent main --message \"REVENUE EMERGENCY — Execute Action 1 NOW.:*)",
+      "Bash(source ~/.openclaw/.env __NEW_LINE_5d7d3aabc57e8f0d__ curl -s \"https://openapi.etsy.com/v3/application/shops/64922126/listings/active?limit=25\" -H \"Authorization: Bearer $ETSY_ACCESS_TOKEN\" -H \"x-api-key: $ETSY_API_KEY\")",
+      "Bash(openclaw skills:*)",
+      "Bash(export PATH=\"/Users/mattyerington/.nvm/versions/node/v24.14.0/bin:$PATH\" __NEW_LINE_66e78ac69d2da0cc__ openclaw agent --agent main --message \"REVENUE EMERGENCY — Execute Pinterest Blitz NOW.:*)",
+      "Bash(openclaw cron:*)",
+      "Bash(PATH=\"/Users/mattyerington/.nvm/versions/node/v24.14.0/bin:$PATH\" openclaw skills list)",
+      "Bash(find /Users/mattyerington/.openclaw -path *pinterest-traffic* -o -path *skills* -name *traffic*)",
+      "Bash(grep -r \"REDDIT_API\\\\|reddit.*client\\\\|reddit.*auth\" /Users/mattyerington/.openclaw --include=*.js --include=*.ts --include=*.md)",
+      "Bash(find /Users/mattyerington/Desktop/SnapQuote -maxdepth 2 -type f -name *.json -o -name *.md -o -name .env*)",
+      "Bash(chmod +x ~/.openclaw/scripts/pinterest-oauth.sh)",
+      "mcp__Control_Chrome__list_tabs",
+      "mcp__Control_Chrome__get_page_content",
+      "Bash(__NEW_LINE_0f849796097d844d__ openclaw:*)",
+      "Bash(__NEW_LINE_2d44a1e6801aa4ec__ openclaw:*)",
+      "Bash(__NEW_LINE_d1539c15591f9bdd__ openclaw:*)"
     ]
   }
 }
