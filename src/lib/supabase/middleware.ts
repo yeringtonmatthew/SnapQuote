@@ -1,8 +1,33 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
+// Routes that never need auth — skip the getUser() round-trip
+const PUBLIC_PREFIXES = [
+  '/blog', '/compare', '/roofing-estimate-software', '/hvac-quoting-app',
+  '/contractor-estimate-app', '/q/', '/p/', '/privacy', '/terms',
+  '/api/leads/public', '/api/quotes/', '/api/sms/incoming', '/api/stripe/webhook',
+];
+
+function isPublicRoute(pathname: string): boolean {
+  if (pathname === '/') return true;
+  if (PUBLIC_PREFIXES.some((p) => pathname.startsWith(p))) {
+    // Allow /api/quotes/*/accept, /api/quotes/*/view, /api/quotes/*/checkout through
+    // but don't short-circuit other /api/quotes paths that may need auth
+    if (pathname.startsWith('/api/quotes/')) {
+      return /^\/api\/quotes\/[^/]+\/(accept|view|checkout)$/.test(pathname);
+    }
+    return true;
+  }
+  return false;
+}
+
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request: { headers: request.headers } });
+
+  // Short-circuit for public routes — no Supabase auth call needed
+  if (isPublicRoute(request.nextUrl.pathname)) {
+    return response;
+  }
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

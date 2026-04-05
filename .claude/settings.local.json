@@ -170,7 +170,8 @@
       "Bash(export PATH=\"/Users/mattyerington/.nvm/versions/node/v24.14.0/bin:$PATH\" __NEW_LINE_2d99e45eba79ce13__ openclaw agent --agent main --message \"LISTING UPGRADE — FINAL BATCH. Finish upgrading ALL remaining listings.:*)",
       "WebSearch",
       "WebFetch(domain:inference.sh)",
-      "WebFetch(domain:fal.ai)"
+      "WebFetch(domain:fal.ai)",
+      "Bash(export PATH=\"/Users/mattyerington/.nvm/versions/node/v24.14.0/bin:$PATH\" __NEW_LINE_ff52f8d03dcbd9e1__ openclaw agent --agent image-creator --message \"Generate 5 premium Etsy listing images for this product::*)"
     ]
   }
 }

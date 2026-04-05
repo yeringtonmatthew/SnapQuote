@@ -52,95 +52,102 @@ export default async function DashboardPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/auth/login');
 
-  const { data: profile } = await supabase
-    .from('users')
-    .select('*')
-    .eq('id', user.id)
-    .single();
-
-  if (profile && !profile.onboarded) redirect('/onboarding');
-
-  const { data: quotes } = await supabase
-    .from('quotes')
-    .select('id, customer_name, customer_phone, customer_email, job_address, status, subtotal, total, deposit_amount, deposit_percent, photos, scope_of_work, ai_description, quote_number, created_at, sent_at, approved_at, paid_at, archived, internal_notes, pipeline_stage, scheduled_date, scheduled_time, reminder_sent_at, job_tasks, inspection_findings, started_at, completed_at, expires_at')
-    .eq('contractor_id', user.id)
-    .order('created_at', { ascending: false })
-    .limit(100);
-
   // ── Today's date string ──────────────────────────
   const now = new Date();
   const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 
-  // ── Fetch today's calendar events (gracefully handle if table doesn't exist) ──
-  let todayEvents: Record<string, unknown>[] = [];
-  try {
-    const { data, error } = await supabase
-      .from('events')
-      .select(`
-        *,
-        quotes:quote_id (
-          customer_name,
-          job_address,
-          customer_phone,
-          quote_number
-        ),
-        clients:client_id (
-          name,
-          phone,
-          address
-        )
-      `)
+  // ── Parallelize the 3 independent queries ──────────────────────────
+  const [profileResult, quotesResult, eventsResult] = await Promise.all([
+    supabase
+      .from('users')
+      .select('*')
+      .eq('id', user.id)
+      .single(),
+    supabase
+      .from('quotes')
+      .select('id, customer_name, customer_phone, customer_email, status, subtotal, total, deposit_amount, deposit_percent, quote_number, created_at, sent_at, approved_at, paid_at, archived, pipeline_stage, scheduled_date, scheduled_time, reminder_sent_at, job_address, expires_at, client_id, started_at, completed_at, payment_method, quote_options, selected_option, photos, scope_of_work, ai_description, job_tasks')
       .eq('contractor_id', user.id)
-      .eq('event_date', todayStr)
-      .order('start_time', { ascending: true });
+      .order('created_at', { ascending: false })
+      .limit(100),
+    (async () => {
+      try {
+        const { data, error } = await supabase
+          .from('events')
+          .select(`
+            *,
+            quotes:quote_id (
+              customer_name,
+              job_address,
+              customer_phone,
+              quote_number
+            ),
+            clients:client_id (
+              name,
+              phone,
+              address
+            )
+          `)
+          .eq('contractor_id', user.id)
+          .eq('event_date', todayStr)
+          .order('start_time', { ascending: true });
 
-    if (!error && data) {
-      todayEvents = data.map((e: Record<string, unknown>) => {
-        const quote = e.quotes as Record<string, unknown> | null;
-        const client = e.clients as Record<string, unknown> | null;
-        return {
-          ...e,
-          quotes: undefined,
-          clients: undefined,
-          customer_name: client?.name ?? quote?.customer_name ?? e.title,
-          job_address: client?.address ?? quote?.job_address ?? null,
-          customer_phone: client?.phone ?? quote?.customer_phone ?? null,
-          quote_number: quote?.quote_number ?? null,
-        };
-      });
-    } else if (error) {
-      const { data: evData } = await supabase
-        .from('events')
-        .select(`
-          *,
-          quotes:quote_id (
-            customer_name,
-            job_address,
-            customer_phone,
-            quote_number
-          )
-        `)
-        .eq('contractor_id', user.id)
-        .eq('event_date', todayStr)
-        .order('start_time', { ascending: true });
+        if (!error && data) {
+          return data.map((e: Record<string, unknown>) => {
+            const quote = e.quotes as Record<string, unknown> | null;
+            const client = e.clients as Record<string, unknown> | null;
+            return {
+              ...e,
+              quotes: undefined,
+              clients: undefined,
+              customer_name: client?.name ?? quote?.customer_name ?? e.title,
+              job_address: client?.address ?? quote?.job_address ?? null,
+              customer_phone: client?.phone ?? quote?.customer_phone ?? null,
+              quote_number: quote?.quote_number ?? null,
+            };
+          });
+        } else if (error) {
+          const { data: evData } = await supabase
+            .from('events')
+            .select(`
+              *,
+              quotes:quote_id (
+                customer_name,
+                job_address,
+                customer_phone,
+                quote_number
+              )
+            `)
+            .eq('contractor_id', user.id)
+            .eq('event_date', todayStr)
+            .order('start_time', { ascending: true });
 
-      if (evData) {
-        todayEvents = evData.map((e: Record<string, unknown>) => {
-          const quote = e.quotes as Record<string, unknown> | null;
-          return {
-            ...e,
-            quotes: undefined,
-            customer_name: quote?.customer_name ?? e.title,
-            job_address: quote?.job_address ?? null,
-            customer_phone: quote?.customer_phone ?? null,
-            quote_number: quote?.quote_number ?? null,
-          };
-        });
+          if (evData) {
+            return evData.map((e: Record<string, unknown>) => {
+              const quote = e.quotes as Record<string, unknown> | null;
+              return {
+                ...e,
+                quotes: undefined,
+                customer_name: quote?.customer_name ?? e.title,
+                job_address: quote?.job_address ?? null,
+                customer_phone: quote?.customer_phone ?? null,
+                quote_number: quote?.quote_number ?? null,
+              };
+            });
+          }
+        }
+        return [];
+      } catch {
+        // Events table may not exist yet
+        return [];
       }
-    }
-  } catch {
-    // Events table may not exist yet
-  }
+    })(),
+  ]);
+
+  const profile = profileResult.data;
+  if (profile && !profile.onboarded) redirect('/onboarding');
+
+  const quotes = quotesResult.data;
+  let todayEvents: Record<string, unknown>[] = eventsResult;
 
   // ── Also include quotes with scheduled_date = today (backcompat) ──
   const allQuotes = quotes || [];
