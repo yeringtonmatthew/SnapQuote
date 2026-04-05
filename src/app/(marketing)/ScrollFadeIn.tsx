@@ -23,7 +23,7 @@ export default function ScrollFadeIn({ children, className = '', delay = 0 }: Sc
           observer.unobserve(el);
         }
       },
-      { threshold: 0.15 }
+      { threshold: 0.05 }
     );
 
     observer.observe(el);
@@ -36,8 +36,8 @@ export default function ScrollFadeIn({ children, className = '', delay = 0 }: Sc
       className={className}
       style={{
         opacity: isVisible ? 1 : 0,
-        transform: isVisible ? 'translateY(0)' : 'translateY(24px)',
-        transition: `opacity 0.7s ease ${delay}ms, transform 0.7s ease ${delay}ms`,
+        transform: isVisible ? 'translateY(0)' : 'translateY(8px)',
+        transition: `opacity 0.3s ease-out ${delay}ms, transform 0.3s ease-out ${delay}ms`,
       }}
     >
       {children}
