@@ -75,7 +75,7 @@ export default function Home() {
                   <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-amber-500 text-[10px] font-bold text-white ring-2 ring-white">JD</span>
                 </span>
                 <span className="text-[13px] text-gray-600">
-                  Trusted by <strong className="font-semibold text-gray-900">500+</strong> contractors
+                  Built by contractors, for contractors
                 </span>
                 <span className="flex gap-0.5">
                   {[...Array(5)].map((_, i) => (
