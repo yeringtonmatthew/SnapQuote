@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { fireWebhook } from '@/lib/webhook';
 import { rateLimit } from '@/lib/rate-limit';
+import { Resend } from 'resend';
+import { escapeHtml } from '@/lib/escape-html';
 // Twilio import disabled — A2P 10DLC campaign pending. Re-enable when approved.
 // import twilio from 'twilio';
 
@@ -75,36 +77,55 @@ export async function POST(
   // in Twilio Console > Messaging > Regulatory Compliance > Campaigns.
   // TODO: Re-enable Twilio SMS after A2P approval
 
-  // Send email if customer_email exists (fire-and-forget, don't block on failure)
+  // Send email directly if customer_email exists
   let emailError: string | undefined;
   if (quote.customer_email) {
-    try {
-      // Only call the send-email sub-route when appUrl is the configured app URL.
-      // Fall back gracefully if the URL is not set rather than calling localhost
-      // in a context where that could route to an internal service.
-      const sendEmailUrl = process.env.NEXT_PUBLIC_APP_URL
-        ? `${process.env.NEXT_PUBLIC_APP_URL}/api/quotes/${params.id}/send-email`
-        : null;
+    const apiKey = process.env.RESEND_API_KEY;
+    if (!apiKey) {
+      emailError = 'Email not configured';
+    } else {
+      try {
+        const { data: profile } = await supabase
+          .from('users')
+          .select('business_name, full_name, logo_url, brand_color')
+          .eq('id', user.id)
+          .single();
 
-      if (!sendEmailUrl) {
-        emailError = 'NEXT_PUBLIC_APP_URL not configured — email skipped';
-      } else {
-        const emailRes = await fetch(sendEmailUrl, {
-          method: 'POST',
-          headers: {
-            // Forward the auth cookie so the email route can authenticate.
-            // Only sent to our own configured app origin.
-            cookie: request.headers.get('cookie') || '',
-          },
+        const businessName = profile?.business_name || profile?.full_name || 'Licensed Professional';
+        const rawBrandColor = profile?.brand_color || '#2563eb';
+        const brandColor = /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(rawBrandColor) ? rawBrandColor : '#2563eb';
+        const amount = Number(quote.total ?? quote.subtotal).toLocaleString('en-US', { minimumFractionDigits: 2 });
+        const fromAddress = process.env.RESEND_FROM_EMAIL || 'SnapQuote <quotes@snapquote.dev>';
+
+        const resend = new Resend(apiKey);
+        const { error: resendError } = await resend.emails.send({
+          from: fromAddress,
+          to: quote.customer_email,
+          subject: `Quote from ${businessName} — $${amount}`,
+          html: `
+            <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 16px;">
+              <div style="text-align: center; margin-bottom: 24px;">
+                ${profile?.logo_url ? `<img src="${escapeHtml(profile.logo_url)}" alt="${escapeHtml(businessName)}" style="max-height: 48px; margin-bottom: 12px;" />` : ''}
+                <h2 style="margin: 0; color: #111827; font-size: 20px;">${escapeHtml(businessName)}</h2>
+              </div>
+              <p style="color: #374151; font-size: 15px; line-height: 1.6;">Hi ${escapeHtml(quote.customer_name)},</p>
+              <p style="color: #374151; font-size: 15px; line-height: 1.6;">You've received a quote for <strong>$${amount}</strong>. Review the details and approve it online:</p>
+              <div style="text-align: center; margin: 28px 0;">
+                <a href="${proposalUrl}" style="display: inline-block; background-color: ${brandColor}; color: #ffffff; text-decoration: none; padding: 12px 32px; border-radius: 8px; font-weight: 600; font-size: 15px;">View Your Quote</a>
+              </div>
+              <p style="color: #6b7280; font-size: 13px; line-height: 1.5;">This quote was created using <a href="https://snapquote.dev" style="color: ${brandColor}; text-decoration: none;">SnapQuote</a>.</p>
+            </div>
+          `,
         });
-        if (!emailRes.ok) {
-          const emailData = await emailRes.json();
-          emailError = emailData.error || 'Email send failed';
+
+        if (resendError) {
+          console.error('[send] Resend error:', resendError);
+          emailError = resendError.message;
         }
+      } catch (err) {
+        console.error('[send] Email error:', err);
+        emailError = err instanceof Error ? err.message : 'Email send failed';
       }
-    } catch (err) {
-      console.error('[send] Email error:', err);
-      emailError = err instanceof Error ? err.message : 'Email send failed';
     }
   }
 
