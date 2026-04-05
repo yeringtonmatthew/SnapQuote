@@ -4,8 +4,9 @@
 
 html {
   scroll-behavior: smooth;
-  /* Enable safe area insets for notched phones */
-  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  /* Safe area insets — only left/right for landscape. Top/bottom handled by components (PageHeader, BottomNav) */
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
 }
 
 /* Safe area utility classes */
