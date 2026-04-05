@@ -164,7 +164,13 @@
       "mcp__Control_Chrome__get_page_content",
       "Bash(__NEW_LINE_0f849796097d844d__ openclaw:*)",
       "Bash(__NEW_LINE_2d44a1e6801aa4ec__ openclaw:*)",
-      "Bash(__NEW_LINE_d1539c15591f9bdd__ openclaw:*)"
+      "Bash(__NEW_LINE_d1539c15591f9bdd__ openclaw:*)",
+      "Bash(source ~/.openclaw/.env __NEW_LINE_720ca59e36ed6e28__ curl -s \"https://openapi.etsy.com/v3/application/shops/64922126/listings/active?limit=5&sort_on=created&sort_order=up\" -H \"Authorization: Bearer $ETSY_ACCESS_TOKEN\" -H \"x-api-key: $ETSY_API_KEY\")",
+      "Bash(export PATH=\"/Users/mattyerington/.nvm/versions/node/v24.14.0/bin:$PATH\" __NEW_LINE_8d4970ae6a1d69c8__ openclaw agent --agent main --message \"LISTING UPGRADE — BATCH 3. Keep going.:*)",
+      "Bash(export PATH=\"/Users/mattyerington/.nvm/versions/node/v24.14.0/bin:$PATH\" __NEW_LINE_2d99e45eba79ce13__ openclaw agent --agent main --message \"LISTING UPGRADE — FINAL BATCH. Finish upgrading ALL remaining listings.:*)",
+      "WebSearch",
+      "WebFetch(domain:inference.sh)",
+      "WebFetch(domain:fal.ai)"
     ]
   }
 }

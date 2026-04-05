@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import { timingSafeEqual } from 'crypto';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
-import twilio from 'twilio';
+// Twilio disabled — A2P 10DLC pending. Re-enable when approved.
+// import twilio from 'twilio';
 import { Resend } from 'resend';
 import { escapeHtml } from '@/lib/escape-html';
 
@@ -81,31 +82,10 @@ async function sendFollowUp({
   let channel: 'sms' | 'email' = 'sms';
   let sendSuccess = false;
 
-  // Try SMS first
-  const sid = process.env.TWILIO_ACCOUNT_SID;
-  const token = process.env.TWILIO_AUTH_TOKEN;
-  const from = process.env.TWILIO_PHONE_NUMBER;
-  const messagingServiceSid = process.env.TWILIO_MESSAGING_SERVICE_SID;
-
-  if (sid && token && (from || messagingServiceSid) && quote.customer_phone) {
-    try {
-      const client = twilio(sid, token);
-      const digits = quote.customer_phone.replace(/\D/g, '');
-      const toNumber = digits.startsWith('1') ? `+${digits}` : `+1${digits}`;
-
-      const smsBody = `${message}\n\nView your quote: ${proposalUrl}`;
-
-      await client.messages.create({
-        body: smsBody,
-        ...(messagingServiceSid ? { messagingServiceSid } : { from }),
-        to: toNumber,
-      });
-      channel = 'sms';
-      sendSuccess = true;
-    } catch (smsError) {
-      console.error(`[cron/follow-ups] SMS error for quote ${quote.id}:`, smsError);
-    }
-  }
+  // Twilio SMS disabled — A2P 10DLC campaign pending carrier approval.
+  // SMS follow-ups were costing $15-30/day with 401 eligible quotes.
+  // Re-enable this block once A2P campaign is approved.
+  // TODO: Re-enable Twilio SMS follow-ups after A2P approval
 
   // Fall back to email if SMS failed or no phone
   if (!sendSuccess && quote.customer_email) {
