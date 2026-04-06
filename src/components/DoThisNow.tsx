@@ -165,7 +165,14 @@ export default function DoThisNow({ actions, leadScores }: Props) {
             </button>
           ) : oneTap.type === 'sms' ? (
             <a
-              href={`sms:${action.customerPhone || ''}?body=${encodeURIComponent(`Hi ${action.customerName.split(' ')[0]}`)}`}
+              href={`sms:${action.customerPhone || ''}&body=${encodeURIComponent(`Hi ${action.customerName.split(' ')[0]}`)}`}
+              onClick={() => {
+                haptic('medium');
+                // Mark as done after tap — user is being sent to Messages
+                setTimeout(() => {
+                  setCompletedIds(prev => new Set(prev).add(action.quoteId));
+                }, 500);
+              }}
               className="flex items-center gap-1 rounded-xl bg-emerald-600 px-3 py-1.5 text-[11px] font-semibold text-white press-scale transition-all"
             >
               {oneTap.label}
@@ -173,6 +180,12 @@ export default function DoThisNow({ actions, leadScores }: Props) {
           ) : oneTap.type === 'call' ? (
             <a
               href={`tel:${action.customerPhone || ''}`}
+              onClick={() => {
+                haptic('medium');
+                setTimeout(() => {
+                  setCompletedIds(prev => new Set(prev).add(action.quoteId));
+                }, 500);
+              }}
               className="flex items-center gap-1 rounded-xl bg-blue-600 px-3 py-1.5 text-[11px] font-semibold text-white press-scale transition-all"
             >
               {oneTap.label}
