@@ -9,6 +9,12 @@ html {
   padding-right: env(safe-area-inset-right);
 }
 
+/* Kill iOS 300ms tap delay globally — critical for Capacitor WebView */
+* {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
 /* Safe area utility classes */
 .safe-area-bottom {
   padding-bottom: env(safe-area-inset-bottom, 0px);
@@ -448,16 +454,12 @@ html {
 
 /* ── Micro-interaction utilities ─────────────── */
 
-/* Button press effect — refined spring feel */
+/* Button press effect — lightweight, no stacking context issues */
 .press-scale {
-  transition: transform 0.15s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.15s ease;
-  will-change: transform;
+  transition: transform 0.1s ease-out;
 }
 .press-scale:active {
-  transform: scale(0.96);
-}
-.press-scale:hover {
-  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  transform: scale(0.97);
 }
 
 /* Smooth hover lift */
