@@ -125,6 +125,6 @@ The following provisions shall survive the completion, termination, or expiratio
 
 In witness whereof, this Agreement has been duly executed as of the last date written below. The Owner's signature or digital approval constitutes acknowledgment of receiving a copy of this Agreement.
 
-Contact Telephone Number: 260.755.8374
-Contact Email: Jason@bigdogroofing.co
-Address: 429 E Dupont Rd, Fort Wayne, IN 46825`;
+Contact Telephone Number: 260-999-0347
+Contact Email: team@bigdogroofing.org
+Address: 1690 Broadway, Fort Wayne, IN`;
