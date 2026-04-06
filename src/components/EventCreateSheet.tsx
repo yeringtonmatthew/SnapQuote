@@ -88,7 +88,7 @@ export default function EventCreateSheet({
       const res = await fetch('/api/clients');
       if (res.ok) {
         const data = await res.json();
-        setClients(data);
+        setClients(Array.isArray(data) ? data : (data.clients || []));
       }
     } catch { /* silent */ }
     setClientsLoaded(true);
