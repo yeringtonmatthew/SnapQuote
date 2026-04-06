@@ -14,6 +14,7 @@ import PageTransition from '@/components/PageTransition';
 import AddressAutocomplete from '@/components/ui/AddressAutocomplete';
 import FormField from '@/components/ui/FormField';
 import type { LineItem, InspectionFinding, AIQuoteResponse, User, QuoteTemplate, LeadSourceValue, QuoteOption } from '@/types/database';
+import { getBuiltInTemplates, type QuoteTemplate as BuiltInTemplate, type CertificationBadge } from '@/lib/quoteTemplates';
 import { TierEditor } from '@/components/TierEditor';
 import { DEFAULT_TERMS } from '@/lib/defaultTerms';
 import { Spinner } from '@/components/ui/Spinner';
@@ -330,6 +331,10 @@ export default function NewQuotePage() {
   const [profile, setProfile] = useState<User | null>(null);
   const [templates, setTemplates] = useState<QuoteTemplate[]>([]);
   const [loadingTemplates, setLoadingTemplates] = useState(true);
+  const builtInTemplates = getBuiltInTemplates();
+  const [isTemplateBased, setIsTemplateBased] = useState(false);
+  const [certificationBadge, setCertificationBadge] = useState<CertificationBadge | null>(null);
+  const [showTemplatePicker, setShowTemplatePicker] = useState(false);
 
   // Job details
   const [files, setFiles] = useState<File[]>([]);
@@ -648,7 +653,23 @@ export default function NewQuotePage() {
     setLineItems(template.line_items);
     if (template.notes) setNotes(template.notes);
     if (template.scope_of_work) setScopeOfWork(template.scope_of_work);
-    setStep('review');
+    setIsTemplateBased(true);
+    setStep('details');
+  }
+
+  function handleSelectBuiltInTemplate(template: BuiltInTemplate) {
+    setLineItems(template.lineItems);
+    setNotes(template.defaultNotes);
+    setCertificationBadge(template.certificationBadge ?? null);
+    setIsTemplateBased(true);
+    if (template.certificationBadge) {
+      // Prepend certification info to notes so it shows on the customer-facing proposal
+      setNotes(
+        `${template.certificationBadge.label}: ${template.certificationBadge.description}\n\n${template.defaultNotes}`
+      );
+    }
+    setShowTemplatePicker(false);
+    setStep('details');
   }
 
   async function handleGenerateQuote() {
@@ -880,6 +901,7 @@ export default function NewQuotePage() {
     }
     if (step === 'details') {
       setStep('start');
+      setShowTemplatePicker(false);
     } else if (step === 'review') {
       setStep('details');
     } else if (step === 'send') {
@@ -928,11 +950,11 @@ export default function NewQuotePage() {
         )}
 
         {/* ========== STEP 0: Choose Starting Point ========== */}
-        {step === 'start' && (
+        {step === 'start' && !showTemplatePicker && (
           <div className="space-y-6">
             <div>
               <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">How do you want to start?</h2>
-              <p className="mt-1 text-[15px] text-gray-500">Snap photos for an AI quote, or start from a saved template.</p>
+              <p className="mt-1 text-[15px] text-gray-500">Snap photos for an AI quote, use a template, or start from scratch.</p>
             </div>
 
             {/* Snap a Photo option */}
@@ -954,10 +976,88 @@ export default function NewQuotePage() {
               </div>
             </button>
 
-            {/* Templates section */}
+            {/* Use a Template option */}
+            <button
+              onClick={() => setShowTemplatePicker(true)}
+              className="w-full rounded-2xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-5 text-left shadow-sm transition-colors hover:border-brand-300 active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
+            >
+              <div className="flex items-center gap-4">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900">
+                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-[15px] font-bold text-gray-900 dark:text-gray-100">Use a Template</p>
+                  <p className="mt-0.5 text-[13px] text-gray-500">Pre-filled line items, just enter the total price</p>
+                </div>
+              </div>
+            </button>
+
+            {/* Quick Quote option */}
+            <button
+              onClick={() => {
+                setStep('details');
+              }}
+              className="w-full py-2 text-center text-[14px] text-gray-500 hover:text-gray-700 focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 rounded-lg"
+            >
+              Or build a quote manually
+            </button>
+          </div>
+        )}
+
+        {/* ========== STEP 0b: Template Picker ========== */}
+        {step === 'start' && showTemplatePicker && (
+          <div className="step-enter space-y-6">
+            <div>
+              <button
+                onClick={() => setShowTemplatePicker(false)}
+                className="mb-3 flex items-center gap-1.5 text-[14px] font-medium text-brand-600 hover:text-brand-700"
+              >
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+                </svg>
+                Back
+              </button>
+              <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">Choose a Template</h2>
+              <p className="mt-1 text-[15px] text-gray-500">Select a template to pre-fill your line items. You will set the total price.</p>
+            </div>
+
+            {/* Built-in Templates */}
+            <div>
+              <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-500">Built-in Templates</p>
+              <div className="grid grid-cols-2 gap-3">
+                {builtInTemplates.map((template) => (
+                  <button
+                    key={template.id}
+                    onClick={() => handleSelectBuiltInTemplate(template)}
+                    className="flex flex-col items-center gap-2 rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4 text-center shadow-sm transition-colors hover:border-brand-300 hover:bg-brand-50 dark:hover:bg-brand-950/20 active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
+                  >
+                    <span className="text-3xl" role="img" aria-hidden="true">{template.icon}</span>
+                    <span className="text-[14px] font-semibold text-gray-900 dark:text-gray-100 leading-tight">{template.name}</span>
+                    <span className="text-[12px] text-gray-500">{template.lineItems.length} items</span>
+                    {template.certificationBadge && (
+                      <span className="mt-0.5 inline-flex items-center gap-1 rounded-full bg-green-50 dark:bg-green-950/30 px-2 py-0.5 text-[10px] font-medium text-green-700 dark:text-green-400">
+                        <svg className="h-2.5 w-2.5" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 01-1.043 3.296 3.745 3.745 0 01-3.296 1.043A3.745 3.745 0 0112 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 01-3.296-1.043 3.745 3.745 0 01-1.043-3.296A3.745 3.745 0 013 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 011.043-3.296 3.746 3.746 0 013.296-1.043A3.746 3.746 0 0112 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 013.296 1.043 3.745 3.745 0 011.043 3.296A3.745 3.745 0 0121 12z" />
+                        </svg>
+                        Certified
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* My Templates (from Supabase) */}
+            {loadingTemplates && (
+              <div className="flex justify-center py-4">
+                <div className="h-5 w-5 animate-spin rounded-full border-2 border-gray-200 border-t-brand-600" />
+              </div>
+            )}
             {!loadingTemplates && templates.length > 0 && (
               <div>
-                <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-500">Or start from a template</p>
+                <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-500">My Templates</p>
                 <div className="space-y-2">
                   {templates.map((template) => (
                     <button
@@ -982,22 +1082,6 @@ export default function NewQuotePage() {
                 </div>
               </div>
             )}
-
-            {loadingTemplates && (
-              <div className="flex justify-center py-4">
-                <div className="h-5 w-5 animate-spin rounded-full border-2 border-gray-200 border-t-brand-600" />
-              </div>
-            )}
-
-            {/* Quick Quote option */}
-            <button
-              onClick={() => {
-                setStep('details');
-              }}
-              className="w-full py-2 text-center text-[14px] text-gray-500 hover:text-gray-700 focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 rounded-lg"
-            >
-              Or build a quote manually
-            </button>
           </div>
         )}
 
@@ -1222,6 +1306,61 @@ export default function NewQuotePage() {
         {/* ========== STEP 3: Review & Edit ========== */}
         {step === 'review' && (
           <div className="step-enter space-y-6 pb-24">
+            {/* Certification Badge -- shown when a template with certification is used */}
+            {certificationBadge && (
+              <div className="card !bg-green-50 dark:!bg-green-950/20 !border-green-200 dark:!border-green-900">
+                <div className="flex items-start gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-green-600 text-white">
+                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 01-1.043 3.296 3.745 3.745 0 01-3.296 1.043A3.745 3.745 0 0112 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 01-3.296-1.043 3.745 3.745 0 01-1.043-3.296A3.745 3.745 0 013 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 011.043-3.296 3.746 3.746 0 013.296-1.043A3.746 3.746 0 0112 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 013.296 1.043 3.745 3.745 0 011.043 3.296A3.745 3.745 0 0121 12z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-[15px] font-bold text-green-900 dark:text-green-200">{certificationBadge.label}</p>
+                    <p className="mt-0.5 text-[13px] text-green-700 dark:text-green-400 leading-relaxed">{certificationBadge.description}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Template Total Price -- prominent input when using a template */}
+            {isTemplateBased && (
+              <div className="card !bg-brand-50 dark:!bg-brand-950/30 !border-brand-200 dark:!border-brand-800">
+                <div className="flex flex-col items-center gap-2 py-2">
+                  <p className="text-[13px] font-semibold uppercase tracking-wide text-brand-600 dark:text-brand-400">Total Price for this Job</p>
+                  <div className="relative">
+                    <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 text-[24px] font-bold text-gray-900 dark:text-gray-100">$</span>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={total || ''}
+                      onChange={(e) => {
+                        const newTotal = parseFloat(e.target.value);
+                        if (!newTotal || newTotal <= 0) return;
+                        // For template-based quotes, set the total by distributing evenly across line items
+                        const count = lineItems.length || 1;
+                        const perItem = Math.round((newTotal / count) * 100) / 100;
+                        setLineItems(prev => prev.map((item, i) => ({
+                          ...item,
+                          unit_price: i === prev.length - 1
+                            ? Math.round((newTotal - perItem * (count - 1)) * 100) / 100
+                            : perItem,
+                          total: i === prev.length - 1
+                            ? Math.round((newTotal - perItem * (count - 1)) * 100) / 100
+                            : perItem,
+                        })));
+                      }}
+                      placeholder="0.00"
+                      aria-label="Total job price"
+                      className="w-48 rounded-xl border-2 border-brand-300 dark:border-brand-700 bg-white dark:bg-gray-900 pl-10 pr-4 py-3 text-center text-[28px] font-bold text-gray-900 dark:text-gray-100 focus:border-brand-500 focus:ring-2 focus:ring-brand-500"
+                    />
+                  </div>
+                  <p className="text-[12px] text-brand-500 dark:text-brand-400">Enter the total price -- line items are descriptions only</p>
+                </div>
+              </div>
+            )}
+
             {aiDescription && (
               <div className="card !bg-brand-50 !border-brand-200">
                 <div className="flex items-start gap-2">
