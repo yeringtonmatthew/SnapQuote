@@ -250,6 +250,7 @@ export default function ClientsListContent({ initialClients, totalClients, pageS
             placeholder="Search clients..."
             value={search}
             onChange={(e) => handleSearchChange(e.target.value)}
+            autoFocus
             className="w-full rounded-xl bg-white dark:bg-gray-900 pl-11 pr-4 py-3 text-[15px] text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 ring-1 ring-black/[0.04] dark:ring-white/[0.06] focus:outline-none focus:ring-2 focus:ring-brand-500 shadow-sm transition-shadow"
           />
           {search && (
