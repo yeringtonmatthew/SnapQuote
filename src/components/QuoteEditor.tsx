@@ -493,10 +493,31 @@ export function QuoteEditor({ quote }: QuoteEditorProps) {
             <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{fmt(taxAmount)}</span>
           </div>
 
-          {/* Total */}
+          {/* Total – editable to proportionally scale line items */}
           <div className="flex items-center justify-between border-t border-gray-200 dark:border-gray-700 pt-3">
             <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">Total</span>
-            <span className="text-base font-bold text-gray-900 dark:text-gray-100">{fmt(total)}</span>
+            <div className="relative">
+              <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-2.5 text-sm font-bold text-gray-900 dark:text-gray-100">$</span>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={total || ''}
+                onChange={(e) => {
+                  const newTotal = parseFloat(e.target.value);
+                  if (!newTotal || newTotal <= 0 || subtotal <= 0) return;
+                  // Back-calculate what the new subtotal needs to be
+                  // total = (subtotal - discount + tax), we scale subtotal (line items)
+                  const ratio = newTotal / total;
+                  setLineItems(prev => prev.map(item => ({
+                    ...item,
+                    unit_price: Math.round(Number(item.unit_price) * ratio * 100) / 100,
+                    total: Math.round(Number(item.total) * ratio * 100) / 100,
+                  })));
+                }}
+                className="w-32 rounded-lg border border-gray-200 dark:border-gray-700 bg-transparent pl-6 pr-2 py-1.5 text-right text-base font-bold text-gray-900 dark:text-gray-100 focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
+              />
+            </div>
           </div>
 
           {/* Deposit */}

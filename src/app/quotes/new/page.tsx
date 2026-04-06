@@ -344,7 +344,7 @@ export default function NewQuotePage() {
 
   // Client picker
   const [clients, setClients] = useState<{ id: string; name: string; phone: string | null; email: string | null; address: string | null }[]>([]);
-  const [loadingClients, setLoadingClients] = useState(true);
+  const [loadingClients, setLoadingClients] = useState(false);
   const [clientId, setClientId] = useState<string | null>(null);
   const [clientSearch, setClientSearch] = useState('');
   const [showClientDropdown, setShowClientDropdown] = useState(false);
@@ -418,22 +418,8 @@ export default function NewQuotePage() {
         setLoadingTemplates(false);
       }
     }
-    async function loadClients() {
-      try {
-        const res = await fetch('/api/clients');
-        if (res.ok) {
-          const data = await res.json();
-          setClients(Array.isArray(data) ? data : (data.clients || []));
-        }
-      } catch {
-        // Clients are optional
-      } finally {
-        setLoadingClients(false);
-      }
-    }
     loadProfile();
     loadTemplates();
-    loadClients();
   }, []);
 
   // Close client dropdown when clicking outside
@@ -464,17 +450,36 @@ export default function NewQuotePage() {
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [customerName, lineItems, aiDescription, files, photoUrls, step]);
 
-  // Filter clients based on search input
-  const filteredClients = clientSearch.trim()
-    ? clients.filter(c => {
-        const q = clientSearch.toLowerCase();
-        return (
-          (c.name && c.name.toLowerCase().includes(q)) ||
-          (c.email && c.email.toLowerCase().includes(q)) ||
-          (c.phone && c.phone.includes(q))
-        );
-      })
-    : clients;
+  // Server-side client search with debounce
+  const clientSearchAbortRef = useRef<AbortController | null>(null);
+  useEffect(() => {
+    const query = clientSearch.trim();
+    if (!query) {
+      setClients([]);
+      setLoadingClients(false);
+      return;
+    }
+    setLoadingClients(true);
+    const controller = new AbortController();
+    clientSearchAbortRef.current?.abort();
+    clientSearchAbortRef.current = controller;
+    const timeout = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/clients?search=${encodeURIComponent(query)}&limit=20`, { signal: controller.signal });
+        if (res.ok) {
+          const data = await res.json();
+          setClients(Array.isArray(data) ? data : (data.clients || []));
+        }
+      } catch (e: unknown) {
+        if (e instanceof DOMException && e.name === 'AbortError') return;
+      } finally {
+        if (!controller.signal.aborted) setLoadingClients(false);
+      }
+    }, 250);
+    return () => { clearTimeout(timeout); controller.abort(); };
+  }, [clientSearch]);
+
+  const filteredClients = clients;
 
   function selectClient(client: { id: string; name: string; phone: string | null; email: string | null; address: string | null }) {
     setClientId(client.id);
@@ -1074,9 +1079,9 @@ export default function NewQuotePage() {
                         <p className="text-[13px] text-gray-500">No clients found</p>
                       </div>
                     )}
-                    {showClientDropdown && !loadingClients && !clientSearch.trim() && clients.length === 0 && (
+                    {showClientDropdown && !loadingClients && !clientSearch.trim() && (
                       <div className="absolute z-20 mt-1 w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-3 shadow-lg">
-                        <p className="text-[13px] text-gray-400">No clients yet — enter details below</p>
+                        <p className="text-[13px] text-gray-400">Type to search clients...</p>
                       </div>
                     )}
                   </div>
@@ -1430,13 +1435,31 @@ export default function NewQuotePage() {
                 </>
               )}
 
-              {/* Total */}
+              {/* Total – editable to proportionally scale line items */}
               <div className="border-t border-gray-200 dark:border-gray-700 pt-3">
                 <div className="flex items-center justify-between">
                   <span className="text-[15px] font-semibold text-gray-900 dark:text-gray-100">Total</span>
-                  <span className="text-[20px] font-bold text-gray-900 dark:text-gray-100">
-                    ${total.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                  </span>
+                  <div className="relative">
+                    <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-2.5 text-[16px] font-bold text-gray-900 dark:text-gray-100">$</span>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={total || ''}
+                      onChange={(e) => {
+                        const newTotal = parseFloat(e.target.value);
+                        if (!newTotal || newTotal <= 0 || subtotal <= 0) return;
+                        const ratio = newTotal / total;
+                        setLineItems(prev => prev.map(item => ({
+                          ...item,
+                          unit_price: Math.round(Number(item.unit_price) * ratio * 100) / 100,
+                          total: Math.round(Number(item.total) * ratio * 100) / 100,
+                        })));
+                      }}
+                      aria-label="Edit total price"
+                      className="w-36 rounded-lg border border-gray-200 dark:border-gray-700 bg-transparent pl-7 pr-2 py-1.5 text-right text-[20px] font-bold text-gray-900 dark:text-gray-100 focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
+                    />
+                  </div>
                 </div>
               </div>
 
