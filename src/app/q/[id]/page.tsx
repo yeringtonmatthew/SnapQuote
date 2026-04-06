@@ -847,10 +847,12 @@ export default async function CustomerProposalPage({
           </div>
           {(() => {
             // Detect template-style quotes: all items qty=1 with evenly distributed prices
-            // or all items have the same unit_price (template total was split evenly)
+            // or all items have the same unit_price (template total was split evenly).
+            // Guard: if all prices are $0 this is an unpriced quote, not a template.
             const allQtyOne = lineItems.every(item => Number(item.quantity) === 1);
             const uniquePrices = new Set(lineItems.map(item => Number(item.unit_price).toFixed(2)));
-            const isTemplateStyle = allQtyOne && uniquePrices.size === 1 && lineItems.length > 2;
+            const allZero = uniquePrices.size === 1 && uniquePrices.has('0.00');
+            const isTemplateStyle = allQtyOne && uniquePrices.size === 1 && !allZero && lineItems.length > 2;
 
             if (isTemplateStyle) {
               // Template display: numbered descriptions, no individual prices

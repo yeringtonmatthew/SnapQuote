@@ -1262,7 +1262,7 @@ export default function NewQuotePage() {
 
             <button
               onClick={handleGenerateQuote}
-              disabled={generating || uploadingPhotos}
+              disabled={generating || uploadingPhotos || (isTemplateBased && files.length === 0 && photoUrls.length === 0)}
               className="btn-primary flex items-center justify-center gap-2"
             >
               {uploadingPhotos ? (
@@ -1279,6 +1279,9 @@ export default function NewQuotePage() {
               )}
               {generating ? 'Generating...' : isTemplateBased ? 'Add Inspection Report' : 'Generate AI Quote'}
             </button>
+            {isTemplateBased && files.length === 0 && photoUrls.length === 0 && (
+              <p className="text-center text-xs text-gray-400">Add photos above to generate an inspection report</p>
+            )}
 
             <button
               onClick={() => {
@@ -1303,7 +1306,7 @@ export default function NewQuotePage() {
               <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 010 3.75H5.625a1.875 1.875 0 010-3.75z" />
               </svg>
-              Quick Quote -- Skip AI
+              {isTemplateBased ? 'Skip Inspection Report' : 'Quick Quote -- Skip AI'}
             </button>
           </div>
         )}
