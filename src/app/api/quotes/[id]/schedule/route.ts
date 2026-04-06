@@ -69,7 +69,7 @@ export async function PATCH(
 
         const contractorEmail = profile?.email || user.email;
         if (contractorEmail) {
-          const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+          const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://snapquote.dev';
           const quoteUrl = `${appUrl}/quotes/${params.id}`;
           const jobSummary = existing.ai_description || existing.scope_of_work || 'Scheduled job';
           const quoteLabel = existing.quote_number

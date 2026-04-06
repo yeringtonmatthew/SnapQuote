@@ -55,7 +55,7 @@ export async function POST(
     .single();
 
   const businessName = profile?.business_name || profile?.full_name || 'Licensed Professional';
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://snapquote.dev';
   const proposalUrl = `${appUrl}/q/${params.id}`;
   const amount = Number(quote.subtotal).toLocaleString('en-US', { minimumFractionDigits: 2 });
 

@@ -103,7 +103,7 @@ export async function POST(request: NextRequest) {
           .single();
 
         if (contractor?.email) {
-          const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+          const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://snapquote.dev';
           sendNotificationEmail({
             email: contractor.email,
             subject: `Payment received for quote ${label}`,
@@ -115,7 +115,7 @@ export async function POST(request: NextRequest) {
 
         // Fire-and-forget: Send thank-you email to customer
         if (quote.customer_email) {
-          const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+          const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://snapquote.dev';
           fetch(`${appUrl}/api/quotes/${quoteId}/thank-you`, {
             method: 'POST',
             headers: {
@@ -134,7 +134,7 @@ export async function POST(request: NextRequest) {
 
         if (sid && token && (from || messagingServiceSid) && quote.customer_phone) {
           const businessName = contractor?.business_name || contractor?.full_name || 'Licensed Professional';
-          const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+          const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://snapquote.dev';
           const receiptUrl = `${appUrl}/receipt/${quoteId}`;
           const digits = quote.customer_phone.replace(/\D/g, '');
           const toNumber = digits.startsWith('1') ? `+${digits}` : `+1${digits}`;

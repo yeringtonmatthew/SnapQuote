@@ -31,7 +31,7 @@ export async function POST(
     );
   }
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://snapquote.dev';
   const proposalUrl = `${appUrl}/q/${params.id}`;
 
   const { data: profile } = await supabase

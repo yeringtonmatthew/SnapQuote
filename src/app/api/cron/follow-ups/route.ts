@@ -253,9 +253,9 @@ export async function GET(request: Request) {
       (existingFollowUps || []).map((f) => `${f.quote_id}:${f.follow_up_number}`)
     );
 
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://snapquote.dev';
     if (process.env.NODE_ENV === 'production' && !process.env.NEXT_PUBLIC_APP_URL) {
-      console.error('[cron/follow-ups] NEXT_PUBLIC_APP_URL is not set in production — using localhost fallback');
+      console.error('[cron/follow-ups] NEXT_PUBLIC_APP_URL is not set in production — using snapquote.dev fallback');
     }
 
     // 4. Process each quote — initial 21-day sequence (follow-ups 1–7)

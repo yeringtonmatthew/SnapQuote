@@ -31,7 +31,7 @@ export const TWILIO_PHONE_NUMBER = process.env.TWILIO_PHONE_NUMBER ?? null;
 export const TWILIO_MESSAGING_SERVICE_SID = process.env.TWILIO_MESSAGING_SERVICE_SID ?? null;
 export const RESEND_API_KEY = process.env.RESEND_API_KEY ?? null;
 export const RESEND_FROM_EMAIL = process.env.RESEND_FROM_EMAIL ?? 'SnapQuote <quotes@snapquote.dev>';
-export const NEXT_PUBLIC_APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
+export const NEXT_PUBLIC_APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://snapquote.dev';
 export const NEXT_PUBLIC_GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? null;
 /** Server-only Google Maps key — falls back to the public key for backward compatibility */
 export const GOOGLE_MAPS_SERVER_KEY = process.env.GOOGLE_MAPS_SERVER_KEY ?? process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? null;

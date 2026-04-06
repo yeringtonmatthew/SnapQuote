@@ -78,7 +78,7 @@ export async function POST(
         .single();
 
       const businessName = profile?.business_name || profile?.full_name || 'Licensed Professional';
-      const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://snapquote.dev';
       const receiptUrl = `${appUrl}/receipt/${params.id}`;
       const paidAmount = amount || quote.deposit_amount;
       const client = twilio(sid!, token!);

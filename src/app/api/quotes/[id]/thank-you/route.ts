@@ -57,7 +57,7 @@ export async function POST(
     minimumFractionDigits: 2,
   });
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://snapquote.dev';
   const receiptUrl = `${appUrl}/receipt/${params.id}`;
 
   const resend = new Resend(apiKey);

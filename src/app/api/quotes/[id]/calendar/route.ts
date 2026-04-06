@@ -41,7 +41,7 @@ export async function GET(
     );
   }
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://snapquote.dev';
   const quoteUrl = `${appUrl}/quotes/${params.id}`;
   const quoteLabel = quote.quote_number
     ? formatQuoteNumber(quote.quote_number)

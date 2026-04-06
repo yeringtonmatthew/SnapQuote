@@ -144,7 +144,7 @@ export async function POST(
     .single();
 
   if (contractor?.email) {
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://snapquote.dev';
     sendNotificationEmail({
       email: contractor.email,
       subject: `Quote ${label} approved by ${quote.customer_name}`,
