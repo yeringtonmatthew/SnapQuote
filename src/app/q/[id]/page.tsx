@@ -840,33 +840,62 @@ export default async function CustomerProposalPage({
             <div>
               <p className="text-[11px] font-semibold uppercase tracking-widest text-gray-400">Your Investment</p>
               <p className="text-[12px] text-gray-400 mt-0.5">
-                Itemized pricing — no markups, no surprises
+                Project scope — what&apos;s included
               </p>
             </div>
             <span className="text-[11px] font-medium text-gray-400">{lineItems.length} item{lineItems.length !== 1 ? 's' : ''}</span>
           </div>
-          <div className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/[0.04]">
-            {lineItems.map((item, i: number) => (
-              <div
-                key={i}
-                className={`flex items-start justify-between px-5 py-4 ${
-                  i < lineItems.length - 1 ? 'border-b border-gray-100' : ''
-                }`}
-              >
-                <div className="min-w-0 flex-1 pr-4">
-                  <p className="text-[15px] font-medium text-gray-900 leading-snug">{item.description}</p>
-                  {(Number(item.quantity) > 1 || (item.unit && item.unit.trim() !== '')) && (
-                    <p className="mt-1 text-[12px] text-gray-400">
-                      {item.quantity} {item.unit} × {fmt(Number(item.unit_price))}
-                    </p>
-                  )}
+          {(() => {
+            // Detect template-style quotes: all items qty=1 with evenly distributed prices
+            // or all items have the same unit_price (template total was split evenly)
+            const allQtyOne = lineItems.every(item => Number(item.quantity) === 1);
+            const uniquePrices = new Set(lineItems.map(item => Number(item.unit_price).toFixed(2)));
+            const isTemplateStyle = allQtyOne && uniquePrices.size === 1 && lineItems.length > 2;
+
+            if (isTemplateStyle) {
+              // Template display: numbered descriptions, no individual prices
+              return (
+                <div className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/[0.04] px-5 py-5">
+                  <div className="space-y-4">
+                    {lineItems.map((item, i: number) => (
+                      <div key={i} className="flex gap-3">
+                        <span className="shrink-0 flex h-6 w-6 items-center justify-center rounded-full bg-brand-50 text-[11px] font-bold text-brand-600 mt-0.5">
+                          {i + 1}
+                        </span>
+                        <p className="text-[14px] text-gray-700 leading-relaxed">{item.description}</p>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-                <p className="shrink-0 text-[15px] font-semibold text-gray-900 tabular-nums">
-                  {fmt(Number(item.total))}
-                </p>
+              );
+            }
+
+            // Standard display: individual prices shown
+            return (
+              <div className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/[0.04]">
+                {lineItems.map((item, i: number) => (
+                  <div
+                    key={i}
+                    className={`flex items-start justify-between px-5 py-4 ${
+                      i < lineItems.length - 1 ? 'border-b border-gray-100' : ''
+                    }`}
+                  >
+                    <div className="min-w-0 flex-1 pr-4">
+                      <p className="text-[15px] font-medium text-gray-900 leading-snug">{item.description}</p>
+                      {(Number(item.quantity) > 1 || (item.unit && item.unit.trim() !== '')) && (
+                        <p className="mt-1 text-[12px] text-gray-400">
+                          {item.quantity} {item.unit} × {fmt(Number(item.unit_price))}
+                        </p>
+                      )}
+                    </div>
+                    <p className="shrink-0 text-[15px] font-semibold text-gray-900 tabular-nums">
+                      {fmt(Number(item.total))}
+                    </p>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
+            );
+          })()}
         </div>}
 
         {!hasTiers && <>
