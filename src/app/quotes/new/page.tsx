@@ -676,7 +676,7 @@ export default function NewQuotePage() {
     const errors: FieldErrors = {};
     if (!customerName.trim()) errors.customerName = 'Customer name is required';
     if (!customerPhone.trim() && !customerEmail.trim()) errors.customerContact = 'Phone or email is required';
-    if (files.length === 0 && photoUrls.length === 0) errors.photos = 'Add at least one photo for AI generation';
+    if (!isTemplateBased && files.length === 0 && photoUrls.length === 0) errors.photos = 'Add at least one photo for AI generation';
 
     if (Object.keys(errors).length > 0) {
       setFieldErrors(errors);
@@ -719,11 +719,19 @@ export default function NewQuotePage() {
       const data: AIQuoteResponse = await res.json();
 
       setAiDescription(data.job_summary);
-      setScopeOfWork(data.scope_of_work || '');
-      setLineItems(data.line_items);
       setInspectionFindings(data.inspection_findings || []);
-      setNotes(data.notes || '');
       setEstimatedDuration(data.estimated_duration || '');
+
+      if (isTemplateBased) {
+        // Template mode: keep template line items and notes, only use AI for
+        // inspection report and job summary. Don't overwrite the template.
+        if (data.scope_of_work) setScopeOfWork(data.scope_of_work);
+      } else {
+        // AI mode: use everything from the AI response
+        setScopeOfWork(data.scope_of_work || '');
+        setLineItems(data.line_items);
+        setNotes(data.notes || '');
+      }
       setStep('review');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong');
@@ -1269,7 +1277,7 @@ export default function NewQuotePage() {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456z" />
                 </svg>
               )}
-              {generating ? 'Generating...' : 'Generate AI Quote'}
+              {generating ? 'Generating...' : isTemplateBased ? 'Add Inspection Report' : 'Generate AI Quote'}
             </button>
 
             <button
@@ -1283,9 +1291,11 @@ export default function NewQuotePage() {
                 }
                 setError(null);
                 setFieldErrors({});
-                setLineItems([]);
-                setAiDescription('');
-                setScopeOfWork('');
+                if (!isTemplateBased) {
+                  setLineItems([]);
+                  setAiDescription('');
+                  setScopeOfWork('');
+                }
                 setStep('review');
               }}
               className="btn-secondary flex items-center justify-center gap-2"
