@@ -11,6 +11,11 @@ interface SocialAuthButtonsProps {
 export default function SocialAuthButtons({ redirectTo = '/dashboard' }: SocialAuthButtonsProps) {
   const [loadingProvider, setLoadingProvider] = useState<string | null>(null);
 
+  // Don't render until providers are configured in Supabase
+  if (process.env.NEXT_PUBLIC_SOCIAL_AUTH_ENABLED !== 'true') {
+    return null;
+  }
+
   async function handleOAuthLogin(provider: 'google' | 'apple') {
     setLoadingProvider(provider);
     const supabase = createClient();

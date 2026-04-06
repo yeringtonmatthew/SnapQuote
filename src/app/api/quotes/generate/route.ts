@@ -46,6 +46,9 @@ export async function POST(request: Request) {
     const content: Anthropic.MessageParam['content'] = [];
 
     for (const b64 of images) {
+      if (typeof b64 !== 'string' || b64.length > 10_000_000) {
+        return NextResponse.json({ error: 'Image too large. Maximum 7.5MB per image.' }, { status: 400 });
+      }
       const inputBuffer = Buffer.from(b64, 'base64');
 
       const resized = await sharp(inputBuffer)

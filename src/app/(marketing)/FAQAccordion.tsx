@@ -26,7 +26,7 @@ const faqs = [
   {
     question: 'Can I customize my proposals with my branding?',
     answer:
-      'On the Pro plan, you can add your logo, company colors, license numbers, and custom terms. Your proposals look like they came from a Fortune 500 company — but with your brand front and center.',
+      'With SnapQuote, you can add your logo, company colors, license numbers, and custom terms. Your proposals look like they came from a Fortune 500 company — but with your brand front and center.',
   },
   {
     question: 'How is this different from Jobber or ServiceTitan?',
