@@ -798,6 +798,9 @@ export default function NewQuotePage() {
       setFieldErrors({ lineItems: 'Add at least one line item with a description' });
       return;
     }
+    // Open blank window NOW (synchronous user gesture) to avoid popup blocker.
+    // We'll navigate it to the real URL once the quote is saved.
+    const previewWindow = window.open('', '_blank');
     setPreviewSaving(true);
     setError(null);
     setFieldErrors({});
@@ -850,8 +853,13 @@ export default function NewQuotePage() {
         throw new Error(data.error || 'Failed to save quote');
       }
       const savedQuote = await res.json();
-      window.open(`/q/${savedQuote.id}`, '_blank');
+      if (previewWindow) {
+        previewWindow.location.href = `/q/${savedQuote.id}`;
+      } else {
+        window.open(`/q/${savedQuote.id}`, '_blank');
+      }
     } catch (err) {
+      if (previewWindow) previewWindow.close();
       setError(err instanceof Error ? err.message : 'Something went wrong');
     } finally {
       setPreviewSaving(false);
