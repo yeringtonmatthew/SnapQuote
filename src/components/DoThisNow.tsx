@@ -165,7 +165,7 @@ export default function DoThisNow({ actions, leadScores }: Props) {
             </button>
           ) : oneTap.type === 'sms' ? (
             <a
-              href={`sms:${action.customerPhone || ''}&body=${encodeURIComponent(`Hi ${action.customerName.split(' ')[0]}`)}`}
+              href={`sms:${action.customerPhone || ''}?body=${encodeURIComponent(`Hi ${action.customerName.split(' ')[0]}`)}`}
               onClick={() => {
                 haptic('medium');
                 // Mark as done after tap — user is being sent to Messages

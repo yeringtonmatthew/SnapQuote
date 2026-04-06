@@ -1598,6 +1598,21 @@ export default function NewQuotePage() {
                       onChange={(e) => {
                         const newTotal = parseFloat(e.target.value);
                         if (!newTotal || newTotal <= 0 || subtotal <= 0) return;
+                        if (total <= 0) {
+                          // Can't compute ratio when current total is 0; distribute evenly
+                          const count = lineItems.length || 1;
+                          const perItem = Math.round((newTotal / count) * 100) / 100;
+                          setLineItems(prev => prev.map((item, i) => ({
+                            ...item,
+                            unit_price: i === prev.length - 1
+                              ? Math.round((newTotal - perItem * (count - 1)) * 100) / 100
+                              : perItem,
+                            total: i === prev.length - 1
+                              ? Math.round((newTotal - perItem * (count - 1)) * 100) / 100
+                              : perItem,
+                          })));
+                          return;
+                        }
                         const ratio = newTotal / total;
                         setLineItems(prev => prev.map(item => ({
                           ...item,

@@ -89,7 +89,7 @@ export function SendQuoteButton({
       router.refresh();
     });
     // Open native SMS
-    window.location.href = `sms:${digits}&body=${encodeURIComponent(msg)}`;
+    window.location.href = `sms:${digits}?body=${encodeURIComponent(msg)}`;
     setSent(true);
     haptic('medium');
   }

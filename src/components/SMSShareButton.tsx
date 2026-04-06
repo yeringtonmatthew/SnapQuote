@@ -12,9 +12,8 @@ interface SMSShareButtonProps {
 export function SMSShareButton({ phone, message }: SMSShareButtonProps) {
   // Normalize phone to digits only
   const digits = phone.replace(/\D/g, '');
-  // sms: URI works on both iOS and Android
-  // iOS uses &body=, Android uses ?body=, but the & format works on both modern OS
-  const smsUrl = `sms:${digits}&body=${encodeURIComponent(message)}`;
+  // sms: URI — ?body= is the standard format that works on both iOS and Android
+  const smsUrl = `sms:${digits}?body=${encodeURIComponent(message)}`;
 
   return (
     <a
