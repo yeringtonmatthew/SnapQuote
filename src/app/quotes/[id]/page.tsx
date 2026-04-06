@@ -225,6 +225,36 @@ export default async function QuoteDetailPage({
           </div>
         )}
 
+        {/* Inspection Report */}
+        {quote.inspection_findings && Array.isArray(quote.inspection_findings) && (quote.inspection_findings as Array<{finding: string; severity: string; urgency_message: string; photo_index: number}>).length > 0 && (
+          <div className="card space-y-3">
+            <p className="text-[11px] font-semibold uppercase tracking-widest text-gray-400">
+              Inspection Report ({(quote.inspection_findings as unknown[]).length} finding{(quote.inspection_findings as unknown[]).length !== 1 ? 's' : ''})
+            </p>
+            <div className="space-y-2">
+              {(quote.inspection_findings as Array<{finding: string; severity: string; urgency_message: string; photo_index: number}>).map((f, i) => {
+                const sc = f.severity === 'critical'
+                  ? { bg: 'bg-red-50 dark:bg-red-950/20 border-red-100 dark:border-red-900', dot: 'bg-red-500', label: 'Critical', textColor: 'text-red-700 dark:text-red-400' }
+                  : f.severity === 'moderate'
+                    ? { bg: 'bg-amber-50 dark:bg-amber-950/20 border-amber-100 dark:border-amber-900', dot: 'bg-amber-500', label: 'Moderate', textColor: 'text-amber-700 dark:text-amber-400' }
+                    : { bg: 'bg-blue-50 dark:bg-blue-950/20 border-blue-100 dark:border-blue-900', dot: 'bg-blue-400', label: 'Minor', textColor: 'text-blue-700 dark:text-blue-400' };
+                return (
+                  <div key={i} className={`rounded-xl border px-4 py-3 ${sc.bg}`}>
+                    <div className="flex items-center gap-2 mb-1">
+                      <div className={`h-2 w-2 rounded-full shrink-0 ${sc.dot}`} />
+                      <span className={`text-[11px] font-semibold uppercase tracking-wider ${sc.textColor}`}>{sc.label}</span>
+                    </div>
+                    <p className="text-[14px] font-medium text-gray-900 dark:text-gray-100">{f.finding}</p>
+                    {f.urgency_message && (
+                      <p className="mt-0.5 text-[13px] text-gray-500 dark:text-gray-400 italic">"{f.urgency_message}"</p>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         {/* Customer */}
         <div className="card">
           <p className="text-[11px] font-semibold uppercase tracking-widest text-gray-400">Customer</p>

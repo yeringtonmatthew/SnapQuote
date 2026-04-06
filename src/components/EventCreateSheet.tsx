@@ -37,6 +37,7 @@ interface EventCreateSheetProps {
   defaultTime?: string;
   quotes?: QuoteOption[];
   editingEvent?: CalendarEvent;
+  saveError?: string | null;
 }
 
 export default function EventCreateSheet({
@@ -47,6 +48,7 @@ export default function EventCreateSheet({
   defaultTime,
   quotes = [],
   editingEvent,
+  saveError,
 }: EventCreateSheetProps) {
   const [title, setTitle] = useState('');
   const [eventType, setEventType] = useState<EventType>('job_scheduled');
@@ -548,6 +550,13 @@ export default function EventCreateSheet({
               className="w-full rounded-xl bg-gray-100 dark:bg-gray-800 px-4 py-3 text-[15px] text-gray-900 dark:text-gray-100 placeholder-gray-400 outline-none focus:ring-2 focus:ring-brand-500/20 transition-all resize-none"
             />
           </div>
+
+          {/* Save error */}
+          {saveError && (
+            <div className="rounded-xl bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 px-4 py-3">
+              <p className="text-[14px] font-medium text-red-700 dark:text-red-400">{saveError}</p>
+            </div>
+          )}
 
           {/* Delete button for editing */}
           {editingEvent && (

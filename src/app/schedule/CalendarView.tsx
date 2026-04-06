@@ -220,15 +220,11 @@ function EventDetailSheet({
 
   return (
     <>
-      <div className="fixed inset-0 z-50 bg-black/40 animate-sheet-backdrop" onClick={onClose} />
-      <div className="fixed inset-x-0 bottom-0 lg:inset-y-0 lg:left-auto lg:right-0 lg:bottom-auto lg:w-[420px] z-50 animate-sheet-up lg:animate-none">
-        <div className="mx-auto max-w-lg lg:max-w-none lg:h-full rounded-t-2xl lg:rounded-none bg-white dark:bg-gray-900 shadow-2xl pb-8 lg:pb-0 lg:overflow-y-auto">
-          <div className="flex justify-center pt-3 pb-2">
-            <div className="h-1 w-8 rounded-full bg-gray-300 dark:bg-gray-700" />
-          </div>
-
-          {/* Title */}
-          <div className="px-5 pb-3">
+      <div className="fixed inset-0 z-50 bg-black/50 animate-sheet-backdrop" onClick={onClose} />
+      <div className="fixed inset-0 z-[60] animate-sheet-up overflow-y-auto bg-white dark:bg-gray-900">
+        <div className="mx-auto max-w-lg pb-safe-bottom">
+          {/* Header with close button */}
+          <div className="px-5 pt-5 pb-3">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2 mb-1">
@@ -241,9 +237,20 @@ function EventDetailSheet({
                   {event.customer_name || event.title}
                 </h2>
               </div>
-              <button onClick={onEdit} className="shrink-0 rounded-lg bg-gray-100 dark:bg-gray-800 px-3.5 py-2 text-[13px] font-semibold text-gray-600 dark:text-gray-300 press-scale min-h-[44px] flex items-center">
-                Edit
-              </button>
+              <div className="flex items-center gap-2 shrink-0">
+                <button onClick={onEdit} className="rounded-lg bg-gray-100 dark:bg-gray-800 px-3.5 py-2 text-[13px] font-semibold text-gray-600 dark:text-gray-300 press-scale min-h-[44px] flex items-center">
+                  Edit
+                </button>
+                <button
+                  onClick={onClose}
+                  className="flex h-11 w-11 items-center justify-center rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 press-scale"
+                  aria-label="Close"
+                >
+                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
             </div>
 
             {/* Address */}
@@ -353,10 +360,11 @@ function EventDetailSheet({
 
           {/* Notes */}
           {event.notes && (
-            <div className="px-5 pb-2">
+            <div className="px-5 pb-6">
               <p className="text-[12px] text-gray-400 whitespace-pre-wrap">{event.notes}</p>
             </div>
           )}
+          <div className="h-8" />
         </div>
       </div>
     </>
@@ -915,7 +923,10 @@ export function CalendarView({ initialEvents, unscheduledQuotes, allQuotes = [] 
   }, [view, selectedDate]);
 
   // Handle event creation/update
+  const [saveEventError, setSaveEventError] = useState<string | null>(null);
+
   const handleSaveEvent = useCallback(async (eventData: Partial<CalendarEvent>) => {
+    setSaveEventError(null);
     try {
       if (editingEvent) {
         const res = await fetch(`/api/events/${editingEvent.id}`, {
@@ -926,6 +937,12 @@ export function CalendarView({ initialEvents, unscheduledQuotes, allQuotes = [] 
         if (res.ok) {
           const updated = await res.json();
           setEvents((prev) => prev.map((e) => (e.id === editingEvent.id ? { ...e, ...updated } : e)));
+          setSheetOpen(false);
+          setEditingEvent(undefined);
+          setDefaultTime(undefined);
+        } else {
+          const data = await res.json().catch(() => ({}));
+          setSaveEventError(data.error || 'Failed to save event. Please try again.');
         }
       } else {
         const res = await fetch('/api/events', {
@@ -936,14 +953,17 @@ export function CalendarView({ initialEvents, unscheduledQuotes, allQuotes = [] 
         if (res.ok) {
           const created = await res.json();
           setEvents((prev) => [...prev, created]);
+          setSheetOpen(false);
+          setEditingEvent(undefined);
+          setDefaultTime(undefined);
+        } else {
+          const data = await res.json().catch(() => ({}));
+          setSaveEventError(data.error || 'Failed to create event. Please try again.');
         }
       }
     } catch {
-      // Event save failed silently — user can retry
+      setSaveEventError('Network error — check your connection and try again.');
     }
-    setSheetOpen(false);
-    setEditingEvent(undefined);
-    setDefaultTime(undefined);
   }, [editingEvent]);
 
   // Event detail sheet state
@@ -1112,6 +1132,7 @@ export function CalendarView({ initialEvents, unscheduledQuotes, allQuotes = [] 
           setSheetOpen(false);
           setEditingEvent(undefined);
           setDefaultTime(undefined);
+          setSaveEventError(null);
         }}
         onSave={handleSaveEvent}
         defaultDate={toDateKey(selectedDate)}
@@ -1122,6 +1143,7 @@ export function CalendarView({ initialEvents, unscheduledQuotes, allQuotes = [] 
           job_address: q.job_address,
         }))}
         editingEvent={editingEvent}
+        saveError={saveEventError}
       />
     </>
   );

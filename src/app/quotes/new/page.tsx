@@ -344,6 +344,7 @@ export default function NewQuotePage() {
 
   // Client picker
   const [clients, setClients] = useState<{ id: string; name: string; phone: string | null; email: string | null; address: string | null }[]>([]);
+  const [loadingClients, setLoadingClients] = useState(true);
   const [clientId, setClientId] = useState<string | null>(null);
   const [clientSearch, setClientSearch] = useState('');
   const [showClientDropdown, setShowClientDropdown] = useState(false);
@@ -370,6 +371,7 @@ export default function NewQuotePage() {
   // UI state
   const [generating, setGenerating] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [previewSaving, setPreviewSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [draftSavedVisible, setDraftSavedVisible] = useState(false);
@@ -425,6 +427,8 @@ export default function NewQuotePage() {
         }
       } catch {
         // Clients are optional
+      } finally {
+        setLoadingClients(false);
       }
     }
     loadProfile();
@@ -787,6 +791,73 @@ export default function NewQuotePage() {
     }
   }
 
+  // Save as draft and open customer preview in new tab
+  async function handleSaveForPreview() {
+    const hasLineItem = lineItems.some(item => item.description?.trim());
+    if (!hasLineItem) {
+      setFieldErrors({ lineItems: 'Add at least one line item with a description' });
+      return;
+    }
+    setPreviewSaving(true);
+    setError(null);
+    setFieldErrors({});
+    try {
+      const supabase = createClient();
+      let finalPhotoUrls = [...photoUrls];
+      if (files.length > photoUrls.length) {
+        const remainingFiles = files.slice(photoUrls.length);
+        for (const file of remainingFiles) {
+          const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.jpg`;
+          const filePath = `quotes/${fileName}`;
+          const { error: uploadError } = await supabase.storage
+            .from('photos')
+            .upload(filePath, file, { contentType: file.type || 'image/jpeg' });
+          if (!uploadError) {
+            const { data: urlData } = supabase.storage.from('photos').getPublicUrl(filePath);
+            finalPhotoUrls.push(urlData.publicUrl);
+          }
+        }
+      }
+      const res = await fetch('/api/quotes/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          client_id: clientId,
+          customer_name: customerName,
+          customer_phone: customerPhone,
+          customer_email: customerEmail,
+          job_address: jobAddress,
+          lead_source: leadSource || null,
+          photos: finalPhotoUrls,
+          ai_description: aiDescription,
+          scope_of_work: scopeOfWork,
+          line_items: lineItems,
+          inspection_findings: inspectionFindings.length > 0 ? inspectionFindings : null,
+          subtotal,
+          tax_rate: parsedTaxRate > 0 ? parsedTaxRate : null,
+          discount_amount: discountType === 'amount' ? discountAmount : null,
+          discount_percent: discountType === 'percent' ? parsedDiscountValue : null,
+          total,
+          deposit_amount: depositAmount,
+          deposit_percent: depositPercent,
+          notes,
+          quote_options: quoteOptions,
+          status: 'draft',
+        }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || 'Failed to save quote');
+      }
+      const savedQuote = await res.json();
+      window.open(`/q/${savedQuote.id}`, '_blank');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Something went wrong');
+    } finally {
+      setPreviewSaving(false);
+    }
+  }
+
   // Handle back navigation with draft save
   function handleBackClick() {
     const hasContent = customerName || lineItems.length > 0 || aiDescription || files.length > 0 || photoUrls.length > 0;
@@ -933,74 +1004,82 @@ export default function NewQuotePage() {
             <div className="space-y-4">
               <h2 className="text-[15px] font-semibold text-gray-700">Customer Info</h2>
 
-              {/* Client search / picker */}
-              {clients.length > 0 && (
-                <>
-                  {clientId ? (
-                    <div className="flex items-center gap-2 rounded-xl bg-brand-50 border border-brand-200 px-3 py-2.5">
-                      <svg className="h-4 w-4 text-brand-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+              {/* Client search / picker — always visible */}
+              <>
+                {clientId ? (
+                  <div className="flex items-center gap-2 rounded-xl bg-brand-50 border border-brand-200 px-3 py-2.5">
+                    <svg className="h-4 w-4 text-brand-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+                    </svg>
+                    <span className="text-[16px] font-medium text-brand-700 flex-1 truncate">{customerName}</span>
+                    <button
+                      type="button"
+                      onClick={deselectClient}
+                      className="flex h-11 w-11 items-center justify-center rounded-full text-brand-400 hover:bg-brand-100 hover:text-brand-600"
+                      aria-label="Deselect client"
+                    >
+                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                       </svg>
-                      <span className="text-[16px] font-medium text-brand-700 flex-1 truncate">{customerName}</span>
-                      <button
-                        type="button"
-                        onClick={deselectClient}
-                        className="flex h-11 w-11 items-center justify-center rounded-full text-brand-400 hover:bg-brand-100 hover:text-brand-600"
-                        aria-label="Deselect client"
-                      >
-                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="relative" ref={clientPickerRef}>
-                      <div className="relative">
-                        <svg className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
-                        </svg>
-                        <input
-                          type="text"
-                          value={clientSearch}
-                          onChange={(e) => { setClientSearch(e.target.value); setShowClientDropdown(true); }}
-                          onFocus={() => setShowClientDropdown(true)}
-                          placeholder="Search existing clients..."
-                          className="input-field pl-9"
-                        />
-                      </div>
-                      {showClientDropdown && filteredClients.length > 0 && (
-                        <ul className="absolute z-20 mt-1 max-h-52 w-full overflow-y-auto rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-lg">
-                          {filteredClients.slice(0, 20).map((c) => (
-                            <li key={c.id}>
-                              <button
-                                type="button"
-                                onClick={() => selectClient(c)}
-                                className="flex w-full min-h-[48px] flex-col gap-0.5 px-3 py-2.5 text-left hover:bg-gray-50 dark:hover:bg-gray-700 active:bg-gray-100 dark:active:bg-gray-600"
-                              >
-                                <span className="text-[16px] font-medium text-gray-900 dark:text-gray-100">{c.name}</span>
-                                <span className="text-[13px] text-gray-500">
-                                  {[c.phone, c.email].filter(Boolean).join(' -- ')}
-                                </span>
-                              </button>
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-                      {showClientDropdown && clientSearch.trim() && filteredClients.length === 0 && (
-                        <div className="absolute z-20 mt-1 w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-3 shadow-lg">
-                          <p className="text-[13px] text-gray-500">No clients found</p>
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  <div className="flex items-center gap-3">
-                    <div className="h-px flex-1 bg-gray-200 dark:bg-gray-700" />
-                    <span className="text-xs text-gray-400">or enter manually</span>
-                    <div className="h-px flex-1 bg-gray-200 dark:bg-gray-700" />
+                    </button>
                   </div>
-                </>
-              )}
+                ) : (
+                  <div className="relative" ref={clientPickerRef}>
+                    <div className="relative">
+                      <svg className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+                      </svg>
+                      <input
+                        type="text"
+                        value={clientSearch}
+                        onChange={(e) => { setClientSearch(e.target.value); setShowClientDropdown(true); }}
+                        onFocus={() => setShowClientDropdown(true)}
+                        placeholder="Search existing clients..."
+                        className="input-field pl-9"
+                      />
+                    </div>
+                    {showClientDropdown && loadingClients && (
+                      <div className="absolute z-20 mt-1 w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-3 shadow-lg">
+                        <p className="text-[13px] text-gray-400">Loading clients...</p>
+                      </div>
+                    )}
+                    {showClientDropdown && !loadingClients && filteredClients.length > 0 && (
+                      <ul className="absolute z-20 mt-1 max-h-52 w-full overflow-y-auto rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-lg">
+                        {filteredClients.slice(0, 20).map((c) => (
+                          <li key={c.id}>
+                            <button
+                              type="button"
+                              onClick={() => selectClient(c)}
+                              className="flex w-full min-h-[48px] flex-col gap-0.5 px-3 py-2.5 text-left hover:bg-gray-50 dark:hover:bg-gray-700 active:bg-gray-100 dark:active:bg-gray-600"
+                            >
+                              <span className="text-[16px] font-medium text-gray-900 dark:text-gray-100">{c.name}</span>
+                              <span className="text-[13px] text-gray-500">
+                                {[c.phone, c.email].filter(Boolean).join(' -- ')}
+                              </span>
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                    {showClientDropdown && !loadingClients && clientSearch.trim() && filteredClients.length === 0 && (
+                      <div className="absolute z-20 mt-1 w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-3 shadow-lg">
+                        <p className="text-[13px] text-gray-500">No clients found</p>
+                      </div>
+                    )}
+                    {showClientDropdown && !loadingClients && !clientSearch.trim() && clients.length === 0 && (
+                      <div className="absolute z-20 mt-1 w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-3 shadow-lg">
+                        <p className="text-[13px] text-gray-400">No clients yet — enter details below</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                <div className="flex items-center gap-3">
+                  <div className="h-px flex-1 bg-gray-200 dark:bg-gray-700" />
+                  <span className="text-xs text-gray-400">or enter manually</span>
+                  <div className="h-px flex-1 bg-gray-200 dark:bg-gray-700" />
+                </div>
+              </>
 
               <FormField label="Customer Name" required error={fieldErrors.customerName} htmlFor="customerName">
                 <input
@@ -1151,6 +1230,40 @@ export default function NewQuotePage() {
               <div className="card">
                 <p className="mb-2 text-xs font-medium uppercase tracking-wide text-gray-500">Scope of Work</p>
                 <p className="text-[15px] leading-relaxed text-gray-700">{scopeOfWork}</p>
+              </div>
+            )}
+
+            {/* Inspection Report */}
+            {inspectionFindings.length > 0 && (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between px-0.5">
+                  <h2 className="text-[15px] font-semibold text-gray-700 dark:text-gray-300">Inspection Report</h2>
+                  <span className="text-xs text-gray-400">{inspectionFindings.length} finding{inspectionFindings.length !== 1 ? 's' : ''}</span>
+                </div>
+                <div className="space-y-2">
+                  {inspectionFindings.map((finding, i) => {
+                    const sc = finding.severity === 'critical'
+                      ? { bg: 'bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-900', dot: 'bg-red-500', label: 'Critical', labelColor: 'text-red-700 dark:text-red-400' }
+                      : finding.severity === 'moderate'
+                        ? { bg: 'bg-amber-50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-900', dot: 'bg-amber-500', label: 'Moderate', labelColor: 'text-amber-700 dark:text-amber-400' }
+                        : { bg: 'bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-900', dot: 'bg-blue-400', label: 'Minor', labelColor: 'text-blue-700 dark:text-blue-400' };
+                    return (
+                      <div key={i} className={`rounded-xl border px-4 py-3 ${sc.bg}`}>
+                        <div className="flex items-center gap-2 mb-1">
+                          <div className={`h-2 w-2 rounded-full shrink-0 ${sc.dot}`} />
+                          <span className={`text-[11px] font-semibold uppercase tracking-wider ${sc.labelColor}`}>{sc.label}</span>
+                          {finding.photo_index !== undefined && photoUrls[finding.photo_index] && (
+                            <span className="text-[11px] text-gray-400">· Photo {finding.photo_index + 1}</span>
+                          )}
+                        </div>
+                        <p className="text-[14px] font-medium text-gray-900 dark:text-gray-100">{finding.finding}</p>
+                        {finding.urgency_message && (
+                          <p className="mt-0.5 text-[13px] text-gray-500 dark:text-gray-400 italic">"{finding.urgency_message}"</p>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             )}
 
@@ -1355,7 +1468,7 @@ export default function NewQuotePage() {
                   setFieldErrors({});
                   setStep('send');
                 }}
-                disabled={saving || lineItems.length === 0}
+                disabled={saving || previewSaving || lineItems.length === 0}
                 className="btn-primary flex items-center justify-center gap-2"
               >
                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
@@ -1364,8 +1477,28 @@ export default function NewQuotePage() {
                 Continue to Send
               </button>
               <button
+                onClick={handleSaveForPreview}
+                disabled={saving || previewSaving || lineItems.length === 0}
+                className="btn-secondary flex items-center justify-center gap-2"
+              >
+                {previewSaving ? (
+                  <>
+                    <Spinner size="md" className="text-gray-700" />
+                    Opening preview...
+                  </>
+                ) : (
+                  <>
+                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    Preview as Customer
+                  </>
+                )}
+              </button>
+              <button
                 onClick={() => handleSaveQuote('draft')}
-                disabled={saving}
+                disabled={saving || previewSaving}
                 className="btn-secondary"
               >
                 {saving ? (
