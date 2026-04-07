@@ -81,18 +81,17 @@ export default function EventCreateSheet({
   const sheetRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
 
-  // Fetch clients when sheet opens
+  // Fetch clients every time the sheet opens so newly added clients appear
   const fetchClients = useCallback(async () => {
-    if (clientsLoaded) return;
     try {
-      const res = await fetch('/api/clients');
+      const res = await fetch('/api/clients?limit=200');
       if (res.ok) {
         const data = await res.json();
-        setClients(data);
+        setClients(Array.isArray(data) ? data : (data.clients || []));
       }
     } catch { /* silent */ }
     setClientsLoaded(true);
-  }, [clientsLoaded]);
+  }, []);
 
   // Reset form when opening
   useEffect(() => {
