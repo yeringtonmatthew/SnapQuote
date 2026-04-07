@@ -389,32 +389,70 @@ export function QuotePDF({ quote, profile, brandColor: brandColorProp }: QuotePD
         )}
 
         {/* Inspection Report */}
-        {quote.inspection_findings && Array.isArray(quote.inspection_findings) && (quote.inspection_findings as Array<{ finding: string; severity: string; urgency_message: string }>).length > 0 && (
-          <View style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: bc, borderBottomColor: bcLight }]}>
-              Inspection Report — {(quote.inspection_findings as unknown[]).length} Finding{(quote.inspection_findings as unknown[]).length !== 1 ? 's' : ''}
-            </Text>
-            {(quote.inspection_findings as Array<{ finding: string; severity: string; urgency_message: string }>).map((f, i) => {
-              const severityLabel = f.severity === 'critical' ? 'CRITICAL' : f.severity === 'moderate' ? 'MODERATE' : 'MINOR';
-              const severityColor = f.severity === 'critical' ? '#dc2626' : f.severity === 'moderate' ? '#d97706' : '#2563eb';
-              return (
-                <View key={i} style={{ marginBottom: 6, paddingLeft: 8, borderLeftWidth: 3, borderLeftColor: severityColor }}>
-                  <Text style={{ fontSize: 7.5, fontFamily: 'Helvetica-Bold', color: severityColor, marginBottom: 2 }}>
-                    {severityLabel}
-                  </Text>
-                  <Text style={{ fontSize: 8.5, color: '#111827', marginBottom: f.urgency_message ? 2 : 0 }}>
-                    {f.finding}
-                  </Text>
-                  {f.urgency_message ? (
-                    <Text style={{ fontSize: 8, color: '#6b7280', fontStyle: 'italic' }}>
-                      {f.urgency_message}
-                    </Text>
-                  ) : null}
-                </View>
-              );
-            })}
-          </View>
-        )}
+        {quote.inspection_findings && Array.isArray(quote.inspection_findings) && (quote.inspection_findings as Array<{ finding: string; severity: string; urgency_message: string; photo_index?: number }>).length > 0 && (() => {
+          const findings = quote.inspection_findings as Array<{ finding: string; severity: string; urgency_message: string; photo_index?: number }>;
+          const photos: string[] = quote.photos || [];
+
+          // Group findings by photo_index
+          const byPhoto = new Map<number | undefined, typeof findings>();
+          for (const f of findings) {
+            const key = (f.photo_index !== undefined && f.photo_index < photos.length) ? f.photo_index : undefined;
+            if (!byPhoto.has(key)) byPhoto.set(key, []);
+            byPhoto.get(key)!.push(f);
+          }
+
+          const criticalCount = findings.filter(f => f.severity === 'critical').length;
+          const moderateCount = findings.filter(f => f.severity === 'moderate').length;
+
+          return (
+            <View style={styles.section}>
+              <Text style={[styles.sectionTitle, { color: bc, borderBottomColor: bcLight }]}>
+                Inspection Report — {findings.length} Finding{findings.length !== 1 ? 's' : ''}
+              </Text>
+              {(criticalCount > 0 || moderateCount > 0) && (
+                <Text style={{ fontSize: 8, color: '#374151', marginBottom: 8, lineHeight: 1.4 }}>
+                  {criticalCount > 0 ? `${criticalCount} critical issue${criticalCount !== 1 ? 's' : ''}` : ''}
+                  {criticalCount > 0 && moderateCount > 0 ? ' and ' : ''}
+                  {moderateCount > 0 ? `${moderateCount} area${moderateCount !== 1 ? 's' : ''} requiring attention` : ''}
+                  {' identified during inspection. Early intervention prevents escalating repair costs.'}
+                </Text>
+              )}
+              {Array.from(byPhoto.entries()).map(([photoIdx, photoFindings], groupIdx) => {
+                const photoUrl = photoIdx !== undefined ? photos[photoIdx] : undefined;
+                return (
+                  <View key={groupIdx} style={{ marginBottom: 10 }}>
+                    {photoUrl && (
+                      <Image
+                        src={photoUrl}
+                        style={{ width: '100%', height: 120, objectFit: 'cover', borderRadius: 4, marginBottom: 6 }}
+                      />
+                    )}
+                    {photoFindings.map((f, i) => {
+                      const severityLabel = f.severity === 'critical' ? 'CRITICAL' : f.severity === 'moderate' ? 'MODERATE' : 'MINOR';
+                      const severityColor = f.severity === 'critical' ? '#dc2626' : f.severity === 'moderate' ? '#d97706' : '#2563eb';
+                      const severityBg = f.severity === 'critical' ? '#fef2f2' : f.severity === 'moderate' ? '#fffbeb' : '#eff6ff';
+                      return (
+                        <View key={i} style={{ marginBottom: 5, padding: 6, backgroundColor: severityBg, borderRadius: 3, borderLeftWidth: 3, borderLeftColor: severityColor }}>
+                          <Text style={{ fontSize: 7, fontFamily: 'Helvetica-Bold', color: severityColor, marginBottom: 2 }}>
+                            {severityLabel}
+                          </Text>
+                          <Text style={{ fontSize: 8.5, color: '#111827', marginBottom: f.urgency_message ? 2 : 0 }}>
+                            {f.finding}
+                          </Text>
+                          {f.urgency_message ? (
+                            <Text style={{ fontSize: 7.5, color: '#6b7280', fontStyle: 'italic' }}>
+                              If left unaddressed: {f.urgency_message}
+                            </Text>
+                          ) : null}
+                        </View>
+                      );
+                    })}
+                  </View>
+                );
+              })}
+            </View>
+          );
+        })()}
 
         {/* Line Items */}
         <View style={styles.section}>

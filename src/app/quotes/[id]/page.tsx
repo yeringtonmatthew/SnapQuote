@@ -238,16 +238,29 @@ export default async function QuoteDetailPage({
                   : f.severity === 'moderate'
                     ? { bg: 'bg-amber-50 dark:bg-amber-950/20 border-amber-100 dark:border-amber-900', dot: 'bg-amber-500', label: 'Moderate', textColor: 'text-amber-700 dark:text-amber-400' }
                     : { bg: 'bg-blue-50 dark:bg-blue-950/20 border-blue-100 dark:border-blue-900', dot: 'bg-blue-400', label: 'Minor', textColor: 'text-blue-700 dark:text-blue-400' };
+                const photoUrl = (quote.photos && f.photo_index != null && f.photo_index < quote.photos.length)
+                  ? quote.photos[f.photo_index]
+                  : null;
                 return (
-                  <div key={i} className={`rounded-xl border px-4 py-3 ${sc.bg}`}>
-                    <div className="flex items-center gap-2 mb-1">
-                      <div className={`h-2 w-2 rounded-full shrink-0 ${sc.dot}`} />
-                      <span className={`text-[11px] font-semibold uppercase tracking-wider ${sc.textColor}`}>{sc.label}</span>
-                    </div>
-                    <p className="text-[14px] font-medium text-gray-900 dark:text-gray-100">{f.finding}</p>
-                    {f.urgency_message && (
-                      <p className="mt-0.5 text-[13px] text-gray-500 dark:text-gray-400 italic">"{f.urgency_message}"</p>
+                  <div key={i} className={`rounded-xl border overflow-hidden ${sc.bg}`}>
+                    {photoUrl && (
+                      <img
+                        src={photoUrl}
+                        alt={`Finding photo ${f.photo_index + 1}`}
+                        loading="lazy"
+                        className="w-full h-28 object-cover"
+                      />
                     )}
+                    <div className="px-4 py-3">
+                      <div className="flex items-center gap-2 mb-1">
+                        <div className={`h-2 w-2 rounded-full shrink-0 ${sc.dot}`} />
+                        <span className={`text-[11px] font-semibold uppercase tracking-wider ${sc.textColor}`}>{sc.label}</span>
+                      </div>
+                      <p className="text-[14px] font-medium text-gray-900 dark:text-gray-100">{f.finding}</p>
+                      {f.urgency_message && (
+                        <p className="mt-0.5 text-[13px] text-gray-500 dark:text-gray-400 italic">"{f.urgency_message}"</p>
+                      )}
+                    </div>
                   </div>
                 );
               })}
