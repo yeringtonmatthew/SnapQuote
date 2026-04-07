@@ -13,6 +13,7 @@ export interface DraftData {
   scopeOfWork: string;
   aiDescription: string;
   photos: string[];
+  inspectionFindings?: { photo_index: number; finding: string; severity: string; urgency_message: string }[];
   savedAt: string;
 }
 

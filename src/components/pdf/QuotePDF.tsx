@@ -388,6 +388,34 @@ export function QuotePDF({ quote, profile, brandColor: brandColorProp }: QuotePD
           </View>
         )}
 
+        {/* Inspection Report */}
+        {quote.inspection_findings && Array.isArray(quote.inspection_findings) && (quote.inspection_findings as Array<{ finding: string; severity: string; urgency_message: string }>).length > 0 && (
+          <View style={styles.section}>
+            <Text style={[styles.sectionTitle, { color: bc, borderBottomColor: bcLight }]}>
+              Inspection Report — {(quote.inspection_findings as unknown[]).length} Finding{(quote.inspection_findings as unknown[]).length !== 1 ? 's' : ''}
+            </Text>
+            {(quote.inspection_findings as Array<{ finding: string; severity: string; urgency_message: string }>).map((f, i) => {
+              const severityLabel = f.severity === 'critical' ? 'CRITICAL' : f.severity === 'moderate' ? 'MODERATE' : 'MINOR';
+              const severityColor = f.severity === 'critical' ? '#dc2626' : f.severity === 'moderate' ? '#d97706' : '#2563eb';
+              return (
+                <View key={i} style={{ marginBottom: 6, paddingLeft: 8, borderLeftWidth: 3, borderLeftColor: severityColor }}>
+                  <Text style={{ fontSize: 7.5, fontFamily: 'Helvetica-Bold', color: severityColor, marginBottom: 2 }}>
+                    {severityLabel}
+                  </Text>
+                  <Text style={{ fontSize: 8.5, color: '#111827', marginBottom: f.urgency_message ? 2 : 0 }}>
+                    {f.finding}
+                  </Text>
+                  {f.urgency_message ? (
+                    <Text style={{ fontSize: 8, color: '#6b7280', fontStyle: 'italic' }}>
+                      {f.urgency_message}
+                    </Text>
+                  ) : null}
+                </View>
+              );
+            })}
+          </View>
+        )}
+
         {/* Line Items */}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: bc, borderBottomColor: bcLight }]}>Line Items</Text>
