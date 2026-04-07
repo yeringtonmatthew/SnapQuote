@@ -24,6 +24,22 @@ function isPublicRoute(pathname: string): boolean {
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request: { headers: request.headers } });
 
+  // Native iOS app (Capacitor): skip the marketing landing page entirely.
+  // Redirect "/" → "/dashboard" so Apple reviewers see the real app, not
+  // the marketing site with pricing text that doesn't match the free app.
+  // Detection: Capacitor config appends ?native=1 to the server URL,
+  // or the User-Agent contains "SnapQuote" / "Capacitor".
+  const ua = request.headers.get('user-agent') || '';
+  const isNativeApp =
+    request.nextUrl.searchParams.get('native') === '1' ||
+    /SnapQuote|Capacitor/i.test(ua);
+  if (isNativeApp && request.nextUrl.pathname === '/') {
+    const url = request.nextUrl.clone();
+    url.pathname = '/dashboard';
+    url.searchParams.delete('native');
+    return NextResponse.redirect(url);
+  }
+
   // Short-circuit for public routes — no Supabase auth call needed
   if (isPublicRoute(request.nextUrl.pathname)) {
     return response;
