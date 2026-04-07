@@ -34,6 +34,7 @@ export async function GET(request: Request) {
       clients:client_id (
         name,
         phone,
+        email,
         address
       )
     `)
@@ -56,6 +57,7 @@ export async function GET(request: Request) {
       customer_name: (clients?.name as string) ?? (quotes?.customer_name as string) ?? null,
       job_address: (clients?.address as string) ?? (quotes?.job_address as string) ?? null,
       customer_phone: (clients?.phone as string) ?? (quotes?.customer_phone as string) ?? null,
+      customer_email: (clients?.email as string) ?? null,
       quote_number: (quotes?.quote_number as number) ?? null,
       pipeline_stage: (quotes?.pipeline_stage as string) ?? null,
       total: (quotes?.total as number) ?? null,
