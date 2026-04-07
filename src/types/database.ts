@@ -71,6 +71,11 @@ export interface User {
   reviews_last_fetched_at: string | null;
   onboarded: boolean;
   created_at: string;
+  // Subscription fields
+  stripe_customer_id: string | null;
+  subscription_id: string | null;
+  subscription_status: 'trialing' | 'active' | 'past_due' | 'canceled' | 'expired' | null;
+  trial_ends_at: string | null;
 }
 
 export interface Quote {

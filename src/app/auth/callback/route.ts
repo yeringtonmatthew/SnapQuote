@@ -46,6 +46,8 @@ export async function GET(request: Request) {
             email: user.email,
             full_name: oauthName,
             onboarded: false,
+            subscription_status: 'trialing',
+            trial_ends_at: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
           });
         } else if (!profile.full_name && user.user_metadata?.full_name) {
           // Backfill name from OAuth metadata if missing

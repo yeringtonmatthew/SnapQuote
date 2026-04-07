@@ -1,5 +1,7 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
+import { createClient } from '@supabase/supabase-js';
 import { NextResponse, type NextRequest } from 'next/server';
+import { isPaywallExempt } from '@/lib/subscription';
 
 // Routes that never need auth — skip the getUser() round-trip
 const PUBLIC_PREFIXES = [
@@ -74,7 +76,7 @@ export async function updateSession(request: NextRequest) {
   const isPublic = publicPaths.some((path) => request.nextUrl.pathname.startsWith(path));
 
   // Protected routes — redirect to login if not authenticated
-  const protectedPaths = ['/dashboard', '/quotes', '/onboarding', '/settings', '/schedule', '/clients', '/jobs', '/pipeline'];
+  const protectedPaths = ['/dashboard', '/quotes', '/onboarding', '/settings', '/schedule', '/clients', '/jobs', '/pipeline', '/subscribe'];
   const isProtected = !isPublic && protectedPaths.some((path) => request.nextUrl.pathname.startsWith(path));
 
   if (isProtected && !user) {
@@ -95,6 +97,38 @@ export async function updateSession(request: NextRequest) {
     const url = request.nextUrl.clone();
     url.pathname = '/dashboard';
     return NextResponse.redirect(url);
+  }
+
+  // ── Paywall check ──────────────────────────────────────────────────
+  // For authenticated users on protected routes, check subscription status.
+  // Skip for routes that should always be accessible (subscribe, settings, api/stripe).
+  if (user && isProtected && !isPaywallExempt(request.nextUrl.pathname)) {
+    const adminSb = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+    const { data: profile } = await adminSb
+      .from('users')
+      .select('subscription_status, trial_ends_at')
+      .eq('id', user.id)
+      .single();
+
+    if (profile) {
+      const status = profile.subscription_status;
+      const trialValid =
+        status === 'trialing' &&
+        profile.trial_ends_at &&
+        new Date(profile.trial_ends_at) > new Date();
+
+      const hasAccess =
+        status === 'active' || status === 'past_due' || trialValid;
+
+      if (!hasAccess) {
+        const url = request.nextUrl.clone();
+        url.pathname = '/subscribe';
+        return NextResponse.redirect(url);
+      }
+    }
   }
 
   return response;

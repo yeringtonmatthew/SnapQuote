@@ -90,7 +90,11 @@ export default function SignupPage() {
     if (user) {
       await supabase
         .from('users')
-        .update({ full_name: fullName })
+        .update({
+          full_name: fullName,
+          subscription_status: 'trialing',
+          trial_ends_at: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
+        })
         .eq('id', user.id);
     }
 
