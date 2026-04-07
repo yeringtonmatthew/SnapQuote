@@ -4,6 +4,7 @@ import { createClient as createServiceClient } from '@supabase/supabase-js';
 
 export const dynamic = 'force-dynamic';
 import { AcceptQuoteButton } from '@/components/AcceptQuoteButton';
+import { ContractDisclaimer } from '@/components/ContractDisclaimer';
 import { DownloadPdfButton } from '@/components/DownloadPdfButton';
 import { PrintButton } from '@/components/PrintButton';
 import { ViewTracker } from '@/components/ViewTracker';
@@ -1056,6 +1057,11 @@ export default async function CustomerProposalPage({
             </details>
           </div>
         )}
+
+        {/* ══════════════════════════════════════════════
+            CONTRACT / DISCLAIMER — Always shown on every quote
+            ══════════════════════════════════════════════ */}
+        <ContractDisclaimer />
 
         {/* ══════════════════════════════════════════════
             13. BOTTOM CTA — Final close with urgency
