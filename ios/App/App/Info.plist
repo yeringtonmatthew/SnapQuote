@@ -47,5 +47,13 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>SnapQuote needs camera access to take photos of job sites for quote generation and inspection reports.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>SnapQuote needs photo library access to select job site photos for quote generation.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>SnapQuote needs permission to save photos to your library.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>SnapQuote uses your location to auto-fill job site addresses.</string>
 </dict>
 </plist>
