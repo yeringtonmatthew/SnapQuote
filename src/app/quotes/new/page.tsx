@@ -568,7 +568,8 @@ export default function NewQuotePage() {
     scopeOfWork,
     aiDescription,
     photos: photoUrls,
-  }), [customerName, customerPhone, customerEmail, jobAddress, lineItems, notes, scopeOfWork, aiDescription, photoUrls]);
+    inspectionFindings,
+  }), [customerName, customerPhone, customerEmail, jobAddress, lineItems, notes, scopeOfWork, aiDescription, photoUrls, inspectionFindings]);
 
   // Auto-save every 30 seconds with visual indicator
   useEffect(() => {
@@ -593,6 +594,9 @@ export default function NewQuotePage() {
     setNotes(draft.notes || DEFAULT_TERMS);
     setScopeOfWork(draft.scopeOfWork || '');
     setAiDescription(draft.aiDescription || '');
+    if (draft.inspectionFindings && Array.isArray(draft.inspectionFindings)) {
+      setInspectionFindings(draft.inspectionFindings);
+    }
     if (draft.photos && draft.photos.length > 0) {
       setPhotoUrls(draft.photos);
     }
