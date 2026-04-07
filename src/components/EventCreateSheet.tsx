@@ -67,36 +67,43 @@ export default function EventCreateSheet({
   const [linkedName, setLinkedName] = useState('');
   const [linkedType, setLinkedType] = useState<'client' | 'quote' | null>(null);
 
-  // Clients fetched from API
-  const [clients, setClients] = useState<ClientOption[]>([]);
-  const [clientsLoaded, setClientsLoaded] = useState(false);
-
-  // Inline client creation
-  const [showNewClient, setShowNewClient] = useState(false);
-  const [newClientName, setNewClientName] = useState('');
-  const [newClientPhone, setNewClientPhone] = useState('');
-  const [newClientAddress, setNewClientAddress] = useState('');
-  const [creatingClient, setCreatingClient] = useState(false);
+  // Live server-side client search results
+  const [clientResults, setClientResults] = useState<ClientOption[]>([]);
+  const [searching, setSearching] = useState(false);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const sheetRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
 
-  // Fetch clients every time the sheet opens so newly added clients appear
-  const fetchClients = useCallback(async () => {
+  // Debounced live search against the full clients table
+  const searchClients = useCallback(async (query: string) => {
+    setSearching(true);
     try {
-      const res = await fetch('/api/clients?limit=200');
+      const params = new URLSearchParams({ limit: '20' });
+      if (query.trim()) params.set('search', query.trim());
+      const res = await fetch(`/api/clients?${params}`);
       if (res.ok) {
         const data = await res.json();
-        setClients(Array.isArray(data) ? data : (data.clients || []));
+        setClientResults(Array.isArray(data) ? data : (data.clients || []));
       }
-    } catch { /* silent */ }
-    setClientsLoaded(true);
+    } catch { /* silent */ } finally {
+      setSearching(false);
+    }
   }, []);
+
+  // Fire search on query change with debounce
+  useEffect(() => {
+    if (!showDropdown) return;
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => searchClients(searchQuery), 250);
+    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
+  }, [searchQuery, showDropdown, searchClients]);
 
   // Reset form when opening
   useEffect(() => {
     if (isOpen) {
-      fetchClients();
+      // Pre-load recent clients immediately when sheet opens
+      searchClients('');
       if (editingEvent) {
         setTitle(editingEvent.title || '');
         setEventType(editingEvent.event_type);
@@ -124,22 +131,17 @@ export default function EventCreateSheet({
       }
       setSearchQuery('');
       setShowDropdown(false);
-      setShowNewClient(false);
+      setClientResults([]);
       setSaving(false);
     }
-  }, [isOpen, editingEvent, defaultDate, defaultTime, fetchClients]);
+  }, [isOpen, editingEvent, defaultDate, defaultTime, searchClients]);
 
-  // Combined search results: clients + quotes
-  const searchResults = (() => {
-    const q = searchQuery.toLowerCase().trim();
-    if (!q) return { clients: clients.slice(0, 5), quotes: quotes.slice(0, 5) };
-    return {
-      clients: clients.filter(c => c.name.toLowerCase().includes(q)).slice(0, 5),
-      quotes: quotes.filter(qo => qo.customer_name.toLowerCase().includes(q)).slice(0, 5),
-    };
-  })();
+  // Filter quotes client-side (small list passed as prop)
+  const filteredQuotes = searchQuery.trim()
+    ? quotes.filter(q => q.customer_name.toLowerCase().includes(searchQuery.toLowerCase())).slice(0, 5)
+    : quotes.slice(0, 5);
 
-  const hasResults = searchResults.clients.length > 0 || searchResults.quotes.length > 0;
+  const hasResults = clientResults.length > 0 || filteredQuotes.length > 0;
 
   const handleSelectClient = (client: ClientOption) => {
     setClientId(client.id);
@@ -172,37 +174,6 @@ export default function EventCreateSheet({
     setShowDropdown(false);
   };
 
-  const handleCreateClient = async () => {
-    if (!newClientName.trim()) return;
-    setCreatingClient(true);
-    try {
-      const res = await fetch('/api/clients', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: newClientName.trim(),
-          phone: newClientPhone.trim() || null,
-          address: newClientAddress.trim() || null,
-        }),
-      });
-      if (res.ok) {
-        const newClient = await res.json();
-        // Add to local clients list
-        setClients(prev => [...prev, newClient]);
-        // Select the new client
-        handleSelectClient(newClient);
-        setShowNewClient(false);
-        setNewClientName('');
-        setNewClientPhone('');
-        setNewClientAddress('');
-        haptic('medium');
-      }
-    } catch {
-      // Client creation failed silently — user can retry
-    } finally {
-      setCreatingClient(false);
-    }
-  };
 
   const handleSave = async () => {
     if (!title.trim() && !linkedName) return;
@@ -302,50 +273,8 @@ export default function EventCreateSheet({
                   Remove
                 </button>
               </div>
-            ) : showNewClient ? (
-              /* Inline new client form */
-              <div className="rounded-xl border border-brand-200 dark:border-brand-800 bg-brand-50/30 dark:bg-brand-950/20 p-4 space-y-3">
-                <div className="flex items-center justify-between">
-                  <p className="text-[13px] font-semibold text-gray-700 dark:text-gray-300">New Client</p>
-                  <button
-                    onClick={() => setShowNewClient(false)}
-                    className="text-[12px] font-medium text-gray-400 press-scale"
-                  >
-                    Cancel
-                  </button>
-                </div>
-                <input
-                  type="text"
-                  value={newClientName}
-                  onChange={(e) => setNewClientName(e.target.value)}
-                  placeholder="Client name *"
-                  autoFocus
-                  className="w-full rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 px-3 py-2.5 text-base text-gray-900 dark:text-gray-100 placeholder-gray-400 outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400"
-                />
-                <input
-                  type="tel"
-                  value={newClientPhone}
-                  onChange={(e) => setNewClientPhone(e.target.value)}
-                  placeholder="Phone (optional)"
-                  className="w-full rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 px-3 py-2.5 text-base text-gray-900 dark:text-gray-100 placeholder-gray-400 outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400"
-                />
-                <input
-                  type="text"
-                  value={newClientAddress}
-                  onChange={(e) => setNewClientAddress(e.target.value)}
-                  placeholder="Address (optional)"
-                  className="w-full rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 px-3 py-2.5 text-base text-gray-900 dark:text-gray-100 placeholder-gray-400 outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400"
-                />
-                <button
-                  onClick={handleCreateClient}
-                  disabled={!newClientName.trim() || creatingClient}
-                  className="w-full rounded-lg bg-brand-600 py-2.5 text-[15px] font-semibold text-white disabled:opacity-40 press-scale"
-                >
-                  {creatingClient ? 'Creating...' : 'Create Client'}
-                </button>
-              </div>
             ) : (
-              /* Search input */
+              /* Live search input */
               <div className="relative">
                 <div className="relative">
                   <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
@@ -360,24 +289,26 @@ export default function EventCreateSheet({
                       setShowDropdown(true);
                     }}
                     onFocus={() => setShowDropdown(true)}
-                    placeholder="Search clients or jobs..."
+                    placeholder="Search clients..."
                     className="w-full rounded-xl bg-gray-100 dark:bg-gray-800 pl-10 pr-4 py-3 text-[15px] text-gray-900 dark:text-gray-100 placeholder-gray-400 outline-none focus:ring-2 focus:ring-brand-500/20 transition-all"
                   />
+                  {searching && (
+                    <div className="absolute right-3.5 top-1/2 -translate-y-1/2">
+                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-brand-600" />
+                    </div>
+                  )}
                 </div>
 
                 {showDropdown && (
-                  <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-gray-800 rounded-xl ring-1 ring-black/[0.08] dark:ring-white/[0.08] shadow-lg max-h-60 overflow-y-auto z-20">
-                    {/* Clients section */}
-                    {searchResults.clients.length > 0 && (
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-gray-800 rounded-xl ring-1 ring-black/[0.08] dark:ring-white/[0.08] shadow-lg max-h-64 overflow-y-auto z-20">
+                    {/* Clients */}
+                    {clientResults.length > 0 && (
                       <>
-                        <div className="px-3.5 py-2 border-b border-gray-100 dark:border-gray-700">
-                          <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Clients</p>
-                        </div>
-                        {searchResults.clients.map((c) => (
+                        {clientResults.map((c) => (
                           <button
                             key={`c-${c.id}`}
                             onClick={() => handleSelectClient(c)}
-                            className="w-full text-left px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-700 active:bg-gray-100 dark:active:bg-gray-600 transition-colors flex items-center gap-3"
+                            className="w-full text-left px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-700 active:bg-gray-100 dark:active:bg-gray-600 transition-colors flex items-center gap-3 border-b border-gray-50 dark:border-gray-700/50 last:border-0"
                           >
                             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-700 shrink-0">
                               <span className="text-[12px] font-bold text-gray-600 dark:text-gray-300">{c.name.charAt(0).toUpperCase()}</span>
@@ -391,17 +322,19 @@ export default function EventCreateSheet({
                       </>
                     )}
 
-                    {/* Quotes section */}
-                    {searchResults.quotes.length > 0 && (
+                    {/* Jobs section */}
+                    {filteredQuotes.length > 0 && (
                       <>
-                        <div className="px-3.5 py-2 border-b border-gray-100 dark:border-gray-700">
-                          <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Jobs</p>
-                        </div>
-                        {searchResults.quotes.map((q) => (
+                        {clientResults.length > 0 && (
+                          <div className="px-3.5 py-1.5 border-t border-gray-100 dark:border-gray-700">
+                            <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Jobs</p>
+                          </div>
+                        )}
+                        {filteredQuotes.map((q) => (
                           <button
                             key={`q-${q.id}`}
                             onClick={() => handleSelectQuote(q)}
-                            className="w-full text-left px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-700 active:bg-gray-100 dark:active:bg-gray-600 transition-colors flex items-center gap-3"
+                            className="w-full text-left px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-700 active:bg-gray-100 dark:active:bg-gray-600 transition-colors flex items-center gap-3 border-b border-gray-50 dark:border-gray-700/50 last:border-0"
                           >
                             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-100 dark:bg-indigo-900/40 shrink-0">
                               <svg className="h-3.5 w-3.5 text-indigo-600 dark:text-indigo-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
@@ -417,34 +350,19 @@ export default function EventCreateSheet({
                       </>
                     )}
 
-                    {/* No results + create new */}
-                    {!hasResults && searchQuery.trim() && (
-                      <div className="px-4 py-3 text-center">
-                        <p className="text-[13px] text-gray-400">No matches found</p>
+                    {/* No results */}
+                    {!searching && !hasResults && searchQuery.trim() && (
+                      <div className="px-4 py-4 text-center">
+                        <p className="text-[13px] text-gray-400">No clients found for &ldquo;{searchQuery}&rdquo;</p>
                       </div>
                     )}
 
-                    {/* Create new client option */}
-                    <button
-                      onClick={() => {
-                        setShowNewClient(true);
-                        setNewClientName(searchQuery.trim());
-                        setShowDropdown(false);
-                      }}
-                      className="w-full text-left px-4 py-3 hover:bg-brand-50 dark:hover:bg-brand-950/30 active:bg-brand-100 dark:active:bg-brand-950/50 transition-colors flex items-center gap-3 border-t border-gray-100 dark:border-gray-700"
-                    >
-                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-100 dark:bg-brand-900/40 shrink-0">
-                        <svg className="h-4 w-4 text-brand-600" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                        </svg>
+                    {/* Empty state — no query yet */}
+                    {!searching && !hasResults && !searchQuery.trim() && (
+                      <div className="px-4 py-4 text-center">
+                        <p className="text-[13px] text-gray-400">Start typing to search all clients</p>
                       </div>
-                      <div>
-                        <p className="text-[14px] font-semibold text-brand-600">
-                          {searchQuery.trim() ? `Create "${searchQuery.trim()}"` : 'Create new client'}
-                        </p>
-                        <p className="text-[11px] text-gray-400">Add a new client to your list</p>
-                      </div>
-                    </button>
+                    )}
                   </div>
                 )}
               </div>
