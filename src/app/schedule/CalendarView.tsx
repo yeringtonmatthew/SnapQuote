@@ -196,7 +196,19 @@ function EventDetailSheet({
   const colorBar = EVENT_COLORS[eventType] || 'bg-gray-400';
   const addr = typeof event.job_address === 'string' ? event.job_address : null;
   const phone = typeof event.customer_phone === 'string' ? event.customer_phone : null;
+  const email = typeof event.customer_email === 'string' ? event.customer_email : null;
   const [updating, setUpdating] = useState(false);
+  const [notes, setNotes] = useState(event.notes || '');
+  const [savingNotes, setSavingNotes] = useState(false);
+  const [notesSaved, setNotesSaved] = useState(false);
+
+  // Format the event date nicely
+  const eventDateLabel = (() => {
+    if (!event.event_date) return '';
+    const [y, m, d] = event.event_date.split('-').map(Number);
+    const dt = new Date(y, m - 1, d);
+    return dt.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+  })();
 
   const handleStageChange = async (stage: string) => {
     if (!event.quote_id) return;
@@ -214,6 +226,21 @@ function EventDetailSheet({
     }
   };
 
+  const handleSaveNotes = async () => {
+    setSavingNotes(true);
+    try {
+      await fetch(`/api/events/${event.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ notes: notes || null }),
+      });
+      setNotesSaved(true);
+      setTimeout(() => setNotesSaved(false), 2000);
+    } catch { /* silent */ } finally {
+      setSavingNotes(false);
+    }
+  };
+
   const pipelineStage = event.pipeline_stage as string | undefined;
   const canStart = event.quote_id && pipelineStage !== 'in_progress' && pipelineStage !== 'completed';
   const canComplete = event.quote_id && pipelineStage === 'in_progress';
@@ -223,7 +250,7 @@ function EventDetailSheet({
       <div className="fixed inset-0 z-50 bg-black/50 animate-sheet-backdrop" onClick={onClose} />
       <div className="fixed inset-0 z-[60] animate-sheet-up overflow-y-auto bg-white dark:bg-gray-900">
         <div className="mx-auto max-w-lg pb-safe-bottom">
-          {/* Header with close button */}
+          {/* Header */}
           <div className="px-5 pt-5 pb-3">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0 flex-1">
@@ -233,9 +260,14 @@ function EventDetailSheet({
                     {EVENT_TYPE_LABELS[eventType] || eventType}
                   </span>
                 </div>
-                <h2 className="text-[20px] font-bold text-gray-900 dark:text-gray-100 truncate">
+                <h2 className="text-[20px] font-bold text-gray-900 dark:text-gray-100">
                   {event.customer_name || event.title}
                 </h2>
+                {/* Date & time */}
+                <p className="text-[13px] text-gray-500 mt-0.5">
+                  {eventDateLabel}{eventDateLabel && !event.all_day && event.start_time ? ' · ' : ''}
+                  {event.all_day ? (eventDateLabel ? 'All day' : 'All day') : formatTimeRange(event.start_time, event.end_time)}
+                </p>
               </div>
               <div className="flex items-center gap-2 shrink-0">
                 <button onClick={onEdit} className="rounded-lg bg-gray-100 dark:bg-gray-800 px-3.5 py-2 text-[13px] font-semibold text-gray-600 dark:text-gray-300 press-scale min-h-[44px] flex items-center">
@@ -252,25 +284,6 @@ function EventDetailSheet({
                 </button>
               </div>
             </div>
-
-            {/* Address */}
-            {addr && (
-              <a
-                href={`maps://maps.apple.com/?daddr=${encodeURIComponent(addr)}`}
-                className="flex items-center gap-1.5 mt-2 text-[13px] text-gray-500 press-scale"
-              >
-                <svg className="h-3.5 w-3.5 shrink-0 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.75} stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
-                </svg>
-                <span className="truncate">{addr}</span>
-              </a>
-            )}
-
-            {/* Time */}
-            <p className="text-[13px] text-gray-400 mt-1.5">
-              {event.all_day ? 'All day' : formatTimeRange(event.start_time, event.end_time)}
-            </p>
           </div>
 
           {/* Directions — primary CTA */}
@@ -283,13 +296,13 @@ function EventDetailSheet({
                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.75} stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 6.75V15m6-6v8.25m.503 3.498l4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 00-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0z" />
                 </svg>
-                Directions
+                Directions to {addr}
               </a>
             </div>
           )}
 
           {/* Action row */}
-          <div className="px-5 grid grid-cols-4 gap-2 mb-4">
+          <div className="px-5 grid grid-cols-4 gap-2 mb-5">
             {/* Call */}
             {phone ? (
               <a href={`tel:${phone}`} className="flex flex-col items-center gap-1 rounded-xl bg-gray-50 dark:bg-gray-800 py-3 press-scale">
@@ -358,12 +371,48 @@ function EventDetailSheet({
             )}
           </div>
 
-          {/* Notes */}
-          {event.notes && (
-            <div className="px-5 pb-6">
-              <p className="text-[12px] text-gray-400 whitespace-pre-wrap">{event.notes}</p>
+          {/* Customer contact info */}
+          {(phone || email || addr) && (
+            <div className="px-5 mb-5 rounded-2xl mx-5 bg-gray-50 dark:bg-gray-800/60 divide-y divide-gray-100 dark:divide-gray-700/50">
+              {phone && (
+                <a href={`tel:${phone}`} className="flex items-center gap-3 py-3 press-scale">
+                  <svg className="h-4 w-4 shrink-0 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.75} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z" /></svg>
+                  <span className="text-[14px] text-gray-700 dark:text-gray-200">{phone}</span>
+                </a>
+              )}
+              {email && (
+                <a href={`mailto:${email}`} className="flex items-center gap-3 py-3 press-scale">
+                  <svg className="h-4 w-4 shrink-0 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.75} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" /></svg>
+                  <span className="text-[14px] text-gray-700 dark:text-gray-200 truncate">{email}</span>
+                </a>
+              )}
+              {addr && (
+                <a href={`maps://maps.apple.com/?daddr=${encodeURIComponent(addr)}`} className="flex items-center gap-3 py-3 press-scale">
+                  <svg className="h-4 w-4 shrink-0 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.75} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" /></svg>
+                  <span className="text-[14px] text-gray-700 dark:text-gray-200">{addr}</span>
+                </a>
+              )}
             </div>
           )}
+
+          {/* Notes — editable */}
+          <div className="px-5 pb-6">
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 mb-2">Notes</p>
+            <textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              rows={4}
+              placeholder="Add notes about this appointment..."
+              className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2.5 text-[14px] text-gray-800 dark:text-gray-100 placeholder-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-brand-500"
+            />
+            <button
+              onClick={handleSaveNotes}
+              disabled={savingNotes}
+              className="mt-2 w-full rounded-xl bg-gray-100 dark:bg-gray-800 py-2.5 text-[14px] font-semibold text-gray-700 dark:text-gray-200 press-scale disabled:opacity-50"
+            >
+              {savingNotes ? 'Saving...' : notesSaved ? 'Saved ✓' : 'Save Notes'}
+            </button>
+          </div>
           <div className="h-8" />
         </div>
       </div>

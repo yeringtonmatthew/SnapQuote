@@ -197,6 +197,7 @@ export interface CalendarEvent {
   customer_name?: string;
   job_address?: string;
   customer_phone?: string;
+  customer_email?: string;
   quote_number?: number;
   pipeline_stage?: string;
   total?: number;
