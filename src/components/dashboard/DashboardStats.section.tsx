@@ -3,6 +3,7 @@ import SmartActionsBar from '@/components/SmartActionsBar';
 import DashboardStats from '@/components/DashboardStats';
 import RevenueChart from '@/components/RevenueChart';
 import RevenueIntelligenceCard from '@/components/RevenueIntelligenceCard';
+import WorkflowPipeline from '@/components/WorkflowPipeline';
 import { calculateRevenueIntelligence } from '@/lib/revenue-intelligence';
 import type { Quote } from '@/types/database';
 
@@ -18,8 +19,53 @@ export default async function DashboardStatsSection({ userId }: { userId: string
     .order('created_at', { ascending: false })
     .limit(100);
 
+  // Fetch invoices for workflow pipeline
+  const { data: invoices } = await supabase
+    .from('invoices')
+    .select('id, quote_id, status, amount_due, amount_paid')
+    .eq('contractor_id', userId);
+
   const allQuotes = quotes || [];
   const activeQuotes = allQuotes.filter(q => !q.archived);
+
+  // ── Workflow Pipeline stats ──────────────────────────
+  const invoiceQuoteIds = new Set((invoices || []).map(i => i.quote_id));
+  const wf = {
+    approvedQuotes: 0,
+    approvedValue: 0,
+    activeJobs: 0,
+    activeJobsValue: 0,
+    requiresInvoicing: 0,
+    requiresInvoicingValue: 0,
+    awaitingPayment: 0,
+    awaitingPaymentValue: 0,
+  };
+  for (const q of activeQuotes) {
+    const total = Number(q.total ?? q.subtotal ?? 0);
+    const stage = q.pipeline_stage;
+    // Approved quotes (sent or approved, not yet deposit collected)
+    if (q.status === 'sent' || q.status === 'approved') {
+      wf.approvedQuotes++;
+      wf.approvedValue += total;
+    }
+    // Active jobs (deposit_collected through in_progress)
+    if (['deposit_collected', 'job_scheduled', 'in_progress'].includes(stage)) {
+      wf.activeJobs++;
+      wf.activeJobsValue += total;
+    }
+    // Completed but no invoice yet
+    if (stage === 'completed' && !invoiceQuoteIds.has(q.id)) {
+      wf.requiresInvoicing++;
+      wf.requiresInvoicingValue += total;
+    }
+  }
+  // Awaiting payment from invoices
+  for (const inv of (invoices || [])) {
+    if (inv.status === 'sent' || inv.status === 'partially_paid' || inv.status === 'overdue') {
+      wf.awaitingPayment++;
+      wf.awaitingPaymentValue += Number(inv.amount_due) - Number(inv.amount_paid);
+    }
+  }
   const now = new Date();
 
   // ── Single-pass computation ──────────────────────────
@@ -124,7 +170,7 @@ export default async function DashboardStatsSection({ userId }: { userId: string
     if (status !== 'draft') {
       stats.sentCount++;
     }
-    if (status === 'approved' || status === 'deposit_paid') {
+    if (status === 'approved' || status === 'deposit_paid' || status === 'paid') {
       stats.approvedCount++;
     }
 
@@ -148,7 +194,7 @@ export default async function DashboardStatsSection({ userId }: { userId: string
 
   // Revenue chart: iterate all quotes (including archived) for chart data
   for (const q of allQuotes) {
-    if (q.status === 'deposit_paid' && q.paid_at) {
+    if ((q.status === 'deposit_paid' || q.status === 'paid') && q.paid_at) {
       stats.hasPaidQuotes = true;
       for (const bucket of monthBuckets) {
         if (q.paid_at >= bucket.start && q.paid_at < bucket.end) {
@@ -180,6 +226,20 @@ export default async function DashboardStatsSection({ userId }: { userId: string
 
   return (
     <>
+      {/* Workflow Pipeline — Jobber-style at-a-glance funnel */}
+      <div className="lg:col-span-2">
+        <WorkflowPipeline
+          approvedQuotes={wf.approvedQuotes}
+          approvedValue={wf.approvedValue}
+          activeJobs={wf.activeJobs}
+          activeJobsValue={wf.activeJobsValue}
+          requiresInvoicing={wf.requiresInvoicing}
+          requiresInvoicingValue={wf.requiresInvoicingValue}
+          awaitingPayment={wf.awaitingPayment}
+          awaitingPaymentValue={wf.awaitingPaymentValue}
+        />
+      </div>
+
       {/* SmartActionsBar */}
       {hasAttentionItems && (
         <div className="lg:col-span-2">

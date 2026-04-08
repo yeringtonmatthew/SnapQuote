@@ -595,7 +595,7 @@ export default function NewQuotePage() {
     setScopeOfWork(draft.scopeOfWork || '');
     setAiDescription(draft.aiDescription || '');
     if (draft.inspectionFindings && Array.isArray(draft.inspectionFindings)) {
-      setInspectionFindings(draft.inspectionFindings);
+      setInspectionFindings(draft.inspectionFindings as InspectionFinding[]);
     }
     if (draft.photos && draft.photos.length > 0) {
       setPhotoUrls(draft.photos);

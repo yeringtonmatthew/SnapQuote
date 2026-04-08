@@ -18,10 +18,8 @@ export async function POST(
   }
 
   // Validate payment amount
-  if (amount !== undefined && amount !== null) {
-    if (typeof amount !== 'number' || !Number.isFinite(amount) || amount <= 0) {
-      return NextResponse.json({ error: 'Amount must be a positive number' }, { status: 400 });
-    }
+  if (amount === undefined || amount === null || typeof amount !== 'number' || !Number.isFinite(amount) || amount <= 0) {
+    return NextResponse.json({ error: 'Amount must be a positive number' }, { status: 400 });
   }
 
   const { data: quote, error: fetchError } = await supabase
@@ -35,24 +33,53 @@ export async function POST(
     return NextResponse.json({ error: 'Quote not found' }, { status: 404 });
   }
 
-  // Validate amount does not exceed quote total
-  if (amount !== undefined && amount !== null) {
-    const quoteTotal = Number(quote.total ?? quote.subtotal ?? 0);
-    if (amount > quoteTotal) {
-      return NextResponse.json({ error: 'Amount exceeds quote total' }, { status: 400 });
-    }
+  const quoteTotal = Number(quote.total ?? quote.subtotal ?? 0);
+
+  // Validate amount does not exceed remaining balance
+  const { data: existingPayments } = await supabase
+    .from('payments')
+    .select('amount')
+    .eq('quote_id', params.id);
+  const previouslyPaid = (existingPayments || []).reduce((sum: number, p: { amount: number }) => sum + Number(p.amount), 0);
+
+  if (amount > quoteTotal - previouslyPaid + 0.01) {
+    return NextResponse.json({ error: 'Amount exceeds remaining balance' }, { status: 400 });
   }
 
-  // If a custom amount was provided (e.g. full payment or balance), update deposit_amount
+  // Insert into payments table
+  const { error: payError } = await supabase.from('payments').insert({
+    quote_id: params.id,
+    contractor_id: user.id,
+    amount,
+    payment_type: body.payment_type || 'deposit',
+    payment_method,
+    payment_note: payment_note || null,
+    recorded_at: new Date().toISOString(),
+  });
+
+  if (payError) {
+    return NextResponse.json({ error: payError.message }, { status: 500 });
+  }
+
+  // Query total paid after this payment
+  const { data: paymentRows } = await supabase
+    .from('payments')
+    .select('amount')
+    .eq('quote_id', params.id);
+  const totalPaid = (paymentRows || []).reduce((sum: number, p: { amount: number }) => sum + Number(p.amount), 0);
+
+  // Determine status based on totalPaid vs quote total
+  const newStatus = totalPaid >= quoteTotal ? 'paid' : 'deposit_paid';
   const updatePayload: Record<string, unknown> = {
-    status: 'deposit_paid',
+    status: newStatus,
     paid_at: new Date().toISOString(),
     payment_method,
     payment_note: payment_note || null,
-    pipeline_stage: 'deposit_collected',
   };
-  if (amount !== undefined && amount !== null) {
-    updatePayload.deposit_amount = amount;
+
+  // Only update pipeline_stage for partial payments
+  if (newStatus === 'deposit_paid') {
+    updatePayload.pipeline_stage = 'deposit_collected';
   }
 
   const { data: updated, error } = await supabase
@@ -80,14 +107,13 @@ export async function POST(
       const businessName = profile?.business_name || profile?.full_name || 'Licensed Professional';
       const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://snapquote.dev';
       const receiptUrl = `${appUrl}/receipt/${params.id}`;
-      const paidAmount = amount || quote.deposit_amount;
       const client = twilio(sid!, token!);
 
       const digits = quote.customer_phone?.replace(/\D/g, '') ?? '';
       const toNumber = digits.startsWith('1') ? `+${digits}` : `+1${digits}`;
 
       await client.messages.create({
-        body: `Hi ${quote.customer_name}, ${businessName} has recorded your payment of $${Number(paidAmount).toFixed(2)}. View your receipt here: ${receiptUrl}`,
+        body: `Hi ${quote.customer_name}, ${businessName} has recorded your payment of $${Number(amount).toFixed(2)}. View your receipt here: ${receiptUrl}`,
         from,
         to: toNumber,
       });

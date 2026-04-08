@@ -59,6 +59,13 @@ export default async function QuoteDetailPage({
 
   if (!quote) notFound();
 
+  // Fetch payments to compute totalPaid
+  const { data: payments } = await supabase
+    .from('payments')
+    .select('amount')
+    .eq('quote_id', params.id);
+  const totalPaid = (payments || []).reduce((sum: number, p: { amount: number }) => sum + Number(p.amount), 0);
+
   const { data: profile } = await supabase
     .from('users')
     .select('business_name, full_name')
@@ -111,8 +118,9 @@ export default async function QuoteDetailPage({
           <div className="flex items-center gap-2">
             <CollectPaymentButton
               quoteId={quote.id}
-              depositAmount={deposit}
-              balanceAmount={balance}
+              quoteTotal={quoteTotal}
+              totalPaid={totalPaid}
+              depositPercent={Number(quote.deposit_percent || 0)}
               currentStatus={quote.status}
               paymentMethod={quote.payment_method}
               hasEmail={!!quote.customer_email}

@@ -1,7 +1,48 @@
 export type TradeType = 'plumber' | 'hvac' | 'electrician' | 'general' | 'roofing' | 'painter' | 'landscaper' | 'other';
 export type PlanType = 'starter' | 'pro' | 'team';
 export type RateType = 'hourly' | 'per_square' | 'per_sqft' | 'per_linear_ft' | 'flat_rate';
-export type QuoteStatus = 'draft' | 'sent' | 'approved' | 'deposit_paid' | 'cancelled';
+export type QuoteStatus = 'draft' | 'sent' | 'approved' | 'deposit_paid' | 'paid' | 'cancelled';
+
+export type PaymentType = 'deposit' | 'balance' | 'full' | 'partial';
+export type PaymentMethod = 'cash' | 'check' | 'card' | 'stripe';
+
+export type InvoiceStatus = 'draft' | 'sent' | 'paid' | 'partially_paid' | 'overdue' | 'void';
+
+export interface Payment {
+  id: string;
+  quote_id: string;
+  invoice_id: string | null;
+  contractor_id: string;
+  amount: number;
+  payment_type: PaymentType;
+  payment_method: PaymentMethod;
+  payment_note: string | null;
+  recorded_at: string;
+  created_at: string;
+}
+
+export interface Invoice {
+  id: string;
+  quote_id: string;
+  contractor_id: string;
+  invoice_number: number;
+  status: InvoiceStatus;
+  amount_due: number;
+  amount_paid: number;
+  due_date: string | null;
+  sent_at: string | null;
+  paid_at: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+  // Joined fields
+  customer_name?: string;
+  customer_phone?: string;
+  customer_email?: string;
+  job_address?: string;
+  quote_number?: number;
+  total?: number;
+}
 
 export type PipelineStage =
   | 'lead'

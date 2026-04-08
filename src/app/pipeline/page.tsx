@@ -141,7 +141,7 @@ export default async function PipelinePage() {
           </div>
         )}
 
-        <BottomNav active="pipeline" />
+        <BottomNav active="more" />
       </div>
     </PageTransition>
   );

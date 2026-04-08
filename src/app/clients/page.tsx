@@ -68,7 +68,7 @@ export default async function ClientsPage() {
 
         <ClientsListContent initialClients={enrichedClients} totalClients={totalClients} pageSize={PAGE_SIZE} />
 
-        <BottomNav active="clients" />
+        <BottomNav active="more" />
       </div>
     </PageTransition>
   );

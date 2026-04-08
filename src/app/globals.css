@@ -760,7 +760,8 @@ body.scroll-locked {
   .animate-fade-up, .animate-shimmer, .animate-scale-up,
   .animate-tab-active, .animate-notification-panel,
   .animate-quick-add-spring, .animate-quick-add-backdrop,
-  .animate-quick-add-item, .animate-sheet-down {
+  .animate-quick-add-item, .animate-sheet-down,
+  .animate-sheet-up, .animate-sheet-backdrop {
     animation: none !important;
   }
   .tab-press, .tab-press:active {

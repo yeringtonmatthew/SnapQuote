@@ -74,9 +74,11 @@ interface Props {
   quote: Quote;
   profile: User;
   brandColor: string;
+  totalPaid: number;
+  payments: any[];
 }
 
-export function JobDetailContent({ quote, profile, brandColor }: Props) {
+export function JobDetailContent({ quote, profile, brandColor, totalPaid, payments }: Props) {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<'quote' | 'job' | 'activity'>('quote');
   const [showStagePicker, setShowStagePicker] = useState(false);
@@ -88,7 +90,7 @@ export function JobDetailContent({ quote, profile, brandColor }: Props) {
   const subtotal = Number(quote.subtotal);
   const total = Number(quote.total ?? quote.subtotal);
   const deposit = Number(quote.deposit_amount);
-  const balance = total - deposit;
+  const balance = total - totalPaid;
   const hasDiscount = (quote.discount_amount != null && Number(quote.discount_amount) > 0) ||
     (quote.discount_percent != null && Number(quote.discount_percent) > 0);
   const discountDisplay = quote.discount_amount != null && Number(quote.discount_amount) > 0
@@ -384,6 +386,24 @@ export function JobDetailContent({ quote, profile, brandColor }: Props) {
         };
 
       case 'completed':
+        if (balance > 0) {
+          return {
+            icon: (
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.75} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z" />
+              </svg>
+            ),
+            headline: 'Collect Remaining Balance',
+            description: `${fmt(balance)} remaining — record a payment to close out this job.`,
+            actionLabel: 'Record Payment',
+            actionHref: `/quotes/${quote.id}`,
+            borderColor: 'border-l-amber-500',
+            bgColor: 'bg-amber-50/50',
+            textColor: 'text-amber-700',
+            btnBg: 'bg-amber-500',
+            btnText: 'text-white',
+          };
+        }
         return {
           icon: (
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.75} stroke="currentColor">
@@ -391,9 +411,8 @@ export function JobDetailContent({ quote, profile, brandColor }: Props) {
             </svg>
           ),
           headline: 'All Done',
-          description: balance > 0 ? `Collect remaining balance of ${fmt(balance)}.` : 'This job is complete.',
-          actionLabel: balance > 0 ? 'Share Invoice' : 'Done',
-          actionHref: balance > 0 ? `/q/${quote.id}` : undefined,
+          description: 'This job is complete and fully paid.',
+          actionLabel: 'Done',
           borderColor: 'border-l-green-500',
           bgColor: 'bg-green-50/50',
           textColor: 'text-green-700',

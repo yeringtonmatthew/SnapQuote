@@ -24,6 +24,14 @@ export default async function JobDetailPage({
 
   if (!quote) notFound();
 
+  const { data: payments } = await supabase
+    .from('payments')
+    .select('id, amount, payment_type, payment_method, payment_note, recorded_at')
+    .eq('quote_id', params.id)
+    .order('recorded_at', { ascending: true });
+
+  const totalPaid = (payments || []).reduce((sum: number, p: { amount: number }) => sum + Number(p.amount), 0);
+
   const { data: profile } = await supabase
     .from('users')
     .select('business_name, full_name, stripe_account_id, brand_color')
@@ -53,6 +61,8 @@ export default async function JobDetailPage({
           quote={quoteWithDefaults}
           profile={profile as import('@/types/database').User}
           brandColor={profile?.brand_color || '#4f46e5'}
+          totalPaid={totalPaid}
+          payments={payments || []}
         />
       </div>
     </PageTransition>
