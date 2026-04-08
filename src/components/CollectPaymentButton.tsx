@@ -7,8 +7,9 @@ import { haptic } from '@/lib/haptic';
 
 interface CollectPaymentButtonProps {
   quoteId: string;
-  depositAmount: number;
-  balanceAmount: number;
+  quoteTotal: number;
+  totalPaid: number;
+  depositPercent: number;
   currentStatus: string;
   paymentMethod?: string | null;
   hasEmail?: boolean;
@@ -22,8 +23,9 @@ const fmt = (n: number) =>
 
 export function CollectPaymentButton({
   quoteId,
-  depositAmount,
-  balanceAmount,
+  quoteTotal,
+  totalPaid,
+  depositPercent,
   currentStatus,
   paymentMethod,
   hasEmail = false,
@@ -43,15 +45,26 @@ export function CollectPaymentButton({
   const [sendingInvoice, setSendingInvoice] = useState(false);
   const [invoiceSent, setInvoiceSent] = useState(false);
 
-  const alreadyPaid = currentStatus === 'deposit_paid';
-  const canCollect = currentStatus === 'sent' || currentStatus === 'approved';
+  // Compute amounts from real payment data
+  const remaining = quoteTotal - totalPaid;
+  const originalDeposit = quoteTotal * (depositPercent / 100);
+  const alreadyPaid = remaining <= 0;
+  const canCollect = remaining > 0 && currentStatus !== 'draft' && currentStatus !== 'cancelled';
 
-  const amountMap = {
-    deposit: depositAmount,
-    balance: balanceAmount,
-    full: depositAmount + balanceAmount,
-  };
-  const amount = amountMap[paymentType];
+  // Payment options depend on what's been paid
+  const paymentOptions = totalPaid === 0
+    ? [
+        { key: 'deposit', label: 'Deposit', amount: originalDeposit },
+        { key: 'balance', label: 'Balance', amount: quoteTotal - originalDeposit },
+        { key: 'full', label: 'Full Amount', amount: quoteTotal },
+      ]
+    : [
+        { key: 'balance', label: 'Remaining', amount: remaining },
+      ];
+
+  const amount = totalPaid === 0
+    ? ({ deposit: originalDeposit, balance: quoteTotal - originalDeposit, full: quoteTotal }[paymentType] ?? originalDeposit)
+    : remaining;
 
   async function handleConfirm() {
     setSaving(true);
@@ -63,6 +76,7 @@ export function CollectPaymentButton({
           payment_method: method,
           payment_note: method === 'check' && checkNumber ? `Check #${checkNumber}` : null,
           amount,
+          payment_type: paymentType,
         }),
       });
       if (!res.ok) {
@@ -133,7 +147,7 @@ export function CollectPaymentButton({
     <>
       {prominent ? (
         <button
-          onClick={() => setShowModal(true)}
+          onClick={() => { setPaymentType(paymentOptions[0].key as typeof paymentType); setShowModal(true); }}
           className="flex w-full items-center justify-center gap-2 rounded-2xl bg-green-600 py-3.5 text-[15px] font-semibold text-white shadow-sm hover:bg-green-700 press-scale"
         >
           {cashIcon}
@@ -141,11 +155,11 @@ export function CollectPaymentButton({
         </button>
       ) : (
         <button
-          onClick={() => setShowModal(true)}
+          onClick={() => { setPaymentType(paymentOptions[0].key as typeof paymentType); setShowModal(true); }}
           className="flex items-center gap-1.5 rounded-xl bg-green-600 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-green-700 press-scale"
         >
           {cashIcon}
-          Collect Payment
+          Collect
         </button>
       )}
 
@@ -220,21 +234,21 @@ export function CollectPaymentButton({
               <>
                 <div>
                   <h2 className="text-[20px] font-bold text-gray-900 dark:text-gray-100">Collect Payment</h2>
-                  <p className="text-[14px] text-gray-500 dark:text-gray-400 mt-0.5">Record a cash, check, or card payment</p>
+                  <p className="text-[14px] text-gray-500 dark:text-gray-400 mt-0.5">
+                    {totalPaid > 0
+                      ? `${fmt(totalPaid)} already collected · ${fmt(remaining)} remaining`
+                      : 'Record a cash, check, or card payment'}
+                  </p>
                 </div>
 
                 {/* Payment type */}
                 <div>
                   <p className="label mb-2">What are you collecting?</p>
-                  <div className="grid grid-cols-3 gap-2">
-                    {[
-                      { key: 'deposit', label: 'Deposit', amount: depositAmount },
-                      { key: 'balance', label: 'Balance', amount: balanceAmount },
-                      { key: 'full', label: 'Full Amount', amount: depositAmount + balanceAmount },
-                    ].map((opt) => (
+                  <div className={`grid gap-2 ${paymentOptions.length === 1 ? 'grid-cols-1' : 'grid-cols-3'}`}>
+                    {paymentOptions.map((opt) => (
                       <button
                         key={opt.key}
-                        onClick={() => { haptic('light'); setPaymentType(opt.key as 'deposit' | 'balance' | 'full'); }}
+                        onClick={() => { haptic('light'); setPaymentType(opt.key as typeof paymentType); }}
                         className={`rounded-xl border-2 px-3 py-2.5 text-center transition-colors ${
                           paymentType === opt.key
                             ? 'border-brand-600 bg-brand-50 dark:bg-brand-950/30'
