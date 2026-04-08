@@ -232,8 +232,9 @@ export default async function QuoteDetailPage({
             </div>
             <CollectPaymentButton
               quoteId={quote.id}
-              depositAmount={deposit}
-              balanceAmount={balance}
+              quoteTotal={quoteTotal}
+              totalPaid={totalPaid}
+              depositPercent={Number(quote.deposit_percent || 0)}
               currentStatus={quote.status}
               paymentMethod={quote.payment_method}
               hasEmail={!!quote.customer_email}
