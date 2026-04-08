@@ -20,7 +20,9 @@ const fmt = (n: number) =>
   '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 export function AcceptQuoteButton({ quoteId, depositAmount, currentStatus, stripeEnabled, brandColor = '#4f46e5', selectedOption }: AcceptQuoteButtonProps) {
-  const [accepted, setAccepted] = useState(currentStatus === 'approved' || currentStatus === 'deposit_paid');
+  const alreadyAccepted = currentStatus === 'approved' || currentStatus === 'deposit_paid' || currentStatus === 'paid';
+  // Only show the confirmation screen if the customer JUST accepted (not on revisits)
+  const [accepted, setAccepted] = useState(false);
   const [accepting, setAccepting] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [name, setName] = useState('');
@@ -145,6 +147,21 @@ export function AcceptQuoteButton({ quoteId, depositAmount, currentStatus, strip
           @keyframes successTextIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
           @keyframes successStepIn { from { opacity: 0; transform: translateX(-8px); } to { opacity: 1; transform: translateX(0); } }
         `}</style>
+      </div>
+    );
+  }
+
+  // Already approved — show a status badge, not the accept button or confirmation overlay
+  if (alreadyAccepted) {
+    return (
+      <div className="w-full rounded-2xl bg-green-50 border border-green-200 py-4 px-5 text-center">
+        <div className="flex items-center justify-center gap-2">
+          <svg className="h-5 w-5 text-green-600" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span className="text-[15px] font-semibold text-green-700">Quote Approved</span>
+        </div>
+        <p className="text-[13px] text-green-600/70 mt-1">This project has been confirmed.</p>
       </div>
     );
   }
