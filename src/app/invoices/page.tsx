@@ -45,7 +45,7 @@ export default async function InvoicesPage() {
 
   return (
     <PageTransition>
-      <DesktopSidebar active="more" />
+      <DesktopSidebar active="invoices" />
       <div className="min-h-dvh bg-[#f2f2f7] dark:bg-gray-950 pb-24 lg:pb-8 lg:pl-[220px]">
         <InvoicesList invoices={flat} />
         <BottomNav active="more" />
