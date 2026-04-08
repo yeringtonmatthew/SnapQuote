@@ -3,9 +3,7 @@ import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import InstallPrompt from '@/components/InstallPrompt';
-import ExportDropdown from '@/components/ExportDropdown';
 import { NotificationBell } from '@/components/NotificationBell';
-import { DashboardThemeToggle } from '@/components/DashboardThemeToggle';
 import DashboardPullToRefresh from '@/components/DashboardPullToRefresh';
 import PageTransition from '@/components/PageTransition';
 import BottomNav from '@/components/BottomNav';
@@ -55,9 +53,7 @@ export default async function DashboardPage() {
             </h1>
           </div>
           <div className="flex items-center gap-2">
-            <DashboardThemeToggle />
             <NotificationBell />
-            <ExportDropdown />
             <Link href="/settings" aria-label="Settings" className="flex h-11 w-11 items-center justify-center rounded-full bg-white dark:bg-gray-800 shadow-sm ring-1 ring-black/[0.04] dark:ring-white/[0.06] focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2">
               {profile?.logo_url ? (
                 <img src={profile.logo_url} alt="Your business logo" className="h-full w-full rounded-full object-cover" />

@@ -287,8 +287,11 @@ export default function PipelineCard({
             <span className="text-[10px] text-gray-300 dark:text-gray-600 tabular-nums">
               {relativeTime(lastTouchTime)}
             </span>
-            <span className={`text-[10px] font-semibold tabular-nums ${temperatureStyles[leadScore.temperature].text}`}>
-              {temperatureStyles[leadScore.temperature].icon} {leadScore.score}
+            <span
+              className={`text-[10px] font-semibold tabular-nums ${temperatureStyles[leadScore.temperature].text}`}
+              title={`${leadScore.score}% close likelihood — ${leadScore.reason}`}
+            >
+              {temperatureStyles[leadScore.temperature].icon} {leadScore.score}%
             </span>
           </div>
         </div>

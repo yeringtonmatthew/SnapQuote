@@ -40,7 +40,7 @@ const EVENT_TEXT_COLORS: Record<EventType, string> = {
 };
 
 const EVENT_TYPE_LABELS: Record<EventType, string> = {
-  estimate: 'Estimate',
+  estimate: 'Inspection',
   follow_up: 'Follow Up',
   job_scheduled: 'Job',
   material_dropoff: 'Materials',

@@ -210,7 +210,7 @@ export default function Home() {
           <div className="grid grid-cols-2 gap-y-12 gap-x-8 sm:grid-cols-4">
             {[
               { value: '60', unit: 's', label: 'To create a quote', color: 'text-brand-600' },
-              { value: '40', unit: '%', label: 'Higher close rate', color: 'text-brand-600' },
+              { value: '40', unit: '%', label: 'Higher win rate', color: 'text-brand-600' },
               { value: '$2.1', unit: 'K', label: 'More per job avg.', color: 'text-brand-600' },
               { value: '4.9', unit: '\u2605', label: 'Customer rating', color: 'text-brand-600' },
             ].map((stat, i) => (
@@ -392,7 +392,7 @@ export default function Home() {
           <div className="mt-16 grid gap-6 sm:grid-cols-3">
             {[
               {
-                quote: 'I went from spending 2 hours on quotes to under 5 minutes. My close rate jumped 42% in the first month.',
+                quote: 'I went from spending 2 hours on quotes to under 5 minutes. My win rate jumped 42% in the first month.',
                 name: 'Mike Rodriguez',
                 role: 'Summit Roofing Co.',
                 bg: 'bg-blue-600',
@@ -403,7 +403,7 @@ export default function Home() {
                 name: 'Sarah Thompson',
                 role: 'Thompson Builds LLC',
                 bg: 'bg-emerald-600',
-                result: '42% higher close rate',
+                result: '42% higher win rate',
               },
               {
                 quote: 'Customers tell me I look like a Fortune 500 company. My average ticket is up $2,100 since switching.',

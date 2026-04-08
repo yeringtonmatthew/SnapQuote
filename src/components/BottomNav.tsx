@@ -129,7 +129,7 @@ export default function BottomNav({ active, notificationCount }: BottomNavProps)
                   className="relative flex flex-col items-center gap-0.5 tab-press rounded-lg px-3 py-1 focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
                 >
                   <div className="relative flex h-7 w-7 items-center justify-center">
-                    <span className={`transition-colors duration-200 ${isActive ? 'text-brand-600 dark:text-brand-400' : 'text-gray-400 dark:text-gray-500'}`}>
+                    <span className={`transition-colors duration-200 ${isActive ? 'text-brand-600 dark:text-brand-400' : 'text-gray-500 dark:text-gray-400'}`}>
                       {isActive ? tab.filledIcon : tab.outlineIcon}
                     </span>
                     {isActive && (
@@ -137,10 +137,10 @@ export default function BottomNav({ active, notificationCount }: BottomNavProps)
                     )}
                   </div>
                   <span
-                    className={`text-[10px] leading-tight ${
+                    className={`text-[11px] leading-tight ${
                       isActive
                         ? 'font-semibold text-brand-600 dark:text-brand-400'
-                        : 'font-medium text-gray-400 dark:text-gray-500'
+                        : 'font-medium text-gray-500 dark:text-gray-400'
                     }`}
                   >
                     {tab.label}
@@ -157,7 +157,7 @@ export default function BottomNav({ active, notificationCount }: BottomNavProps)
                 className="relative flex flex-col items-center gap-0.5 tab-press rounded-lg px-3 py-1 focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
               >
                 <div className="relative flex h-7 w-7 items-center justify-center">
-                  <span className={`transition-colors duration-200 ${isActive ? 'text-brand-600 dark:text-brand-400' : 'text-gray-400 dark:text-gray-500'}`}>
+                  <span className={`transition-colors duration-200 ${isActive ? 'text-brand-600 dark:text-brand-400' : 'text-gray-500 dark:text-gray-400'}`}>
                     {isActive ? tab.filledIcon : tab.outlineIcon}
                   </span>
 
@@ -175,10 +175,10 @@ export default function BottomNav({ active, notificationCount }: BottomNavProps)
                 </div>
 
                 <span
-                  className={`text-[10px] leading-tight ${
+                  className={`text-[11px] leading-tight ${
                     isActive
                       ? 'font-semibold text-brand-600 dark:text-brand-400'
-                      : 'font-medium text-gray-400 dark:text-gray-500'
+                      : 'font-medium text-gray-500 dark:text-gray-400'
                   }`}
                 >
                   {tab.label}

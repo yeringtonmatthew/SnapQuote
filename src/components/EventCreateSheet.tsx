@@ -6,7 +6,7 @@ import { haptic } from '@/lib/haptic';
 
 // ── Constants ────────────────────────────────────────────
 const EVENT_TYPES: { value: EventType; label: string; color: string }[] = [
-  { value: 'estimate', label: 'Estimate', color: 'bg-blue-500' },
+  { value: 'estimate', label: 'Inspection', color: 'bg-blue-500' },
   { value: 'follow_up', label: 'Follow Up', color: 'bg-amber-500' },
   { value: 'job_scheduled', label: 'Job', color: 'bg-indigo-500' },
   { value: 'material_dropoff', label: 'Materials', color: 'bg-orange-500' },

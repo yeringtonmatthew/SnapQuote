@@ -50,12 +50,12 @@ export default function DashboardStats({
 }: DashboardStatsProps) {
   return (
     <>
-      <h2 className="sr-only">Dashboard Statistics</h2>
+      <h2 className="sr-only">Your Numbers</h2>
 
       {/* Hero stat: Monthly Revenue */}
       <div className="rounded-2xl bg-gradient-to-br from-emerald-600 to-emerald-700 dark:from-emerald-700 dark:to-emerald-900 p-5 shadow-lg shadow-emerald-500/10 dark:shadow-emerald-900/20">
         <p className="text-[11px] font-semibold uppercase tracking-widest text-white/60">
-          Revenue This Month
+          Collected This Month
         </p>
         <div className="mt-1 flex items-baseline">
           <p className="text-[32px] font-extrabold text-white tabular-nums tracking-tight leading-none">
@@ -63,7 +63,7 @@ export default function DashboardStats({
           </p>
           <TrendBadge trend={revenueTrend} />
         </div>
-        <p className="mt-1.5 text-[12px] text-white/50">deposits collected</p>
+        <p className="mt-1.5 text-[12px] text-white/50">from payments</p>
       </div>
 
       {/* Secondary stats: 3-column grid */}
@@ -84,9 +84,9 @@ export default function DashboardStats({
           </div>
         </div>
 
-        {/* Close Rate */}
+        {/* Win Rate */}
         <div className="rounded-2xl bg-white dark:bg-gray-900 p-4 shadow-sm ring-1 ring-black/[0.04] dark:ring-white/[0.06] transition-transform active:scale-[0.98]">
-          <p className="text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Close Rate</p>
+          <p className="text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Win Rate</p>
           <p className="mt-1 text-[22px] font-bold text-gray-900 dark:text-gray-100 tabular-nums leading-none">
             <AnimatedNumber value={approvalRate} suffix="%" />
           </p>
@@ -100,7 +100,7 @@ export default function DashboardStats({
 
         {/* Avg Quote */}
         <div className="rounded-2xl bg-white dark:bg-gray-900 p-4 shadow-sm ring-1 ring-black/[0.04] dark:ring-white/[0.06] transition-transform active:scale-[0.98]">
-          <p className="text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Avg Quote</p>
+          <p className="text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Avg Job</p>
           <p className="mt-1 text-[22px] font-bold text-gray-900 dark:text-gray-100 tabular-nums leading-none">
             <AnimatedNumber value={avgQuoteValue} prefix="$" />
           </p>
@@ -121,7 +121,7 @@ export default function DashboardStats({
               <p className="text-[14px] font-bold text-amber-900 dark:text-amber-200 tabular-nums">
                 <AnimatedNumber value={pendingValue} prefix="$" />
               </p>
-              <p className="text-[11px] text-amber-700/70 dark:text-amber-400/60">{pendingCount} quotes pending</p>
+              <p className="text-[11px] text-amber-700/70 dark:text-amber-400/60">{pendingCount} quotes open</p>
             </div>
           </div>
           <svg className="h-4 w-4 text-amber-400 dark:text-amber-600" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">

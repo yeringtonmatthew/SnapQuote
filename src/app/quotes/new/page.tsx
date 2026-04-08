@@ -937,7 +937,7 @@ export default function NewQuotePage() {
           <div className="flex items-center gap-3 py-3">
             <button
               onClick={handleBackClick}
-              aria-label={step === 'start' ? 'Back to dashboard' : 'Go back'}
+              aria-label="Go back"
               className="flex h-11 w-11 items-center justify-center rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
             >
               <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" aria-hidden="true">

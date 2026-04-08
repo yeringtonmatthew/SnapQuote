@@ -48,7 +48,7 @@ export default function ROICalculator() {
             </p>
             <p className="text-sm font-medium text-green-800 mt-1">additional revenue per month</p>
             <p className="text-xs text-green-600 mt-2">
-              40% higher close rate on avg ${averageQuoteValue.toLocaleString()} quotes
+              40% higher win rate on avg ${averageQuoteValue.toLocaleString()} quotes
             </p>
           </div>
         </div>

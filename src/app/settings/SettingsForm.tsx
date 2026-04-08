@@ -42,7 +42,7 @@ const SECTIONS = [
     tabs: ['Pricing', 'Automation'] as const,
   },
   {
-    group: 'Integrations',
+    group: 'Connected Apps',
     icon: (
       <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" />
@@ -943,7 +943,7 @@ export function SettingsForm({ profile, userId, email, stripeConnected, stripeSt
             <div>
               <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">Auto Follow-Ups</p>
               <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                Automatically send reminders to customers who haven&apos;t responded to their quote. Increase your close rate without lifting a finger.
+                Automatically send reminders to customers who haven&apos;t responded to their quote. Increase your win rate without lifting a finger.
               </p>
             </div>
 
@@ -1026,7 +1026,7 @@ export function SettingsForm({ profile, userId, email, stripeConnected, stripeSt
         </div>
       )}
 
-      {/* Integrations Tab */}
+      {/* Lead Sources Tab */}
       {activeTab === 'Integrations' && <LeadIntegrationsSection />}
 
       {/* Advanced Tab */}

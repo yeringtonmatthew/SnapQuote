@@ -18,6 +18,8 @@ import { getLeadScore, temperatureStyles } from '@/lib/lead-temperature';
 const fmt = (n: number) =>
   '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
+const capitalize = (s: string) => s.replace(/\b\w/g, c => c.toUpperCase());
+
 const stageLabels: Record<string, string> = {
   lead: 'Lead',
   follow_up: 'Follow Up',
@@ -461,7 +463,7 @@ export function JobDetailContent({ quote, profile, brandColor, totalPaid, paymen
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0 flex-1">
               <h1 className="text-[22px] font-bold tracking-tight text-gray-900 dark:text-gray-100 truncate leading-tight">
-                {quote.customer_name}
+                {capitalize(quote.customer_name)}
               </h1>
               {quote.job_address && (
                 <a

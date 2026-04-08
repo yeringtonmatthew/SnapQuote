@@ -26,11 +26,11 @@ export interface RevenueIntelligence {
   weeklyRevenueChange: number | null; // percent vs last week
   /** Monthly pace (extrapolated from current month) */
   monthlyProjection: number;
-  /** Close rate: approved / sent */
+  /** Win rate: approved / sent */
   closeRate: number;
-  /** Deals needing attention right now */
-  dealsNeedingAttention: number;
-  /** Average deal size */
+  /** Quotes needing attention right now */
+  quotesNeedingAttention: number;
+  /** Average job size */
   avgDealSize: number;
 }
 
@@ -118,13 +118,13 @@ export function calculateRevenueIntelligence(
     ? Math.round((monthRevenueSoFar / dayOfMonth) * daysInMonth)
     : 0;
 
-  // Close rate
+  // Win rate
   const totalSent = active.filter(q => q.status !== 'draft' && q.pipeline_stage !== 'lead' && q.pipeline_stage !== 'follow_up' && q.pipeline_stage !== 'quote_created').length;
   const totalClosed = active.filter(q => q.status === 'approved' || q.status === 'deposit_paid').length;
   const closeRate = totalSent > 0 ? Math.round((totalClosed / totalSent) * 100) : 0;
 
-  // Deals needing attention
-  const dealsNeedingAttention = atRiskQuotes.length
+  // Quotes needing attention
+  const quotesNeedingAttention = atRiskQuotes.length
     + active.filter(q => q.status === 'approved' && !q.paid_at).length
     + active.filter(q => q.pipeline_stage === 'deposit_collected' && !q.scheduled_date).length;
 
@@ -147,7 +147,7 @@ export function calculateRevenueIntelligence(
     weeklyRevenueChange,
     monthlyProjection,
     closeRate,
-    dealsNeedingAttention,
+    quotesNeedingAttention,
     avgDealSize,
   };
 }

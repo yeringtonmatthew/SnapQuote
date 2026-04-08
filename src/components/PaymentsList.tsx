@@ -54,6 +54,8 @@ const TYPE_CONFIG: Record<string, { label: string; bg: string; text: string }> =
   },
 };
 
+const capitalize = (s: string) => s.replace(/\b\w/g, c => c.toUpperCase());
+
 function filterPayments(payments: PaymentRow[], filter: FilterTab): PaymentRow[] {
   if (filter === 'all') return payments;
   if (filter === 'card') return payments.filter((p) => p.payment_method === 'card' || p.payment_method === 'stripe');
@@ -200,7 +202,7 @@ export default function PaymentsList({ payments }: { payments: PaymentRow[] }) {
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0 flex-1">
                         <p className="text-[15px] font-semibold text-gray-900 dark:text-gray-100 truncate leading-tight">
-                          {payment.customer_name || 'Unknown'}
+                          {payment.customer_name ? capitalize(payment.customer_name) : 'Unknown'}
                         </p>
                         <p className="text-[12px] text-gray-400 dark:text-gray-500 truncate mt-0.5">
                           QTE-{String(payment.quote_number).padStart(4, '0')}

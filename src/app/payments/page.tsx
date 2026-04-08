@@ -5,6 +5,8 @@ import DesktopSidebar from '@/components/DesktopSidebar';
 import PageTransition from '@/components/PageTransition';
 import PaymentsList from '@/components/PaymentsList';
 
+export const metadata = { title: 'Payments | SnapQuote' };
+
 export default async function PaymentsPage() {
   const supabase = createClient();
   const {

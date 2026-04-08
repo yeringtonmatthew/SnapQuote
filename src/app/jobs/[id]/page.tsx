@@ -5,6 +5,20 @@ import { formatQuoteNumber } from '@/lib/format-quote-number';
 import PageTransition from '@/components/PageTransition';
 import DesktopSidebar from '@/components/DesktopSidebar';
 import { JobDetailContent } from './JobDetailContent';
+import type { Metadata } from 'next';
+
+const capitalize = (s: string) => s.replace(/\b\w/g, (c: string) => c.toUpperCase());
+
+export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
+  const supabase = createClient();
+  const { data: quote } = await supabase
+    .from('quotes')
+    .select('customer_name')
+    .eq('id', params.id)
+    .single();
+  const name = quote?.customer_name ? capitalize(quote.customer_name) : 'Job';
+  return { title: `${name} | SnapQuote` };
+}
 
 export default async function JobDetailPage({
   params,

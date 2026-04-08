@@ -48,8 +48,6 @@ export default async function SettingsPage({
       </header>
 
       <main className="mx-auto max-w-lg px-4 pt-6 space-y-6">
-        <SettingsThemeSection />
-
         <SettingsForm
           profile={profile}
           userId={user.id}
@@ -61,6 +59,8 @@ export default async function SettingsPage({
         <div>
           <TemplatesList initialTemplates={templates || []} />
         </div>
+
+        <SettingsThemeSection />
       </main>
     </div>
     </PageTransition>

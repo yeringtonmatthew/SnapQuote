@@ -22,7 +22,7 @@ interface Props {
   weeklyRevenueChange: number | null;
   monthlyProjection: number;
   closeRate: number;
-  dealsNeedingAttention: number;
+  quotesNeedingAttention: number;
 }
 
 const fmt = (n: number) =>
@@ -39,7 +39,7 @@ export default function RevenueIntelligenceCard({
   weeklyRevenueChange,
   monthlyProjection,
   closeRate,
-  dealsNeedingAttention,
+  quotesNeedingAttention,
 }: Props) {
   const [expanded, setExpanded] = useState(false);
 
@@ -51,7 +51,7 @@ export default function RevenueIntelligenceCard({
           <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18L9 11.25l4.306 4.306a11.95 11.95 0 015.814-5.518l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941" />
         </svg>
         <h2 className="text-[11px] font-semibold uppercase tracking-widest text-gray-400">
-          Revenue Intelligence
+          Money Summary
         </h2>
       </div>
 
@@ -88,7 +88,7 @@ export default function RevenueIntelligenceCard({
         {/* Close rate bar */}
         <div className="mt-4 pt-3 border-t border-white/[0.08]">
           <div className="flex items-center justify-between mb-1.5">
-            <span className="text-[10px] font-semibold text-white/40 uppercase tracking-wider">Close Rate</span>
+            <span className="text-[10px] font-semibold text-white/40 uppercase tracking-wider">Win Rate</span>
             <span className="text-[13px] font-bold text-white tabular-nums">{closeRate}%</span>
           </div>
           <div className="h-1.5 w-full rounded-full bg-white/[0.08] overflow-hidden">
@@ -120,7 +120,7 @@ export default function RevenueIntelligenceCard({
           <p className="mt-1 text-[18px] font-bold text-gray-900 dark:text-gray-100 tabular-nums leading-tight">
             <AnimatedNumber value={likelyToClose} prefix="$" />
           </p>
-          <p className="text-[11px] text-gray-400 mt-0.5">{likelyToCloseCount} deal{likelyToCloseCount !== 1 ? 's' : ''}</p>
+          <p className="text-[11px] text-gray-400 mt-0.5">{likelyToCloseCount} quote{likelyToCloseCount !== 1 ? 's' : ''}</p>
         </div>
       </div>
 
@@ -174,13 +174,13 @@ export default function RevenueIntelligenceCard({
       )}
 
       {/* ── Attention needed ──────────── */}
-      {dealsNeedingAttention > 0 && (
+      {quotesNeedingAttention > 0 && (
         <div className="flex items-center gap-2 px-2 py-1.5">
           <span className="flex h-5 w-5 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900/30">
-            <span className="text-[10px] font-bold text-amber-600">{dealsNeedingAttention}</span>
+            <span className="text-[10px] font-bold text-amber-600">{quotesNeedingAttention}</span>
           </span>
           <p className="text-[12px] text-gray-500 dark:text-gray-400">
-            deal{dealsNeedingAttention !== 1 ? 's' : ''} need attention right now
+            quote{quotesNeedingAttention !== 1 ? 's' : ''} need attention right now
           </p>
         </div>
       )}

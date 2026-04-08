@@ -118,6 +118,7 @@ export default function QuickAddMenu() {
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
           </svg>
         </div>
+        <span className="text-[11px] font-medium text-gray-500 dark:text-gray-400 leading-tight">New</span>
       </button>
 
       {/* Menu Popover -- portaled to body */}

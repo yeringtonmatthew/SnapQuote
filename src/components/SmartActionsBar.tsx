@@ -154,14 +154,14 @@ export default function SmartActionsBar({
   };
 
   return (
-    <div className="flex gap-2.5 overflow-x-auto pb-1 -mx-5 px-5 scrollbar-none snap-x snap-mandatory lg:mx-0 lg:px-0 lg:flex-wrap lg:overflow-visible">
+    <div className="flex flex-wrap gap-2.5 pb-1">
       {items.map((item, i) => {
         const c = colorMap[item.color];
         return (
           <Link
             key={i}
             href={item.href}
-            className={`flex-shrink-0 snap-start flex items-center gap-2.5 rounded-2xl ${c.bg} ring-1 ${c.ring} px-4 py-3 min-h-[52px] active:scale-[0.97] transition-all`}
+            className={`flex items-center gap-2.5 rounded-2xl ${c.bg} ring-1 ${c.ring} px-4 py-3 min-h-[52px] active:scale-[0.97] transition-all`}
           >
             <div className={`flex h-8 w-8 items-center justify-center rounded-xl ${c.icon}`}>
               {item.icon}

@@ -145,7 +145,7 @@ export default function HvacQuotingApp() {
           <div className="rounded-2xl bg-gray-50 p-8 sm:p-10">
             <blockquote className="text-lg text-gray-700 leading-relaxed">
               &ldquo;Between installs and service calls, I barely had time to quote new work. Now I snap a photo of
-              the unit, SnapQuote builds the estimate, and I text it to the customer before I leave. My close rate
+              the unit, SnapQuote builds the estimate, and I text it to the customer before I leave. My win rate
               went up because I&apos;m always the first bid they get.&rdquo;
             </blockquote>
             <p className="mt-4 font-semibold text-gray-900">Carlos M., HVAC Contractor</p>

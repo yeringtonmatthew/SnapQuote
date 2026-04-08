@@ -115,7 +115,7 @@ export function TierEditor({ baseLineItems, existingOptions, onChange }: TierEdi
             <div>
               <p className="text-sm font-semibold text-gray-900">Good / Better / Best Pricing</p>
               <p className="text-xs text-gray-500">
-                {hasOptions ? `${existingOptions.length} tiers configured` : 'Offer multiple pricing options to increase close rate'}
+                {hasOptions ? `${existingOptions.length} tiers configured` : 'Offer multiple pricing options to increase win rate'}
               </p>
             </div>
           </div>

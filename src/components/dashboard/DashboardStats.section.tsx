@@ -2,10 +2,7 @@ import { createClient } from '@/lib/supabase/server';
 import SmartActionsBar from '@/components/SmartActionsBar';
 import DashboardStats from '@/components/DashboardStats';
 import RevenueChart from '@/components/RevenueChart';
-import RevenueIntelligenceCard from '@/components/RevenueIntelligenceCard';
 import WorkflowPipeline from '@/components/WorkflowPipeline';
-import { calculateRevenueIntelligence } from '@/lib/revenue-intelligence';
-import type { Quote } from '@/types/database';
 
 export default async function DashboardStatsSection({ userId }: { userId: string }) {
   const supabase = createClient();
@@ -68,8 +65,17 @@ export default async function DashboardStatsSection({ userId }: { userId: string
   }
   const now = new Date();
 
+  // ── Payments query for actual revenue ──────────────────
+  const startOfMonthDate = new Date(now.getFullYear(), now.getMonth(), 1);
+  const { data: monthlyPayments } = await supabase
+    .from('payments')
+    .select('amount, recorded_at')
+    .eq('contractor_id', userId)
+    .gte('recorded_at', startOfMonthDate.toISOString());
+  const actualMonthlyRevenue = (monthlyPayments || []).reduce((sum, p) => sum + Number(p.amount), 0);
+
   // ── Single-pass computation ──────────────────────────
-  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+  const startOfMonth = startOfMonthDate.toISOString();
   const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString();
   const endOfLastMonth = startOfMonth;
 
@@ -147,12 +153,12 @@ export default async function DashboardStatsSection({ userId }: { userId: string
     }
 
     // Paid this month
-    if (status === 'deposit_paid' && paidAt && paidAt >= startOfMonth) {
+    if ((status === 'deposit_paid' || status === 'paid') && paidAt && paidAt >= startOfMonth) {
       stats.paidThisMonthRevenue += Number(q.deposit_amount);
     }
 
     // Paid last month
-    if (status === 'deposit_paid' && paidAt && paidAt >= startOfLastMonth && paidAt < endOfLastMonth) {
+    if ((status === 'deposit_paid' || status === 'paid') && paidAt && paidAt >= startOfLastMonth && paidAt < endOfLastMonth) {
       stats.paidLastMonthRevenue += Number(q.deposit_amount);
     }
 
@@ -221,43 +227,36 @@ export default async function DashboardStatsSection({ userId }: { userId: string
     ? monthBuckets.map(b => ({ month: b.key, revenue: stats.revenueByMonth[b.key] }))
     : [];
 
-  // Revenue Intelligence
-  const revenueIntel = calculateRevenueIntelligence(activeQuotes as unknown as Quote[], now);
-
   return (
     <>
-      {/* Workflow Pipeline — Jobber-style at-a-glance funnel */}
-      <div className="lg:col-span-2">
-        <WorkflowPipeline
-          approvedQuotes={wf.approvedQuotes}
-          approvedValue={wf.approvedValue}
-          activeJobs={wf.activeJobs}
-          activeJobsValue={wf.activeJobsValue}
-          requiresInvoicing={wf.requiresInvoicing}
-          requiresInvoicingValue={wf.requiresInvoicingValue}
-          awaitingPayment={wf.awaitingPayment}
-          awaitingPaymentValue={wf.awaitingPaymentValue}
-        />
-      </div>
-
-      {/* SmartActionsBar */}
+      {/* Do This Now — most actionable, shown first */}
       {hasAttentionItems && (
-        <div className="lg:col-span-2">
-          <SmartActionsBar
-            awaitingCount={stats.awaitingResponse}
-            depositsCount={stats.depositsToCollect}
-            collectableAmount={stats.collectableAmount}
-            todayJobsCount={stats.todayJobsCount}
-            followUpCount={stats.followUpNeeded}
-            jobsToScheduleCount={stats.jobsToSchedule}
-          />
-        </div>
+        <SmartActionsBar
+          awaitingCount={stats.awaitingResponse}
+          depositsCount={stats.depositsToCollect}
+          collectableAmount={stats.collectableAmount}
+          todayJobsCount={stats.todayJobsCount}
+          followUpCount={stats.followUpNeeded}
+          jobsToScheduleCount={stats.jobsToSchedule}
+        />
       )}
+
+      {/* Workflow Pipeline — at-a-glance funnel */}
+      <WorkflowPipeline
+        approvedQuotes={wf.approvedQuotes}
+        approvedValue={wf.approvedValue}
+        activeJobs={wf.activeJobs}
+        activeJobsValue={wf.activeJobsValue}
+        requiresInvoicing={wf.requiresInvoicing}
+        requiresInvoicingValue={wf.requiresInvoicingValue}
+        awaitingPayment={wf.awaitingPayment}
+        awaitingPaymentValue={wf.awaitingPaymentValue}
+      />
 
       {/* Stats Cards */}
       <div className="lg:col-start-1">
         <DashboardStats
-          monthlyRevenue={stats.paidThisMonthRevenue}
+          monthlyRevenue={actualMonthlyRevenue}
           quotesSentCount={stats.sentThisMonth}
           approvalRate={approvalRate}
           pendingValue={stats.pendingValue}
@@ -267,25 +266,6 @@ export default async function DashboardStatsSection({ userId }: { userId: string
           avgQuoteValue={avgQuoteValue}
         />
       </div>
-
-      {/* Revenue Intelligence */}
-      {activeQuotes.length > 0 && (
-        <div className="lg:col-start-1">
-          <RevenueIntelligenceCard
-            totalPipeline={revenueIntel.totalPipeline}
-            atRiskRevenue={revenueIntel.atRiskRevenue}
-            atRiskCount={revenueIntel.atRiskCount}
-            atRiskQuotes={revenueIntel.atRiskQuotes}
-            likelyToClose={revenueIntel.likelyToClose}
-            likelyToCloseCount={revenueIntel.likelyToCloseCount}
-            weeklyRevenue={revenueIntel.weeklyRevenue}
-            weeklyRevenueChange={revenueIntel.weeklyRevenueChange}
-            monthlyProjection={revenueIntel.monthlyProjection}
-            closeRate={revenueIntel.closeRate}
-            dealsNeedingAttention={revenueIntel.dealsNeedingAttention}
-          />
-        </div>
-      )}
 
       {/* Revenue Chart */}
       {stats.hasPaidQuotes && (

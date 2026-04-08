@@ -15,7 +15,10 @@ interface Job {
   scheduled_date: string | null;
   job_tasks: { name: string; done: boolean }[] | null;
   created_at: string;
+  total_paid?: number;
 }
+
+const capitalize = (s: string) => s.replace(/\b\w/g, c => c.toUpperCase());
 
 type FilterTab = 'all' | 'active' | 'scheduled' | 'completed';
 
@@ -198,7 +201,7 @@ export default function JobsList({ jobs }: { jobs: Job[] }) {
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0 flex-1">
                         <p className="text-[15px] font-semibold text-gray-900 dark:text-gray-100 truncate leading-tight">
-                          {job.customer_name}
+                          {capitalize(job.customer_name)}
                         </p>
                         {job.job_address && (
                           <p className="text-[12px] text-gray-400 dark:text-gray-500 truncate mt-0.5">
@@ -206,9 +209,16 @@ export default function JobsList({ jobs }: { jobs: Job[] }) {
                           </p>
                         )}
                       </div>
-                      <p className="shrink-0 text-[15px] font-bold text-gray-900 dark:text-gray-100 tabular-nums">
-                        {formatCurrency(Number(job.total))}
-                      </p>
+                      <div className="shrink-0 text-right">
+                        <p className="text-[15px] font-bold text-gray-900 dark:text-gray-100 tabular-nums">
+                          {formatCurrency(Number(job.total))}
+                        </p>
+                        {(job.total_paid ?? 0) > 0 && (
+                          <p className="text-[11px] text-gray-400 dark:text-gray-500 font-medium tabular-nums">
+                            ({formatCurrency(job.total_paid!)} collected)
+                          </p>
+                        )}
+                      </div>
                     </div>
 
                     {/* Status row */}
