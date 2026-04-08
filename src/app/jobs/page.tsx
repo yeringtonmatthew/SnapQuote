@@ -44,10 +44,10 @@ export default async function JobsPage() {
 
   return (
     <PageTransition>
-      <DesktopSidebar active="jobs" />
+      <DesktopSidebar active="more" />
       <div className="min-h-dvh bg-[#f2f2f7] dark:bg-gray-950 pb-24 lg:pb-8 lg:pl-[220px]">
         <JobsList jobs={sortedQuotes} />
-        <BottomNav active="jobs" />
+        <BottomNav active="more" />
       </div>
     </PageTransition>
   );

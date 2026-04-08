@@ -51,7 +51,7 @@ export default async function ClientProfilePage({
           totalRevenue={totalRevenue}
           totalQuoted={totalQuoted}
         />
-        <BottomNav active="more" />
+        <BottomNav active="search" />
       </div>
     </PageTransition>
   );

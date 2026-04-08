@@ -92,7 +92,7 @@ export default async function SchedulePage() {
           unscheduledQuotes={unscheduledQuotes}
           allQuotes={(allQuotes || []) as { id: string; customer_name: string; job_address: string | null }[]}
         />
-        <BottomNav active="more" />
+        <BottomNav active="schedule" />
       </div>
     </PageTransition>
   );
