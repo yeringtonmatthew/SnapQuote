@@ -1,7 +1,7 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { createClient } from '@supabase/supabase-js';
 import { NextResponse, type NextRequest } from 'next/server';
-import { isPaywallExempt } from '@/lib/subscription';
+import { isPaywallExempt, isNativeApp } from '@/lib/subscription';
 
 // Routes that never need auth — skip the getUser() round-trip
 const PUBLIC_PREFIXES = [
@@ -26,20 +26,41 @@ function isPublicRoute(pathname: string): boolean {
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request: { headers: request.headers } });
 
-  // Native iOS app (Capacitor): skip the marketing landing page entirely.
-  // Redirect "/" → "/dashboard" so Apple reviewers see the real app, not
-  // the marketing site with pricing text that doesn't match the free app.
-  // Detection: Capacitor config appends ?native=1 to the server URL,
-  // or the User-Agent contains "SnapQuote" / "Capacitor".
-  const ua = request.headers.get('user-agent') || '';
-  const isNativeApp =
-    request.nextUrl.searchParams.get('native') === '1' ||
-    /SnapQuote|Capacitor/i.test(ua);
-  if (isNativeApp && request.nextUrl.pathname === '/') {
-    const url = request.nextUrl.clone();
-    url.pathname = '/dashboard';
-    url.searchParams.delete('native');
-    return NextResponse.redirect(url);
+  // Native iOS app (Capacitor): detect via ?native=1 param, user-agent, or
+  // the persisted cookie set on first visit.  Skip the marketing landing
+  // page (redirect "/" → "/dashboard") and set a cookie so the native
+  // context persists across navigations after the ?native=1 param is stripped.
+  const nativeFromParam = isNativeApp(request);
+  const nativeFromCookie = request.cookies.get('snapquote_native')?.value === '1';
+  const isNative = nativeFromParam || nativeFromCookie;
+
+  if (isNative) {
+    const nativeCookieOpts = {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'lax' as const,
+      maxAge: 60 * 60 * 24 * 365, // 1 year
+      path: '/',
+    };
+
+    // Redirect "/" → "/dashboard" so Apple reviewers see the real app,
+    // not the marketing site with pricing text.
+    if (request.nextUrl.pathname === '/') {
+      const url = request.nextUrl.clone();
+      url.pathname = '/dashboard';
+      url.searchParams.delete('native');
+      const redirectResponse = NextResponse.redirect(url);
+      if (!nativeFromCookie) {
+        redirectResponse.cookies.set('snapquote_native', '1', nativeCookieOpts);
+      }
+      return redirectResponse;
+    }
+
+    // Persist the native flag as a cookie so it survives across page navigations
+    // (the ?native=1 query param only appears on the initial Capacitor load).
+    if (!nativeFromCookie) {
+      response.cookies.set('snapquote_native', '1', nativeCookieOpts);
+    }
   }
 
   // Short-circuit for public routes — no Supabase auth call needed
@@ -102,6 +123,13 @@ export async function updateSession(request: NextRequest) {
   // ── Paywall check ──────────────────────────────────────────────────
   // For authenticated users on protected routes, check subscription status.
   // Skip for routes that should always be accessible (subscribe, settings, api/stripe).
+  // IMPORTANT: Native iOS app users bypass the paywall entirely — the app is
+  // free to download and Apple requires IAP for in-app purchases. We handle
+  // subscriptions on the web only. This resolves App Store Guideline 3.1.1.
+  if (isNative) {
+    // Native app: skip paywall entirely — no subscription check needed
+    return response;
+  }
   if (user && isProtected && !isPaywallExempt(request.nextUrl.pathname)) {
     const adminSb = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,

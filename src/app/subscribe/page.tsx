@@ -7,6 +7,15 @@ import { getTrialDaysRemaining, canAccessApp } from '@/lib/subscription';
 
 export default async function SubscribePage() {
   const cookieStore = await cookies();
+
+  // Native iOS app: don't show Stripe subscription page at all.
+  // Apple Guideline 3.1.1 prohibits directing users to external payment.
+  // Native users bypass the paywall entirely, so redirect to dashboard.
+  const isNative = cookieStore.get('snapquote_native')?.value === '1';
+  if (isNative) {
+    redirect('/dashboard');
+  }
+
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,

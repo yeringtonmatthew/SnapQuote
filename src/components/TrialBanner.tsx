@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { isNativeAppClient } from '@/lib/subscription';
 
 interface TrialBannerProps {
   daysRemaining: number;
@@ -8,6 +9,10 @@ interface TrialBannerProps {
 }
 
 export default function TrialBanner({ daysRemaining, subscriptionStatus }: TrialBannerProps) {
+  // Don't show in native iOS app — Apple Guideline 3.1.1 prohibits
+  // directing users to external payment mechanisms.
+  if (isNativeAppClient()) return null;
+
   // Don't show for active subscribers
   if (subscriptionStatus === 'active') return null;
 

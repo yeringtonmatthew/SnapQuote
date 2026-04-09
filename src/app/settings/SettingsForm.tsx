@@ -11,6 +11,7 @@ import { Spinner } from '@/components/ui/Spinner';
 import type { User } from '@/types/database';
 import { TeamSection } from './TeamSection';
 import { LeadIntegrationsSection } from './LeadIntegrationsSection';
+import { DeleteAccountButton } from '@/components/DeleteAccountButton';
 
 interface Props {
   profile: User;
@@ -1145,6 +1146,15 @@ export function SettingsForm({ profile, userId, email, stripeConnected, stripeSt
             </span>
           ) : 'Save Changes'}
         </button>
+      </div>
+
+      {/* Danger Zone */}
+      <div className="card space-y-4">
+        <p className="text-xs font-semibold uppercase tracking-wide text-red-500 dark:text-red-400">Danger Zone</p>
+        <p className="text-[13px] text-gray-500 dark:text-gray-400 leading-relaxed">
+          Permanently delete your account and all associated data including quotes, clients, invoices, and calendar events.
+        </p>
+        <DeleteAccountButton />
       </div>
 
       {/* Sign Out */}

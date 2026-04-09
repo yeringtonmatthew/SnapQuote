@@ -3,6 +3,29 @@ import type { User } from '@/types/database';
 export type SubscriptionStatus = 'trialing' | 'active' | 'past_due' | 'canceled' | 'expired';
 
 /**
+ * Detect if the request is coming from the native iOS app (Capacitor).
+ * Capacitor config appends ?native=1 to the server URL, and the iOS
+ * WebView user-agent contains "SnapQuote".
+ */
+export function isNativeApp(request: Request): boolean {
+  const url = new URL(request.url);
+  if (url.searchParams.has('native')) return true;
+  const ua = request.headers.get('user-agent') || '';
+  return /SnapQuote|Capacitor/i.test(ua);
+}
+
+/**
+ * Client-side check for native app context.
+ */
+export function isNativeAppClient(): boolean {
+  if (typeof window === 'undefined') return false;
+  return (
+    window.location.href.includes('native=1') ||
+    !!(window as any).Capacitor?.isNativePlatform?.()
+  );
+}
+
+/**
  * Check if a user can access the app (active subscription or valid trial).
  */
 export function canAccessApp(user: Pick<User, 'subscription_status' | 'trial_ends_at'>): boolean {
