@@ -40,10 +40,14 @@ export function SmartFollowUpButton({ quoteId, customerName, customerPhone, bran
 
   async function copyMessage() {
     if (!message) return;
-    await navigator.clipboard.writeText(message);
-    setCopied(true);
-    haptic('light');
-    setTimeout(() => setCopied(false), 2000);
+    try {
+      await navigator.clipboard.writeText(message);
+      setCopied(true);
+      haptic('light');
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Silent fallback for iOS WebView
+    }
   }
 
   function sendSMS() {

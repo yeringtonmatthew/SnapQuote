@@ -45,10 +45,14 @@ export function SendQuoteButton({
   const alreadySent = currentStatus !== 'draft';
 
   async function handleCopyLink() {
-    await navigator.clipboard.writeText(proposalUrl);
-    setCopied(true);
-    toast({ message: 'Link copied to clipboard', type: 'success' });
-    setTimeout(() => setCopied(false), 2000);
+    try {
+      await navigator.clipboard.writeText(proposalUrl);
+      setCopied(true);
+      toast({ message: 'Link copied to clipboard', type: 'success' });
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toast({ message: 'Could not copy link', type: 'error' });
+    }
   }
 
   async function handleSendEmail() {
@@ -85,9 +89,9 @@ export function SendQuoteButton({
     const biz = businessName || 'us';
     const msg = `Hi ${name}, ${biz} sent you a quote for ${amount}. View and approve here: ${proposalUrl}`;
     // Also mark as sent in the backend (fire-and-forget)
-    fetch(`/api/quotes/${quoteId}/send`, { method: 'POST' }).then(() => {
-      router.refresh();
-    });
+    fetch(`/api/quotes/${quoteId}/send`, { method: 'POST' })
+      .then(() => router.refresh())
+      .catch(() => {});
     // Open native SMS
     window.location.href = `sms:${digits}?body=${encodeURIComponent(msg)}`;
     setSent(true);
