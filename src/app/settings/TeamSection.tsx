@@ -245,7 +245,7 @@ export function TeamSection() {
 
       {/* Footer Note */}
       <p className="px-1 text-[11px] text-gray-400 dark:text-gray-500">
-        Team members will be able to log in and manage quotes. Full team permissions coming soon.
+        Team members can log in and manage quotes.
       </p>
     </div>
   );

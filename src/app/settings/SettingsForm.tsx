@@ -12,6 +12,7 @@ import type { User } from '@/types/database';
 import { TeamSection } from './TeamSection';
 import { LeadIntegrationsSection } from './LeadIntegrationsSection';
 import { DeleteAccountButton } from '@/components/DeleteAccountButton';
+import { isNativeAppClient } from '@/lib/subscription';
 
 interface Props {
   profile: User;
@@ -59,6 +60,21 @@ export function SettingsForm({ profile, userId, email, stripeConnected, stripeSt
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<Tab>('Account');
   const [saving, setSaving] = useState(false);
+  const isNative = useMemo(() => isNativeAppClient(), []);
+
+  // Hide Payments tab from native iOS users (Apple Guideline 3.1.1)
+  const filteredSections = useMemo(() => {
+    if (!isNative) return SECTIONS;
+    return SECTIONS.map((section) => {
+      if (section.group === 'Connected Apps') {
+        return {
+          ...section,
+          tabs: section.tabs.filter((t) => t !== 'Payments') as unknown as typeof section.tabs,
+        };
+      }
+      return section;
+    });
+  }, [isNative]);
 
   // Account tab state
   const [editingEmail, setEditingEmail] = useState(false);
@@ -266,13 +282,13 @@ export function SettingsForm({ profile, userId, email, stripeConnected, stripeSt
   }
 
   // Find which group the active tab is in
-  const activeGroup = SECTIONS.find((s) => (s.tabs as readonly string[]).includes(activeTab))?.group || 'Business';
+  const activeGroup = filteredSections.find((s) => (s.tabs as readonly string[]).includes(activeTab))?.group || 'Business';
 
   return (
     <div className="space-y-4">
       {/* Section Group Selector — always visible, no overflow */}
       <div className="grid grid-cols-3 gap-2">
-        {SECTIONS.map((section) => (
+        {filteredSections.map((section) => (
           <button
             key={section.group}
             type="button"
@@ -293,7 +309,7 @@ export function SettingsForm({ profile, userId, email, stripeConnected, stripeSt
 
       {/* Sub-tabs within the active group */}
       {(() => {
-        const section = SECTIONS.find((s) => s.group === activeGroup);
+        const section = filteredSections.find((s) => s.group === activeGroup);
         if (!section || section.tabs.length <= 1) return null;
         return (
           <div className="flex gap-1 bg-gray-100 dark:bg-gray-800 rounded-xl p-1">
@@ -865,8 +881,8 @@ export function SettingsForm({ profile, userId, email, stripeConnected, stripeSt
         </>
       )}
 
-      {/* Payments Tab */}
-      {activeTab === 'Payments' && (
+      {/* Payments Tab — hidden from native iOS (Apple Guideline 3.1.1) */}
+      {activeTab === 'Payments' && !isNative && (
         <div className="card space-y-5">
           <div>
             <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">Payments</p>
@@ -1146,6 +1162,45 @@ export function SettingsForm({ profile, userId, email, stripeConnected, stripeSt
             </span>
           ) : 'Save Changes'}
         </button>
+      </div>
+
+      {/* Legal */}
+      <div className="card space-y-3">
+        <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">Legal</p>
+        <div className="flex flex-col gap-2">
+          <a
+            href="/privacy"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-between rounded-xl bg-gray-50 dark:bg-gray-800 px-4 py-3 text-[13px] font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+          >
+            <span className="flex items-center gap-2.5">
+              <svg className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+              </svg>
+              Privacy Policy
+            </span>
+            <svg className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+            </svg>
+          </a>
+          <a
+            href="/terms"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-between rounded-xl bg-gray-50 dark:bg-gray-800 px-4 py-3 text-[13px] font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+          >
+            <span className="flex items-center gap-2.5">
+              <svg className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+              </svg>
+              Terms of Service
+            </span>
+            <svg className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+            </svg>
+          </a>
+        </div>
       </div>
 
       {/* Danger Zone */}

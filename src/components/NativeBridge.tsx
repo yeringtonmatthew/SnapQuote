@@ -17,30 +17,29 @@ export default function NativeBridge() {
 
 async function initNativeFeatures() {
   try {
-    // Push Notifications
-    const { PushNotifications } = await import('@capacitor/push-notifications');
-    const permResult = await PushNotifications.requestPermissions();
-    if (permResult.receive === 'granted') {
-      await PushNotifications.register();
-      PushNotifications.addListener('registration', (token) => {
-        // Save the device token to the server for sending push notifications
-        fetch('/api/notifications/register-device', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ token: token.value, platform: 'ios' }),
-        }).catch(() => {});
-      });
-      PushNotifications.addListener('pushNotificationReceived', (notification) => {
-        console.log('Push received:', notification);
-      });
-      PushNotifications.addListener('pushNotificationActionPerformed', (action) => {
-        // Navigate to the relevant page when user taps notification
-        const data = action.notification.data;
-        if (data?.url) {
-          window.location.href = data.url;
-        }
-      });
-    }
+    // Push Notifications — disabled: aps-environment entitlement not configured.
+    // Re-enable after adding push notification capability to the provisioning profile.
+    // const { PushNotifications } = await import('@capacitor/push-notifications');
+    // const permResult = await PushNotifications.requestPermissions();
+    // if (permResult.receive === 'granted') {
+    //   await PushNotifications.register();
+    //   PushNotifications.addListener('registration', (token) => {
+    //     fetch('/api/notifications/register-device', {
+    //       method: 'POST',
+    //       headers: { 'Content-Type': 'application/json' },
+    //       body: JSON.stringify({ token: token.value, platform: 'ios' }),
+    //     }).catch(() => {});
+    //   });
+    //   PushNotifications.addListener('pushNotificationReceived', (notification) => {
+    //     console.log('Push received:', notification);
+    //   });
+    //   PushNotifications.addListener('pushNotificationActionPerformed', (action) => {
+    //     const data = action.notification.data;
+    //     if (data?.url) {
+    //       window.location.href = data.url;
+    //     }
+    //   });
+    // }
 
     // Network status monitoring
     const { Network } = await import('@capacitor/network');
