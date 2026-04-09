@@ -1,12 +1,15 @@
 import type { Metadata, Viewport } from 'next';
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/next';
+import dynamic from 'next/dynamic';
 import RegisterSW from '@/components/RegisterSW';
 import OfflineBanner from '@/components/OfflineBanner';
 import { ToastProvider } from '@/components/ui/Toast';
 import { ThemeProvider } from '@/components/ThemeProvider';
 import KeyboardShortcuts from '@/components/KeyboardShortcuts';
 import ScrollToTop from '@/components/ScrollToTop';
+
+const NativeBridge = dynamic(() => import('@/components/NativeBridge'), { ssr: false });
 import './globals.css';
 import { Inter } from "next/font/google";
 import { cn } from "@/lib/utils";
@@ -108,6 +111,7 @@ export default function RootLayout({
             <div id="main-content" className="min-h-dvh">{children}</div>
           </ToastProvider>
         </ThemeProvider>
+        <NativeBridge />
         <KeyboardShortcuts />
         <ScrollToTop />
         <Analytics />

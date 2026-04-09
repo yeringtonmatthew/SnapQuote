@@ -18,9 +18,17 @@ export default function OfflineBanner() {
 
     window.addEventListener('offline', goOffline);
     window.addEventListener('online', goOnline);
+
+    // Also listen for Capacitor network events via data attribute
+    const observer = new MutationObserver(() => {
+      setOffline(document.body.hasAttribute('data-offline'));
+    });
+    observer.observe(document.body, { attributes: true, attributeFilter: ['data-offline'] });
+
     return () => {
       window.removeEventListener('offline', goOffline);
       window.removeEventListener('online', goOnline);
+      observer.disconnect();
     };
   }, []);
 

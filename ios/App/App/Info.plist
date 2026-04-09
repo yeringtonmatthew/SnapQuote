@@ -55,5 +55,9 @@
 	<string>SnapQuote needs permission to save photos to your library.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>SnapQuote uses your location to auto-fill job site addresses.</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
+	</array>
 </dict>
 </plist>
