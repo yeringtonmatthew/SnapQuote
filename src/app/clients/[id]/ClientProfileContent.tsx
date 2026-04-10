@@ -274,7 +274,7 @@ export default function ClientProfileContent({ client, quotes, totalRevenue, tot
   return (
     <>
       {/* Header */}
-      <header className="relative bg-gradient-to-br from-gray-900 to-gray-800 dark:from-gray-900 dark:to-black px-5 pt-14 lg:pt-8 pb-6">
+      <header className="relative bg-gradient-to-br from-gray-900 to-gray-800 dark:from-gray-900 dark:to-black px-5 pt-14 lg:pt-8 pb-10">
         <div className="absolute top-14 lg:top-8 left-5">
           <Link href="/clients" className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 backdrop-blur-sm press-scale">
             <svg className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
@@ -311,18 +311,18 @@ export default function ClientProfileContent({ client, quotes, totalRevenue, tot
       </header>
 
       {/* ── PRIMARY ACTIONS ────────────────────── */}
-      <div className="mx-auto max-w-5xl px-5 -mt-5">
+      <div className="mx-auto max-w-5xl px-5 -mt-4">
         <div className="grid grid-cols-5 gap-2">
           {/* Call */}
           {client.phone ? (
-            <a href={`tel:${client.phone}`} className="flex flex-col items-center gap-1.5 rounded-2xl bg-white dark:bg-gray-900 py-3 ring-1 ring-black/[0.04] dark:ring-white/[0.06] shadow-sm press-scale">
+            <a href={`tel:${client.phone}`} className="flex flex-col items-center gap-1.5 rounded-2xl bg-white dark:bg-gray-900 pt-5 pb-3 ring-1 ring-black/[0.04] dark:ring-white/[0.06] shadow-sm press-scale">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-green-50 dark:bg-green-950/40">
                 <svg className="h-5 w-5 text-green-600" fill="none" viewBox="0 0 24 24" strokeWidth={1.75} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z" /></svg>
               </div>
               <span className="text-[10px] font-semibold text-gray-500">Call</span>
             </a>
           ) : (
-            <div className="flex flex-col items-center gap-1.5 rounded-2xl bg-white/60 dark:bg-gray-900/60 py-3 ring-1 ring-black/[0.02] opacity-40">
+            <div className="flex flex-col items-center gap-1.5 rounded-2xl bg-white/60 dark:bg-gray-900/60 pt-5 pb-3 ring-1 ring-black/[0.02] opacity-40">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gray-50"><svg className="h-5 w-5 text-gray-300" fill="none" viewBox="0 0 24 24" strokeWidth={1.75} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z" /></svg></div>
               <span className="text-[10px] font-semibold text-gray-400">Call</span>
             </div>
@@ -330,14 +330,14 @@ export default function ClientProfileContent({ client, quotes, totalRevenue, tot
 
           {/* Text */}
           {client.phone ? (
-            <a href={`sms:${client.phone}`} className="flex flex-col items-center gap-1.5 rounded-2xl bg-white dark:bg-gray-900 py-3 ring-1 ring-black/[0.04] dark:ring-white/[0.06] shadow-sm press-scale">
+            <a href={`sms:${client.phone}`} className="flex flex-col items-center gap-1.5 rounded-2xl bg-white dark:bg-gray-900 pt-5 pb-3 ring-1 ring-black/[0.04] dark:ring-white/[0.06] shadow-sm press-scale">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 dark:bg-blue-950/40">
                 <svg className="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" strokeWidth={1.75} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" /></svg>
               </div>
               <span className="text-[10px] font-semibold text-gray-500">Text</span>
             </a>
           ) : (
-            <div className="flex flex-col items-center gap-1.5 rounded-2xl bg-white/60 dark:bg-gray-900/60 py-3 ring-1 ring-black/[0.02] opacity-40">
+            <div className="flex flex-col items-center gap-1.5 rounded-2xl bg-white/60 dark:bg-gray-900/60 pt-5 pb-3 ring-1 ring-black/[0.02] opacity-40">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gray-50"><svg className="h-5 w-5 text-gray-300" fill="none" viewBox="0 0 24 24" strokeWidth={1.75} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" /></svg></div>
               <span className="text-[10px] font-semibold text-gray-400">Text</span>
             </div>
@@ -345,21 +345,21 @@ export default function ClientProfileContent({ client, quotes, totalRevenue, tot
 
           {/* Directions */}
           {client.address ? (
-            <a href={`maps://maps.apple.com/?daddr=${encodeURIComponent(client.address)}`} className="flex flex-col items-center gap-1.5 rounded-2xl bg-white dark:bg-gray-900 py-3 ring-1 ring-black/[0.04] dark:ring-white/[0.06] shadow-sm press-scale">
+            <a href={`maps://maps.apple.com/?daddr=${encodeURIComponent(client.address)}`} className="flex flex-col items-center gap-1.5 rounded-2xl bg-white dark:bg-gray-900 pt-5 pb-3 ring-1 ring-black/[0.04] dark:ring-white/[0.06] shadow-sm press-scale">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 dark:bg-indigo-950/40">
                 <svg className="h-5 w-5 text-indigo-600" fill="none" viewBox="0 0 24 24" strokeWidth={1.75} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M9 6.75V15m6-6v8.25m.503 3.498l4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 00-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0z" /></svg>
               </div>
               <span className="text-[10px] font-semibold text-gray-500">Directions</span>
             </a>
           ) : (
-            <div className="flex flex-col items-center gap-1.5 rounded-2xl bg-white/60 dark:bg-gray-900/60 py-3 ring-1 ring-black/[0.02] opacity-40">
+            <div className="flex flex-col items-center gap-1.5 rounded-2xl bg-white/60 dark:bg-gray-900/60 pt-5 pb-3 ring-1 ring-black/[0.02] opacity-40">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gray-50"><svg className="h-5 w-5 text-gray-300" fill="none" viewBox="0 0 24 24" strokeWidth={1.75} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M9 6.75V15m6-6v8.25m.503 3.498l4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 00-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0z" /></svg></div>
               <span className="text-[10px] font-semibold text-gray-400">Directions</span>
             </div>
           )}
 
           {/* Create Job */}
-          <Link href={`/quotes/new?client_id=${client.id}`} className="flex flex-col items-center gap-1.5 rounded-2xl bg-white dark:bg-gray-900 py-3 ring-1 ring-black/[0.04] dark:ring-white/[0.06] shadow-sm press-scale">
+          <Link href={`/quotes/new?client_id=${client.id}`} className="flex flex-col items-center gap-1.5 rounded-2xl bg-white dark:bg-gray-900 pt-5 pb-3 ring-1 ring-black/[0.04] dark:ring-white/[0.06] shadow-sm press-scale">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 dark:bg-amber-950/40">
               <svg className="h-5 w-5 text-amber-600" fill="none" viewBox="0 0 24 24" strokeWidth={1.75} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
             </div>
@@ -367,7 +367,7 @@ export default function ClientProfileContent({ client, quotes, totalRevenue, tot
           </Link>
 
           {/* Create Quote */}
-          <Link href={`/quotes/new?client_id=${client.id}`} className="flex flex-col items-center gap-1.5 rounded-2xl bg-white dark:bg-gray-900 py-3 ring-1 ring-black/[0.04] dark:ring-white/[0.06] shadow-sm press-scale">
+          <Link href={`/quotes/new?client_id=${client.id}`} className="flex flex-col items-center gap-1.5 rounded-2xl bg-white dark:bg-gray-900 pt-5 pb-3 ring-1 ring-black/[0.04] dark:ring-white/[0.06] shadow-sm press-scale">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-50 dark:bg-violet-950/40">
               <svg className="h-5 w-5 text-violet-600" fill="none" viewBox="0 0 24 24" strokeWidth={1.75} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>
             </div>

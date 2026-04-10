@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
 
@@ -240,26 +241,42 @@ export default async function CustomerProposalPage({
         {/* Top bar — logo + actions */}
         <div className="absolute left-0 right-0 top-0 flex items-center justify-between px-5 pt-12">
           <div className="flex items-center gap-2.5">
-            {profile?.logo_url ? (
-              <img
-                src={profile.logo_url}
-                alt={businessName}
-                loading="lazy"
-                className="h-9 w-9 rounded-xl object-contain bg-white/10 backdrop-blur-sm p-1"
-              />
+            {isContractor ? (
+              <Link
+                href={`/quotes/${quote.id}`}
+                aria-label="Back to quote"
+                className="flex h-9 items-center gap-1.5 rounded-full bg-white/15 backdrop-blur-md pl-2 pr-3.5 text-[13px] font-semibold text-white hover:bg-white/25 active:scale-95 transition-all"
+                data-no-print
+              >
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+                </svg>
+                Back
+              </Link>
             ) : (
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/15 backdrop-blur-sm">
-                <span className="text-xs font-bold text-white">{businessName.slice(0, 2).toUpperCase()}</span>
-              </div>
+              <>
+                {profile?.logo_url ? (
+                  <img
+                    src={profile.logo_url}
+                    alt={businessName}
+                    loading="lazy"
+                    className="h-9 w-9 rounded-xl object-contain bg-white/10 backdrop-blur-sm p-1"
+                  />
+                ) : (
+                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/15 backdrop-blur-sm">
+                    <span className="text-xs font-bold text-white">{businessName.slice(0, 2).toUpperCase()}</span>
+                  </div>
+                )}
+                <span className="text-[13px] font-semibold text-white/90 tracking-tight">{businessName}</span>
+              </>
             )}
-            <span className="text-[13px] font-semibold text-white/90 tracking-tight">{businessName}</span>
           </div>
           <div className="flex items-center gap-2" data-no-print>
-            <CustomerShareButton quoteId={quote.id} />
+            {!isContractor && <CustomerShareButton quoteId={quote.id} />}
             <PrintButton variant="icon" />
             {isContractor && <DownloadPdfButton quoteId={params.id} />}
             <span className="rounded-full bg-white/15 backdrop-blur-sm px-3 py-1 text-[11px] font-semibold text-white/80 tracking-wider uppercase">
-              {quote.quote_number ? `Quote ${formatQuoteNumber(quote.quote_number)}` : 'Quote'}
+              {isContractor ? 'Preview' : (quote.quote_number ? `Quote ${formatQuoteNumber(quote.quote_number)}` : 'Quote')}
             </span>
           </div>
         </div>

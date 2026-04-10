@@ -1,23 +1,49 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
+import { haptic } from '@/lib/haptic';
+
 interface SMSShareButtonProps {
   phone: string;
   message: string;
+  quoteId?: string;
+  currentStatus?: string;
 }
 
 /**
  * Opens the native SMS app with the customer's number and a pre-filled
  * message containing the proposal link. One tap to send from their own phone.
+ *
+ * If quoteId is provided and the quote is still in draft, also marks the quote
+ * as sent on the backend so the status updates correctly. This is fire-and-forget
+ * since the SMS launch is the primary action and shouldn't be blocked by network
+ * latency.
  */
-export function SMSShareButton({ phone, message }: SMSShareButtonProps) {
+export function SMSShareButton({ phone, message, quoteId, currentStatus }: SMSShareButtonProps) {
+  const router = useRouter();
   // Normalize phone to digits only
   const digits = phone.replace(/\D/g, '');
   // sms: URI — ?body= is the standard format that works on both iOS and Android
   const smsUrl = `sms:${digits}?body=${encodeURIComponent(message)}`;
 
+  function handleClick(e: React.MouseEvent<HTMLAnchorElement>) {
+    // Mark quote as sent in the backend (fire-and-forget). We do this before
+    // navigating so the request is in flight while the SMS app opens.
+    if (quoteId && currentStatus === 'draft') {
+      fetch(`/api/quotes/${quoteId}/send`, { method: 'POST' })
+        .then(() => router.refresh())
+        .catch(() => {
+          // Non-fatal — the SMS still opens. Status will sync next page load.
+        });
+    }
+    haptic('medium');
+    // Let the default link navigation proceed (opens native SMS app)
+  }
+
   return (
     <a
       href={smsUrl}
+      onClick={handleClick}
       className="flex items-center gap-1.5 rounded-xl bg-green-600 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-green-500 press-scale"
       title="Send via text message"
     >

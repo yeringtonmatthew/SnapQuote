@@ -130,6 +130,8 @@ export default async function QuoteDetailPage({
               <SMSShareButton
                 phone={quote.customer_phone}
                 message={`Hi ${quote.customer_name}, ${businessName} sent you a quote for $${Number(quote.total ?? quote.subtotal).toLocaleString('en-US', { minimumFractionDigits: 2 })}. View and approve here: ${process.env.NEXT_PUBLIC_APP_URL || 'https://snapquote.dev'}/q/${quote.id}`}
+                quoteId={quote.id}
+                currentStatus={quote.status}
               />
             )}
             <ShareButton
