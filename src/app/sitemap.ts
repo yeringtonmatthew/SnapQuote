@@ -1,6 +1,7 @@
 import { MetadataRoute } from 'next';
 import { createClient } from '@supabase/supabase-js';
 import { getAllArticles } from '@/lib/blog';
+import { getAllGlossaryTerms } from '@/lib/glossary';
 
 const SITE = 'https://snapquote.dev';
 
@@ -42,7 +43,16 @@ const INTENT_LANDING_PAGES = [
   'contractor-estimate-app',
 ];
 
-const TOOL_PAGES = ['roofing-square-calculator'];
+const TOOL_PAGES = [
+  'roofing-square-calculator',
+  'roof-pitch-calculator',
+  'roof-replacement-cost-calculator',
+  'roofing-cost-estimator',
+  'shingle-calculator',
+  'roofing-materials-calculator',
+  'squares-to-bundles-calculator',
+  'roof-square-footage-calculator',
+];
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
@@ -58,6 +68,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${SITE}/compare`, lastModified: now, changeFrequency: 'weekly', priority: 0.9 },
     { url: `${SITE}/alternatives`, lastModified: now, changeFrequency: 'weekly', priority: 0.9 },
     { url: `${SITE}/tools`, lastModified: now, changeFrequency: 'weekly', priority: 0.8 },
+    { url: `${SITE}/glossary`, lastModified: now, changeFrequency: 'weekly', priority: 0.7 },
     { url: `${SITE}/blog`, lastModified: now, changeFrequency: 'weekly', priority: 0.8 },
   ];
 
@@ -108,6 +119,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: new Date(article.date),
       changeFrequency: 'monthly',
       priority: 0.7,
+    });
+  }
+
+  // Glossary terms
+  for (const term of getAllGlossaryTerms()) {
+    staticPages.push({
+      url: `${SITE}/glossary/${term.slug}`,
+      lastModified: now,
+      changeFrequency: 'monthly',
+      priority: 0.5,
     });
   }
 

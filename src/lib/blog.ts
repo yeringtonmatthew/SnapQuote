@@ -1168,6 +1168,663 @@ The best way to evaluate is to try one on your next real job. Most AI roofing to
 
 AI is not replacing roofers. It is replacing the yellow legal pad. The part of your business that used to take 20 minutes at the kitchen table now takes 60 seconds in the truck. That gives you back hours of every day and dramatically improves your close rate because your proposals are the first ones in the homeowner\u2019s hand. If you are a small roofer trying to grow in 2026, this is the single highest-leverage tool change you can make.`,
   },
+  {
+    slug: 'how-to-file-a-roofing-insurance-claim',
+    title: 'How to File a Roofing Insurance Claim (Homeowner Step-by-Step)',
+    excerpt:
+      "Step-by-step guide for homeowners filing a roofing insurance claim after hail, wind, or storm damage. Avoid the common mistakes that get claims denied.",
+    metaDescription:
+      'Complete step-by-step guide to filing a roofing insurance claim. Documentation, inspection, adjuster meeting, and what to do if your claim is denied.',
+    date: '2026-04-11',
+    category: 'Insurance',
+    readingTime: '9 min read',
+    targetKeyword: 'how to file a roofing insurance claim',
+    content: `## When to File a Roofing Insurance Claim
+
+Most homeowners policies cover sudden, accidental roof damage from wind, hail, or falling debris. They do not cover gradual wear, age-related failure, or neglect. If your roof was damaged by a specific storm event, you probably have a valid claim.
+
+Signs you should file:
+- Visible hail hits on shingles, vents, or gutters
+- Missing or cracked shingles after a windstorm
+- Interior water stains after a storm
+- Granules in your gutters beyond normal wear
+- A tree branch or debris hit the roof
+
+## Step 1: Document the Damage
+
+Before you call anyone, document everything. Photos and video are your most important evidence.
+
+Take photos of:
+- Every visibly damaged area of the roof (if you can safely access it)
+- Any interior water damage
+- Debris on the ground around the house
+- The general condition of the neighborhood after the storm
+- Dents on cars, gutters, HVAC units, or windows (proves the storm had hail big enough to damage shingles)
+
+Date every photo. Save the raw images somewhere backed up.
+
+## Step 2: Call a Licensed Roofing Contractor First
+
+Before calling your insurance company, get a licensed roofer to inspect the roof. A good roofer will document the damage properly, know what an insurance adjuster looks for, and give you an honest assessment of whether the damage is worth filing a claim over.
+
+Do NOT sign anything the roofer offers that includes phrases like "assignment of benefits" or "contingent contract" unless you understand exactly what it means. Some roofers try to lock you into using them before the claim is even filed.
+
+## Step 3: Call Your Insurance Company
+
+Once you know you have legitimate storm damage, call your insurer and file the claim. They will assign a claim number and schedule an adjuster to inspect your roof.
+
+When you call, be factual: "I had a hailstorm on [date]. A licensed roofing contractor inspected the roof and found hail damage. I would like to file a claim." Do not speculate about what it will cost or what work needs to be done — that is for the adjuster and your roofer to determine.
+
+## Step 4: Be Present at the Adjuster Meeting
+
+This is the most important step most homeowners skip. Be there when the adjuster inspects the roof, and have your roofer there too.
+
+The adjuster is looking for damage that matches the storm you reported. Your roofer knows what actual hail damage looks like and where adjusters sometimes miss it. Having both on the roof at the same time dramatically improves your chances of a fair settlement.
+
+## Step 5: Review the Scope of Loss
+
+After the adjuster finishes, they send you a document called the "scope of loss" — a list of everything they think the insurance will pay for, with itemized pricing based on their estimating software (usually Xactimate).
+
+Do NOT just accept it. Have your roofer review every line item. Common things adjusters miss or underpay:
+- Starter strip
+- Ridge cap quantities
+- Pipe jacks and flashing
+- Drip edge
+- Ice and water shield
+- Tear-off of multiple layers
+- Ventilation replacement
+- Code-required upgrades
+- Overhead and profit (often called "O&P")
+
+If your roofer finds line items missing or underpaid, they submit a "supplement" — a formal request for the insurance company to revise the scope. Good roofers do this as part of the job.
+
+## Step 6: Get Paid, Get the Work Done
+
+Once the scope is finalized and you sign the contract with your roofer, the insurance company pays in two installments:
+
+1. **Initial payment**: Usually the actual cash value (ACV) of the roof, minus your deductible.
+2. **Depreciation recovery**: Paid after the work is completed and you submit proof.
+
+Your roofer handles coordinating the installation. The deductible is your out-of-pocket — by law in most states, the roofer cannot waive or absorb it.
+
+## What to Do If Your Claim Is Denied
+
+Denial does not mean the end. Options:
+
+1. **Request a reinspection** — Adjusters miss damage all the time. A second pair of eyes often reverses the decision.
+2. **Hire a public adjuster** — A licensed public adjuster works for you, not the insurance company. They typically charge 10-15% of the settlement.
+3. **File a complaint with your state insurance commissioner** — Free to do. Sometimes it gets the insurance company to reconsider.
+4. **Consult an attorney** — For large claims where the denial feels unreasonable.
+
+## The Bottom Line
+
+Most roofing insurance claims are winnable if you document properly, get a licensed roofer involved early, and show up at the adjuster meeting. The biggest mistake homeowners make is trusting the first adjuster number — over half the time, the initial scope underestimates the real cost of a proper roof replacement. A good roofer will help you get a fair settlement without any of it coming out of your pocket (except the deductible).`,
+  },
+  {
+    slug: 'hail-damage-roof-insurance-claim-guide',
+    title: 'Hail Damage Roof Insurance Claim Guide (2026)',
+    excerpt:
+      "What hail damage actually looks like, how to prove it to your insurance company, and what to expect from the claim process from storm to payout.",
+    metaDescription:
+      'Complete 2026 guide to hail damage roofing insurance claims. How to identify hail damage, document it, and win your claim.',
+    date: '2026-04-11',
+    category: 'Insurance',
+    readingTime: '8 min read',
+    targetKeyword: 'hail damage roof insurance claim',
+    content: `## What Hail Damage on a Roof Actually Looks Like
+
+Hail damage on asphalt shingles shows up as circular impact marks where the hail struck. The marks look like round bruises — darker spots where the granules have been knocked off, exposing the black mat underneath. Fresh hail damage has sharp edges and clean exposed mat. Older damage has softened edges and collected dirt.
+
+Common places to find hail damage:
+- Flat areas of the main roof surface
+- Ridge cap shingles (hit first, damaged most)
+- Rubber boot flashings around pipes (cracked from impact)
+- Metal vents, caps, and flashings (dented)
+- Gutters and downspouts (dented and bent)
+- Window screens and window sills
+
+## Hail Damage vs Normal Wear
+
+Insurance adjusters will look for reasons to deny your claim. They will try to call damage "wear and tear" if possible. Here is the difference:
+
+**Hail damage:**
+- Circular or semicircular bruises
+- Random pattern across the roof
+- Sharp-edged exposed mat
+- Visible granule loss concentrated around each impact
+- Matching marks on other objects (gutters, AC units, cars)
+
+**Normal wear:**
+- Linear streaks or strips
+- Uniform pattern (always at the same height)
+- Gradual edge softening
+- Diffuse granule loss across large areas
+- No matching marks on nearby objects
+
+The matching marks on other objects is the most important tell. If you can show the adjuster dents on your car, the AC condenser, or gutters that correspond with the date of the storm, it becomes very hard to argue it is not hail.
+
+## Proving the Storm Happened
+
+Insurance companies require proof that an actual hail storm hit your property. They use historical weather data to verify claims. Sources they check:
+
+- NOAA storm reports
+- Weather radar history
+- Third-party hail mapping services
+- National Weather Service event archives
+
+Before filing, pull your own proof from weather.gov or a commercial hail map site. Save screenshots. If a storm was reported near your zip code on a specific date, your claim is on much stronger footing.
+
+## Typical Hail Damage Claim Timeline
+
+Most legitimate hail claims follow this timeline:
+
+- **Day 0**: Storm hits
+- **Day 1-3**: Homeowner notices damage or has a roofer inspect
+- **Day 4-7**: Claim filed with insurance
+- **Day 7-14**: Adjuster schedules and conducts inspection
+- **Day 14-21**: Scope of loss issued
+- **Day 21-30**: Supplement submitted by roofer if needed
+- **Day 30-45**: Final scope approved, contract signed
+- **Day 45-60**: Work completed
+- **Day 60-75**: Final payment issued
+
+Some states have laws that require faster response times. Some complicated claims drag on much longer.
+
+## Common Mistakes That Hurt Hail Claims
+
+1. **Waiting too long to file.** Most policies require prompt notification. Filing 6 months after the storm makes the claim harder to prove.
+2. **Signing a contingent contract without understanding it.** Some roofers push homeowners to sign before the claim is even filed. Read everything first.
+3. **Climbing on the roof yourself.** You can damage shingles just by walking on them, and the adjuster may blame that damage on you.
+4. **Accepting the first scope without review.** First scopes are almost always low. A good roofer will find $2,000-$10,000+ in missed line items that the adjuster forgot.
+5. **Hiring a storm-chasing roofer you have never heard of.** Verify licensing and insurance in your state before signing anything.
+
+## What a Good Contractor Does for You
+
+A roofing contractor who handles a lot of insurance work will:
+- Document the damage thoroughly with photos and notes
+- Attend the adjuster meeting with you
+- Review the scope line-by-line
+- Submit supplements for missed items
+- Coordinate payment timing with your mortgage company if required
+- Handle the work and provide warranty on installation
+
+Modern tools like SnapQuote let contractors generate a detailed, insurance-ready scope of work from photos in under 60 seconds — which helps both the homeowner (faster claim) and the contractor (more efficient workflow).
+
+## The Bottom Line
+
+Hail damage claims are winnable if the damage is real, the storm is documented, and you have a competent contractor in your corner. The process is stressful but straightforward when you follow the steps. The biggest single factor in getting a fair settlement is having a roofer who knows how to work with insurance — not a generic handyman, not the cheapest bid, but someone who does this kind of claim work regularly.`,
+  },
+  {
+    slug: 'xactimate-vs-manual-roofing-estimating',
+    title: 'Xactimate vs Manual Estimating: Which Is Right for Roofing Contractors?',
+    excerpt:
+      "Xactimate dominates insurance estimating, but is it the right tool for every roofer? When to use Xactimate vs manual estimating vs modern AI tools.",
+    metaDescription:
+      'Xactimate vs manual roofing estimating — pros, cons, and when to use each. Plus why AI tools like SnapQuote are the emerging third option.',
+    date: '2026-04-11',
+    category: 'Insurance',
+    readingTime: '7 min read',
+    targetKeyword: 'Xactimate vs manual estimating',
+    content: `## What Xactimate Is and Why It Matters
+
+Xactimate is the standard software that insurance adjusters use to estimate damage claims in the US. It has a massive database of line items, materials, and labor rates broken down by zip code and updated monthly. When a roofing claim is being worked, the adjuster is almost always writing the scope in Xactimate.
+
+For roofing contractors, that matters for one reason: if you want to work insurance jobs, you either need to speak Xactimate (read and write scopes in the same format) or your estimates will not match what the insurance company pays out.
+
+## Xactimate Pros
+
+**Insurance-aligned pricing.** Xactimate pulls regional pricing that matches what insurance companies expect to pay. When you submit a supplement, the insurance company can validate your line items against their own database.
+
+**Standardized line items.** Everyone speaks the same language. "RFG-HIGH-COMP-ARCH-OV" means the same thing to every contractor and adjuster in the country.
+
+**Detailed scope support.** You can break down every component of a roof replacement down to the linear foot of drip edge and the number of pipe jacks.
+
+**Faster supplements.** Submitting a supplement in Xactimate format speeds up the review and approval process with the insurance company.
+
+## Xactimate Cons
+
+**Expensive.** Xactimate costs $85-195/month per user depending on the tier, plus training costs. For a small roofer, that is significant overhead.
+
+**Steep learning curve.** The interface is dated and complicated. New users typically take 20-40 hours of practice to become productive, and months to become truly proficient.
+
+**Not great for retail.** Xactimate is built for insurance work. If you are writing a retail proposal for a homeowner paying out of pocket, Xactimate is overkill — the line-item density overwhelms homeowners.
+
+**Locked into insurance pricing logic.** Your estimates will always reflect insurance company cost assumptions, which may not match your actual labor costs.
+
+## When to Use Xactimate
+
+- You work a lot of insurance claims (storm chasing, insurance-heavy markets)
+- You need to submit formal supplements to insurance companies
+- You want to match the adjuster&apos;s estimating format line-for-line
+- You have the time and budget for proper training
+
+## When Manual Estimating Makes Sense
+
+Not every roof job is an insurance job. For retail work, insurance work where the claim is already settled, or quick proposals, manual estimating (spreadsheets, templates, or custom forms) is still common and sometimes faster.
+
+Manual estimating is better when:
+- The homeowner is paying out of pocket
+- You have established pricing you trust
+- You need a proposal that is easy for homeowners to read
+- You do not need to submit to an insurance company
+
+## The Third Option: AI Estimating Tools
+
+A newer category has emerged in the last few years: AI-powered estimating tools that generate a detailed scope of work from photos of the roof. Tools like SnapQuote use Claude Vision AI to analyze photos, identify materials, and draft a full proposal automatically.
+
+Strengths of AI tools:
+- 60-second quote generation vs 15-30 minutes in Xactimate
+- No training required — the workflow is just "take photos"
+- Output is both insurance-format detailed AND homeowner-friendly
+- Dramatically cheaper than Xactimate ($79/mo flat vs $85-195/mo per user)
+
+Weaknesses:
+- AI output is a starting point, not a final estimate — you still review everything
+- Regional pricing databases are not as comprehensive as Xactimate (yet)
+- Less established integration with insurance company workflows
+- For very complex insurance supplements, you still need Xactimate to match format
+
+## The Hybrid Approach
+
+Many successful roofing contractors in 2026 use both. They run SnapQuote or a similar AI tool for their retail proposals and initial insurance walkthroughs — the speed helps them close more jobs. For the actual supplement work and insurance company communication, they translate the scope into Xactimate.
+
+This lets them get the speed advantage on 90% of their quoting while keeping the insurance-format capability for the parts of the job that require it.
+
+## The Bottom Line
+
+Xactimate remains the standard for insurance claim supplementing — there is no getting around that if you do insurance work. But the emerging AI tools are dramatically faster and cheaper for the proposal-generation side of the business. For most small roofers, the right answer is: use a modern AI tool for retail proposals and first-pass insurance scopes, and invest in Xactimate when insurance work becomes more than 30% of your volume. Use the right tool for the right job.`,
+  },
+  {
+    slug: 'storm-damage-roofing-contractor-guide',
+    title: 'Storm Damage Roofing Contractor: What Homeowners Need to Know',
+    excerpt:
+      "Hiring a storm damage roofing contractor after a hurricane, tornado, or hailstorm? Here is exactly how to vet them, avoid scams, and get the repair done right.",
+    metaDescription:
+      'How to hire a storm damage roofing contractor. Red flags, licensing checks, insurance coordination, and how to avoid storm-chasing scams.',
+    date: '2026-04-11',
+    category: 'Insurance',
+    readingTime: '8 min read',
+    targetKeyword: 'storm damage roofing contractor',
+    content: `## After a Storm, Bad Contractors Come Out First
+
+The worst time to hire a roofer is the day after a major storm. Your neighborhood is flooded with out-of-state contractors who drove in specifically to chase the insurance money. Some are legitimate. Many are not. They will be aggressive, persuasive, and gone before the job is done properly.
+
+This guide is how to tell the good ones from the scammers.
+
+## Red Flags to Watch For
+
+### "We were in the area and noticed your roof."
+Legitimate local roofers do not cold-knock. If someone shows up unannounced and offers a free inspection after a storm, be skeptical. Real local contractors are too busy with existing customers to cold-canvass.
+
+### Pressure to sign immediately.
+Any contractor who says "sign today or I can&apos;t give you this price" is running a sales playbook, not running a roofing business. A real contract can wait 24 hours.
+
+### Offering to waive or "cover" your deductible.
+This is illegal in most states. Your deductible is your out-of-pocket portion of the insurance claim, by law. Any contractor who promises to absorb or waive it is committing insurance fraud — and you would be complicit.
+
+### "Assignment of benefits" contracts.
+An assignment of benefits (AOB) gives the contractor the right to communicate directly with your insurance company, negotiate on your behalf, and collect the insurance payout directly. In the wrong hands, AOBs have led to inflated claims, abandoned jobs, and lawsuits. Never sign one without a lawyer reviewing first.
+
+### No physical local address.
+Legitimate roofers have an office in the state they operate in. Ask for the address and verify it exists.
+
+### License is from a different state.
+Roofing licensing is state-by-state. A contractor with a Florida license cannot legally perform structural roof work in Texas without also being licensed in Texas.
+
+### Massive up-front deposit request.
+A reasonable deposit is 10-30% on signing. "We need $10,000 before we order materials" on a $15,000 job is a scam pattern.
+
+## Green Flags
+
+### Local business with a verifiable track record.
+Google Maps listing with real reviews over several years. Local business phone number. License visible on their website. Physical office.
+
+### Proof of insurance.
+Ask for current certificates of general liability and workers compensation insurance. Call the insurance company to verify the certificates are real.
+
+### License number listed publicly.
+Most states have an online lookup tool where you can verify any contractor license. The contractor should volunteer their license number without being asked.
+
+### Detailed written estimate.
+A legitimate contractor provides a written proposal with specific line items, product names, and scope of work — not just "reroof for $14,000."
+
+### Willingness to wait.
+The contractor should be willing to let you get other quotes and take time to decide. Anyone rushing you is a red flag.
+
+### References you can call.
+Ask for 3-5 recent customers in your area. Call them. Ask about timeliness, cleanup, warranty response, and whether they would hire the contractor again.
+
+## The Proper Hiring Process
+
+1. **Document your damage first.** Photos, dates, notes about what happened.
+2. **Call 2-3 licensed local roofers.** Not the ones knocking on your door.
+3. **Get inspections and written proposals from each.**
+4. **Verify licensing and insurance** for every contractor before choosing.
+5. **Call references** for the top 2 candidates.
+6. **Have the chosen contractor meet the insurance adjuster with you** on inspection day.
+7. **Review the contract carefully** before signing. Look for deposit amounts, timeline, warranty, and any AOB language.
+8. **Pay deposit by check or credit card** — never cash. You want a paper trail.
+
+## How Modern Contractors Work
+
+The best storm damage contractors today use digital tools to move fast without cutting corners. When a contractor uses tools like SnapQuote to generate detailed, professional proposals in 60 seconds from photos, it is a good sign — they care about speed, documentation, and professional presentation. That same discipline usually shows up in their workmanship.
+
+The reverse is also a flag: a "roofer" still writing estimates on a notepad in 2026 is usually running a less-organized operation, which often means delays, misunderstandings, and cleanup issues.
+
+## What Happens If Your Contractor Disappears
+
+Storm-chasing scams often involve the contractor collecting a deposit, disappearing for weeks, and then either ghosting the homeowner or doing shoddy work and leaving town. If this happens to you:
+
+1. File a complaint with your state attorney general
+2. File a complaint with the state contractor licensing board
+3. Contact your insurance company — they may pause further payouts
+4. File a police report for theft or fraud
+5. Contact a local lawyer about civil action
+
+The best protection is avoiding the situation altogether. Take the extra 48 hours to vet carefully before signing anything.
+
+## The Bottom Line
+
+Storm damage creates urgency, and urgency is what scammers use against you. The single most effective defense is slowing down. A legitimate contractor will understand you want time to compare options. A scammer will pressure you to sign before you can think. When in doubt, go with a local, long-established roofer with real online reviews — even if they are a week or two behind on the schedule. The cheapest or fastest contractor in storm season is almost never the best one.`,
+  },
+  {
+    slug: 'how-to-supplement-a-roofing-insurance-claim',
+    title: 'How to Supplement a Roofing Insurance Claim (Contractor Guide)',
+    excerpt:
+      "A step-by-step guide for roofing contractors on how to write and submit supplement requests that actually get approved by insurance companies.",
+    metaDescription:
+      'How to write and submit roofing insurance supplements that get approved. What to include, what to avoid, and why most supplements fail.',
+    date: '2026-04-11',
+    category: 'Insurance',
+    readingTime: '8 min read',
+    targetKeyword: 'roofing insurance supplement',
+    content: `## What a Supplement Is and Why It Matters
+
+A supplement is a formal request to an insurance company to revise their scope of loss to include line items that were missed, underpaid, or incorrectly priced. For roofing contractors doing insurance work, supplements are where a significant portion of your actual revenue comes from — the first scope from an adjuster is almost always low.
+
+A well-written supplement can add $2,000-$10,000+ to a typical roof replacement claim. Getting supplements approved is a learned skill, and it makes the difference between a profitable insurance job and a break-even one.
+
+## Why First Scopes Are Almost Always Low
+
+Insurance adjusters work fast. They see dozens of roofs per week, especially after a storm. They use Xactimate to build the scope, and they tend to default to standard line items without always checking every detail. Common things missed or underpaid in the first scope:
+
+- Ridge cap quantities (often underestimated)
+- Starter strip
+- Drip edge in full linear footage
+- Ice and water shield coverage area
+- Pipe jacks, flashing, vent boots
+- Multiple-layer tear-off
+- Waste factor
+- Code-required upgrades (ventilation, underlayment upgrades)
+- Overhead and profit
+- Steep/difficult access charges
+- Permit fees
+- Dump fees
+
+Any of these missing from the first scope is grounds for a supplement.
+
+## Step 1: Review the Scope Line-by-Line
+
+Do not skim. Read every single line of the scope of loss and compare it against the work the job actually requires. Note every discrepancy — missing items, wrong quantities, wrong pricing, missing O&P.
+
+Good contractors document their review in writing so they can reference it when building the supplement.
+
+## Step 2: Take Supporting Photos and Measurements
+
+For every item you want to supplement, have photographic or measurement evidence. If you are supplementing for additional ice and water shield, you need photos of the eaves showing the code-required coverage. If you are supplementing for pipe jacks, photos of the actual pipe penetrations.
+
+Supplements without evidence get denied. Supplements with solid photo documentation get approved far more often.
+
+## Step 3: Write the Supplement in the Insurance Company&apos;s Format
+
+This is where it gets technical. Most insurance companies want supplements submitted in Xactimate format with matching line-item codes. Writing the supplement in the adjuster&apos;s own pricing language is the fastest way to get approval.
+
+Include:
+- Claim number
+- Insured name and address
+- Date of loss
+- Original scope reference
+- List of supplemented items with line-item codes, quantities, and prices
+- Brief justification for each item
+- Photo attachments
+
+Some insurance companies have specific supplement request portals. Use them when they exist.
+
+## Step 4: Submit Through the Right Channel
+
+Different insurance companies have different processes. Options:
+
+- **Email to the adjuster directly** — fastest for smaller supplements
+- **Upload to the carrier portal** — required for larger supplements with some insurers
+- **Formal re-inspection request** — for large or contested supplements, sometimes the adjuster needs to come back out
+
+Keep records of every submission, including date, channel, and any confirmation.
+
+## Step 5: Follow Up Persistently
+
+Supplements do not always get addressed quickly. Follow up every 3-5 business days until you get a decision. A polite, professional follow-up email keeps the claim moving.
+
+If the adjuster is unresponsive, escalate to their supervisor. Most insurance companies have a claims supervisor or team lead who can move a stuck claim.
+
+## Common Reasons Supplements Get Denied
+
+### Missing documentation.
+Photos, measurements, and manufacturer specs strengthen every supplement. Without them, adjusters can dismiss your request.
+
+### Line items that do not match the scope.
+If you supplement for something the adjuster already included, you look careless. Read the original scope carefully before adding anything.
+
+### Pricing above the Xactimate database.
+Insurance companies are not obligated to pay more than their database says something costs in your zip code. Stay inside the database unless you can document why the job genuinely costs more.
+
+### Overhead and profit on jobs that do not qualify.
+O&P is paid on jobs that involve 3+ trades. Simple reroofs sometimes do not qualify, and requesting O&P when it is not warranted can undermine the rest of your supplement.
+
+### Aggressive or unprofessional tone.
+Supplements are business correspondence. Write them professionally. Adjusters work with dozens of contractors — the professional ones get responses faster.
+
+## Modern Tools That Help
+
+Estimating software like Xactimate is standard for supplements, but newer AI-powered tools can dramatically speed up the initial proposal and site documentation. Contractors using SnapQuote generate detailed photo-based scopes in 60 seconds, which serves two purposes:
+
+1. A starting point for the formal Xactimate supplement
+2. A parallel document to show the homeowner what the final proposed work looks like
+
+Combining both tools — AI for speed, Xactimate for insurance-format precision — is how the most efficient insurance contractors work in 2026.
+
+## The Bottom Line
+
+Supplementing is not optional on insurance work — it is a core part of the business. Contractors who do not supplement are leaving thousands of dollars on every claim. Contractors who supplement with solid documentation and professional communication recover the full value of the jobs they work. Learn the process, build a system, and treat supplements as the revenue-recovery tool they are.`,
+  },
+  {
+    slug: 'understanding-roof-depreciation-insurance',
+    title: 'Understanding Roof Depreciation on Insurance Claims',
+    excerpt:
+      "Why your insurance company holds back part of your roofing claim payout, how to recover the depreciation, and what 'ACV vs RCV' actually means.",
+    metaDescription:
+      'Understanding roof depreciation on insurance claims. ACV vs RCV explained, how to recover depreciation, and what homeowners need to know.',
+    date: '2026-04-11',
+    category: 'Insurance',
+    readingTime: '7 min read',
+    targetKeyword: 'roof depreciation insurance',
+    content: `## Why Your Claim Payment Came in Lower Than Expected
+
+If you filed a roofing insurance claim and got a check that was smaller than the total scope of loss, you probably ran into depreciation. Most homeowners policies pay out in two installments: actual cash value (ACV) first, then depreciation recovery after the work is completed.
+
+This is called "replacement cost value minus depreciation" and it is standard in almost every modern homeowners policy.
+
+## ACV vs RCV Explained
+
+**RCV (Replacement Cost Value)**: What it would cost today to replace the damaged roof with new materials and labor.
+
+**ACV (Actual Cash Value)**: RCV minus depreciation for the age and condition of the existing roof.
+
+Simple example: your RCV for a full roof replacement is $15,000. Your roof is 12 years old. The insurance company depreciates it at 3% per year, so the depreciation is $5,400 (36% of $15,000). Your ACV is $9,600.
+
+Your insurance company sends you $9,600 minus your deductible first. The remaining $5,400 (the depreciation amount) is held in reserve until you actually complete the work.
+
+## How to Recover Your Depreciation
+
+This is the part homeowners often miss: the depreciation is yours to keep, but you have to earn it by actually completing the roof replacement.
+
+The steps:
+1. Accept the ACV payment (minus deductible) from the insurance company
+2. Sign a contract with your roofing contractor
+3. Have the work completed
+4. Submit proof of completion to your insurance company (final invoice, photos, certificate of completion)
+5. Insurance company releases the depreciation check
+
+If you do not complete the work — if you pocket the ACV and skip the replacement — you never get the depreciation. Some homeowners do this and think they are "saving money." They are not. They are leaving thousands of dollars of insurance money on the table.
+
+## Depreciation Rates by Material
+
+Insurance companies use different depreciation schedules based on the material and the expected lifespan. Typical schedules:
+
+- **3-tab asphalt shingles**: ~4% per year (25-year expected life)
+- **Architectural asphalt shingles**: ~3.3% per year (30-year expected life)
+- **Metal roofing**: ~2% per year (50-year expected life)
+- **Tile/slate**: ~1-1.5% per year (75-100 year expected life)
+
+Your actual rate depends on your specific insurance policy. Read the fine print or ask your agent.
+
+## Why Some Claims Are ACV-Only
+
+Some policies, especially older ones or budget homeowner policies, pay only ACV with no depreciation recovery clause. These are called "ACV policies" and they are significantly worse for homeowners when roofs need replacement.
+
+If you have an ACV-only policy, your insurance will pay the depreciated value of the roof and nothing more. The difference between ACV and the actual replacement cost comes out of your pocket.
+
+If you are reading this before filing a claim and you have an ACV-only policy on an aging roof, call your agent and ask about upgrading to RCV coverage before you file.
+
+## The Deductible
+
+Separate from depreciation, your policy has a deductible — usually $1,000-$5,000 or a percentage of your home value. This comes off the top of your claim payment and is your out-of-pocket responsibility.
+
+Important: by law in most states, the roofing contractor cannot waive or pay your deductible for you. Any contractor who offers to is committing insurance fraud and would be making you complicit.
+
+## What Contractors Need to Know
+
+For roofing contractors doing insurance work, depreciation affects how you bill and how you explain the claim to homeowners.
+
+Timeline for contractor payment:
+1. Homeowner pays the deductible at contract signing
+2. Insurance sends ACV check (minus deductible) to homeowner (and sometimes mortgage company) — homeowner pays you
+3. Work is completed
+4. Contractor submits completion documentation
+5. Insurance releases depreciation — homeowner pays you the final installment
+
+This is why insurance jobs can take 60-90 days to fully pay out, even if the installation only takes 2 days.
+
+## Code Upgrades and Depreciation
+
+Modern homeowners policies often include a code upgrade provision that pays for improvements required by current building code even if the old roof did not have them. Examples: ice and water shield coverage, enhanced nailing patterns, upgraded ventilation.
+
+These code upgrades are typically not depreciated. If a line item on your scope is labeled "Law and Ordinance" or "Code Upgrade," that amount should be paid at full value without depreciation.
+
+## The Bottom Line
+
+Roof depreciation on insurance claims is not the insurance company shortchanging you — it is how the policy is structured. The depreciation is yours to collect if you actually replace the roof. The biggest mistake homeowners make is not realizing the depreciation exists and can be recovered. Work with a contractor who understands insurance claims, complete the work on time, submit proper documentation, and collect every dollar your policy entitles you to.`,
+  },
+  {
+    slug: 'public-adjuster-vs-roofing-contractor',
+    title: 'Public Adjuster vs Roofing Contractor: Who Do You Need?',
+    excerpt:
+      "Public adjusters and roofing contractors both help homeowners navigate insurance claims. Here is the difference — and when you should hire one or both.",
+    metaDescription:
+      'Public adjuster vs roofing contractor for insurance claims. Differences in role, cost, and when to hire each.',
+    date: '2026-04-11',
+    category: 'Insurance',
+    readingTime: '6 min read',
+    targetKeyword: 'public adjuster vs roofing contractor',
+    content: `## Both Work for You, But in Different Ways
+
+After a storm, two types of professionals help homeowners with roofing insurance claims: public adjusters and roofing contractors. They do overlapping but different work, and many homeowners are confused about which one to hire. Sometimes the answer is both.
+
+## What a Public Adjuster Does
+
+A public adjuster is a licensed insurance claims specialist who works for the homeowner, not the insurance company. Their job is to negotiate with the insurance company on your behalf and maximize your settlement.
+
+Public adjuster responsibilities:
+- Review your policy for coverage scope
+- Document damage independently
+- Meet with the insurance company&apos;s adjuster
+- Negotiate the claim amount
+- Submit supplements and appeals
+- Handle denied or disputed claims
+
+They charge a percentage of the final settlement, typically 10-15% in non-emergency situations and up to 20% after a declared disaster.
+
+## What a Roofing Contractor Does
+
+A roofing contractor inspects the roof, provides a detailed estimate of the damage and repair, performs the actual work, and typically handles some level of claim documentation as part of their process.
+
+Roofing contractor responsibilities:
+- Inspect the roof and document damage
+- Provide a written scope of work
+- Attend the adjuster inspection (good ones do this automatically)
+- Submit supplements for missed or underpaid line items
+- Perform the roof replacement or repair
+- Provide workmanship warranty
+
+A good roofer does not charge extra for the claim support — it is part of winning the job.
+
+## When You Need Only a Roofing Contractor
+
+Most straightforward claims do not need a public adjuster. If:
+- The damage is clear (obvious hail or wind damage)
+- The insurance company accepts the claim without dispute
+- The initial scope is mostly reasonable
+- Your contractor is experienced with insurance work
+
+...then a competent roofing contractor handles everything you need. They will attend the adjuster meeting, submit supplements for missed items, and coordinate the work. The homeowner pays the deductible and collects the insurance payments.
+
+Most small-to-medium roofing insurance claims fall into this category.
+
+## When You Need a Public Adjuster
+
+Bring in a public adjuster when the claim is complicated or contested. Reasons to hire one:
+
+- **Claim denial** — Insurance refused to pay and you need to fight it
+- **Large claim with multiple trades** — Roof + interior water damage + HVAC + electrical
+- **Significant coverage dispute** — The insurance company is questioning whether the damage is covered at all
+- **Low initial scope that your contractor cannot resolve** — Sometimes the adjuster and contractor cannot come to agreement and you need someone with deeper policy expertise
+- **Policy interpretation issues** — Your contractor is not a licensed insurance professional and cannot argue policy language
+- **Multiple storms** — Damage from more than one event requires separate claim handling
+
+For these situations, the 10-15% fee a public adjuster charges often pays for itself several times over in the difference between the initial offer and the final settlement.
+
+## When You Might Need Both
+
+Some large or complex claims benefit from both a public adjuster and a roofing contractor working together. The public adjuster handles the policy-level negotiation and documentation, while the contractor handles the physical inspection, scope of work, and actual repair.
+
+This is common in:
+- Large commercial roofing claims
+- Multi-million dollar residential claims
+- Claims with significant non-roofing damage
+- Storm-related claims in complicated policy situations
+
+## Red Flags for Both Professions
+
+Whether you are hiring a public adjuster or a roofing contractor, watch for the same warning signs:
+
+- Aggressive cold-knocking
+- Pressure to sign immediately
+- Promises to waive or cover your deductible (illegal)
+- Assignment of benefits contracts pushed without explanation
+- No local address or verifiable license
+- Unrealistic promises ("guaranteed full payout")
+
+## How to Choose
+
+**For a straightforward claim**: Hire a licensed, local roofing contractor with insurance claim experience. Ask specifically about their supplement process and whether they attend adjuster meetings.
+
+**For a denied or disputed claim**: Hire a licensed public adjuster in your state. Verify their license through your state insurance department before signing anything.
+
+**For a complicated large claim**: Consider both. The combined cost is usually worth it for the additional recovery.
+
+## The Bottom Line
+
+Public adjusters and roofing contractors are not interchangeable — they do different parts of the insurance process. Most homeowners only need a competent roofing contractor. Public adjusters are most valuable when the claim is contested, the scope is large, or the policy interpretation is complicated. Understand the difference, hire what you actually need, and verify credentials before signing any contract.`,
+  },
 ];
 
 export function getArticleBySlug(slug: string): BlogArticle | undefined {

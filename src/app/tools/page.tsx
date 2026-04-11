@@ -5,11 +5,11 @@ import { SnapQuoteLogo } from '@/components/SnapQuoteLogo';
 export const metadata: Metadata = {
   title: 'Free Roofing Tools & Calculators — SnapQuote',
   description:
-    'Free online calculators and tools for roofers — roofing square calculator, cost estimator, material calculator. Built for working roofers by SnapQuote.',
-  keywords: ['free roofing calculators', 'roofing tools', 'roofing square calculator', 'roof material calculator'],
+    'Free online calculators and tools for roofers and homeowners — roofing square, pitch, cost, material, bundle, and square footage calculators. Built by a working roofer.',
+  keywords: ['free roofing calculators', 'roofing tools', 'roofing square calculator', 'roof pitch calculator', 'roofing cost calculator'],
   openGraph: {
     title: 'Free Roofing Tools & Calculators — SnapQuote',
-    description: 'Free calculators and tools built for working roofers.',
+    description: 'Free calculators and tools built for working roofers and homeowners.',
     url: 'https://snapquote.dev/tools',
     type: 'website',
   },
@@ -20,16 +20,65 @@ const tools = [
   {
     slug: 'roofing-square-calculator',
     name: 'Roofing Square Calculator',
-    description:
-      'Convert square footage to roofing squares, account for pitch, and estimate shingle bundles instantly.',
+    description: 'Convert square footage to roofing squares, account for pitch, and estimate shingle bundles.',
     tag: 'Most popular',
+  },
+  {
+    slug: 'roof-pitch-calculator',
+    name: 'Roof Pitch Calculator',
+    description: 'Convert rise/run to degrees, percentage, and the surface-area multiplier for any roof.',
+  },
+  {
+    slug: 'roof-replacement-cost-calculator',
+    name: 'Roof Replacement Cost Calculator',
+    description: 'Estimate the cost of a new roof by size, pitch, material, and tear-off scope.',
+    tag: 'Homeowners',
+  },
+  {
+    slug: 'roofing-cost-estimator',
+    name: 'Roofing Cost Estimator',
+    description: 'Per-square and total cost estimates by material type and overhead markup.',
+  },
+  {
+    slug: 'shingle-calculator',
+    name: 'Shingle Calculator',
+    description: 'Calculate exactly how many bundles of shingles you need for any roof.',
+  },
+  {
+    slug: 'roofing-materials-calculator',
+    name: 'Roofing Materials Calculator',
+    description: 'Complete materials list — shingles, underlayment, nails, drip edge, and more.',
+  },
+  {
+    slug: 'squares-to-bundles-calculator',
+    name: 'Squares to Bundles Calculator',
+    description: 'Quick conversion tool to turn roofing squares into shingle bundles.',
+  },
+  {
+    slug: 'roof-square-footage-calculator',
+    name: 'Roof Square Footage Calculator',
+    description: 'Convert home footprint and pitch to actual roof surface area in square feet.',
   },
 ];
 
 export default function ToolsPage() {
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    name: 'SnapQuote Free Roofing Tools',
+    description: 'Free calculators and tools built for working roofers and homeowners.',
+    url: 'https://snapquote.dev/tools',
+    hasPart: tools.map((t) => ({
+      '@type': 'WebApplication',
+      name: t.name,
+      url: `https://snapquote.dev/tools/${t.slug}`,
+    })),
+  };
+
   return (
     <div className="force-light min-h-dvh bg-white antialiased">
-      {/* Nav */}
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+
       <nav className="sticky top-0 z-50 bg-white/70 backdrop-blur-2xl backdrop-saturate-[1.8] border-b border-black/[0.04]">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 h-16">
           <Link href="/" aria-label="SnapQuote home">
@@ -49,8 +98,8 @@ export default function ToolsPage() {
       <main className="mx-auto max-w-5xl px-6 py-16 sm:py-24">
         <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl">Free Roofing Tools</h1>
         <p className="mt-6 text-lg leading-relaxed text-gray-600 max-w-2xl">
-          Free calculators built for working roofers. No signup required. More tools coming as we find them
-          useful on our own jobs.
+          Free calculators built for working roofers and homeowners. No signup required. No email capture.
+          Everything just works.
         </p>
 
         <div className="mt-12 grid gap-5 sm:grid-cols-2">
@@ -60,10 +109,10 @@ export default function ToolsPage() {
               href={`/tools/${tool.slug}`}
               className="group rounded-2xl border border-gray-200 bg-white p-6 transition-all hover:border-blue-200 hover:shadow-md"
             >
-              <div className="flex items-start justify-between">
+              <div className="flex items-start justify-between gap-3">
                 <h2 className="text-xl font-bold text-gray-900">{tool.name}</h2>
                 {tool.tag && (
-                  <span className="rounded-full bg-blue-50 px-2.5 py-1 text-[11px] font-semibold text-blue-700">
+                  <span className="flex-shrink-0 rounded-full bg-blue-50 px-2.5 py-1 text-[11px] font-semibold text-blue-700">
                     {tool.tag}
                   </span>
                 )}
@@ -106,6 +155,7 @@ export default function ToolsPage() {
               <Link href="/compare" className="text-[13px] text-gray-400 transition hover:text-gray-600">Compare</Link>
               <Link href="/alternatives" className="text-[13px] text-gray-400 transition hover:text-gray-600">Alternatives</Link>
               <Link href="/tools" className="text-[13px] text-gray-400 transition hover:text-gray-600">Tools</Link>
+              <Link href="/glossary" className="text-[13px] text-gray-400 transition hover:text-gray-600">Glossary</Link>
               <Link href="/blog" className="text-[13px] text-gray-400 transition hover:text-gray-600">Blog</Link>
               <Link href="/privacy" className="text-[13px] text-gray-400 transition hover:text-gray-600">Privacy</Link>
               <Link href="/terms" className="text-[13px] text-gray-400 transition hover:text-gray-600">Terms</Link>
