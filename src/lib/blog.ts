@@ -746,6 +746,428 @@ Starting a roofing business in 2026 is a viable path to building real wealth. Th
 
 Get licensed, get insured, price for profit, deliver fast proposals, and build your reputation one roof at a time. The contractors who follow this playbook do not stay small for long.`,
   },
+  {
+    slug: 'how-to-price-a-roofing-job-the-right-way',
+    title: 'How to Price a Roofing Job the Right Way',
+    excerpt:
+      'Learn how professional roofers actually price jobs — the formula for labor, materials, overhead, and profit that keeps you in business long-term.',
+    metaDescription:
+      'Learn the exact formula professional roofers use to price jobs. Labor, materials, overhead, profit, and how to avoid the race-to-the-bottom trap.',
+    date: '2026-04-06',
+    category: 'Pricing',
+    readingTime: '9 min read',
+    targetKeyword: 'how to price a roofing job',
+    content: `## Why Most Roofers Price Jobs Wrong
+
+Most small roofers price jobs by one of three bad methods: they guess, they match what the last guy charged, or they go low just to win the job. None of those methods lead to a sustainable business. The roofers who stay in business for decades have a repeatable pricing formula they trust — and they stick to it even when the competition is cheaper.
+
+This is how to build that formula.
+
+## The Four Components of a Real Roof Price
+
+Every roof quote should be built on four inputs. Skip any one of them and you are either losing money or leaving money on the table.
+
+### 1. Direct Materials
+
+Start with the raw material cost for the job. Shingles, underlayment, nails, ridge cap, flashing, drip edge, vents, and anything else going on that roof. Pull prices from your current supplier order sheet, not from what things cost last year.
+
+Include a small markup on materials — 10-15% is standard — to cover your time picking them up, handling supplier issues, and the risk of damaged or returned product.
+
+### 2. Direct Labor
+
+Calculate the true labor cost to install the job. This is not just crew hourly wages. It includes:
+
+- Base hourly pay for every crew member
+- Payroll taxes and workers comp insurance (usually 25-40% on top of base pay)
+- Tool and equipment wear
+- Any crew benefits you provide
+
+Multiply your loaded labor cost by the estimated install hours. Be honest about how long the job will actually take, not how long you wish it would take.
+
+### 3. Overhead
+
+Overhead is the cost of running your business whether you land this job or not. Truck payments, insurance, office rent, phone bills, software, advertising, accountant, licensing. Add it all up monthly, then divide by the number of jobs you reasonably expect to close in a month. That is your overhead cost per job.
+
+A small roofer with $5,000/mo overhead closing 10 jobs a month carries $500 of overhead on every single job. If you are not adding that to your price, you are funding your overhead out of your own pocket.
+
+### 4. Profit
+
+Profit is what is left after everything else is paid. It is not a tip. It is not optional. It is the reason you are in business instead of working for someone else. Target 15-25% profit on top of all your other costs. If you cannot hit that and still be competitive, your costs are too high or your market will not support the business at that price.
+
+## The Formula
+
+Here is the simplified version:
+
+\`\`\`
+Final Price = (Materials + Labor + Overhead) × (1 + Profit Margin)
+\`\`\`
+
+Example for a typical 25-square tear-off and reroof:
+
+- Materials: $5,500
+- Labor (3 guys × 12 hours × $45 loaded): $1,620
+- Overhead allocation: $500
+- Subtotal: $7,620
+- Profit margin (20%): $1,524
+- Final Price: $9,144
+
+Round to $9,250 on the proposal.
+
+## Why Matching Your Competitor\u2019s Price Is a Trap
+
+New roofers love to ask what other contractors charge so they can match it or undercut it. That is a losing game for two reasons.
+
+First, you do not know what the other contractor\u2019s costs look like. They might be cutting corners on insurance, underpaying crew, or running on old trucks they own outright. Matching their price without matching their cost structure means you lose money.
+
+Second, the contractor winning on price is rarely winning on profit. They are busy but broke. You want to be profitable, not just busy.
+
+Price for your own costs and your own profit target. Let the race-to-the-bottom guys fight each other.
+
+## How Fast Quoting Helps You Charge More
+
+There is one way to charge higher prices without being cheaper: be faster. Contractors who deliver a professional proposal within an hour of the roof walk close at 2-3x the rate of contractors who take 24-72 hours. When you are the first and only professional proposal in the homeowner\u2019s hand, they rarely call a second roofer.
+
+That is the secret to charging a fair (higher) price without losing jobs. You win on speed and professionalism, not on undercutting.
+
+## The Bottom Line
+
+Price is the single most important business decision you make as a roofer. Build a real formula with materials, labor, overhead, and profit. Stick to it. Deliver proposals fast and professionally so you are not forced to compete on price. The roofers who do this for five years straight are the ones still in business when the cheap guys have burned out.`,
+  },
+  {
+    slug: 'why-roofing-contractors-are-losing-jobs-to-faster-quotes',
+    title: 'Why Roofing Contractors Are Losing Jobs to Faster Quotes',
+    excerpt:
+      "It\u2019s not price. It\u2019s not quality. Most lost roofing jobs go to the contractor who sent the proposal first. Here's the data — and what to do about it.",
+    metaDescription:
+      'Most lost roofing jobs go to the contractor who quotes fastest, not the cheapest. Here is the data and how to fix it.',
+    date: '2026-04-07',
+    category: 'Sales',
+    readingTime: '6 min read',
+    targetKeyword: 'roofing quote speed',
+    content: `## The Real Reason You Lost That Last Job
+
+Every small roofer has the same story. You walked a roof. It went well. The homeowner seemed engaged, asked good questions, and said they would wait for your quote. Three days later they call back — they went with someone else. You assume you lost on price. You probably did not.
+
+Data from the home service industry is surprisingly consistent on this: the contractor who sends the proposal first closes at 2-3 times the rate of contractors who take longer, regardless of price differences within a normal range. Homeowners pick the first professional quote in front of them far more often than they pick the cheapest one.
+
+## Why Speed Beats Price
+
+Three psychological factors drive this.
+
+**First, momentum.** When a homeowner decides they need a new roof, they are in decision mode. They want the problem handled. The longer you take to send a quote, the more that momentum fades. By day three, they are annoyed about waiting and ready to commit to whoever is there with a proposal in hand.
+
+**Second, authority.** A fast, professional proposal signals competence. If you cannot get a quote out the door in 24 hours, the homeowner assumes you also cannot manage the job well. The other guy who had a branded PDF in their inbox by that evening looks like the real professional.
+
+**Third, scarcity.** Homeowners getting three quotes naturally assume each contractor has limited availability. The first quote sets the anchor price and timeline. Every quote that comes in after has to overcome that anchor to win, even if it is cheaper.
+
+## How Long You Actually Have
+
+Based on the data from thousands of residential home service jobs, here is roughly what happens:
+
+- **Same-day proposal**: Highest close rate. You set the terms.
+- **Within 24 hours**: Still strong. Most homeowners have not made a decision yet.
+- **24-48 hours**: Close rate drops noticeably. You are competing against whoever quoted same day.
+- **48-72 hours**: Close rate drops sharply. Homeowners have usually decided by now.
+- **After 72 hours**: You are mostly wasting your time. Very few jobs come back.
+
+If you are sending most proposals on day two or three, you are losing jobs you could have won.
+
+## Why Most Roofers Are Slow
+
+Small roofers are slow to quote for one honest reason: the quoting process itself takes too long. Most roofers try to build proposals at night after driving home from their last job. They pull up templates, type in line items, calculate squares and bundles, set up pricing, and format the PDF. By the time it is ready, it is too late in the evening to send, so it goes out tomorrow morning at the earliest.
+
+Even a disciplined roofer sending proposals "same day" is usually sending them that evening, 8-10 hours after the walk. In that time, the competition has already quoted.
+
+## The Fix: Quote From the Driveway
+
+The solution is obvious once you see the problem. Do not take proposals home. Send them from the job site before you leave.
+
+Tools like SnapQuote exist specifically to make this possible. You snap photos of the roof, the AI drafts the scope and line items, you review and tweak, and you text the homeowner a branded proposal link — all before you get back in the truck. From walk to proposal in about 60 seconds.
+
+When your proposal hits the homeowner\u2019s phone while they are still standing in the driveway, you go from competing on speed to dominating on speed. You stop losing jobs to the contractors who got there first — because now that is you.
+
+## The Bottom Line
+
+Most lost roofing jobs are not lost on price. They are lost on speed. The contractor who sends the proposal first wins the job far more often than the contractor who sends the cheapest one. If you want to close more jobs without cutting your prices, fix your quoting speed. Everything else takes care of itself.`,
+  },
+  {
+    slug: 'what-to-include-in-a-roofing-proposal',
+    title: "What to Include in a Roofing Proposal (The Full Checklist)",
+    excerpt:
+      "Every item that should be on a professional roofing proposal — with examples of what to say and what to avoid. Win more jobs with clearer, more thorough proposals.",
+    metaDescription:
+      'Complete checklist of what every roofing proposal should include. Scope, pricing, terms, photos, warranty, and how to format it so homeowners say yes.',
+    date: '2026-04-08',
+    category: 'Sales',
+    readingTime: '10 min read',
+    targetKeyword: 'what to include in a roofing proposal',
+    content: `## A Roofing Proposal Is Your Sales Pitch in Paper Form
+
+Most homeowners getting roof work done are comparing 2-4 contractors. They are not roofing experts. They cannot always tell who is skilled and who is not. What they can tell is whose proposal looks more professional and whose is missing information. The contractor with the thorough, clear, well-branded proposal wins most of those comparisons, even if their price is in the middle.
+
+This is exactly what should be in every roofing proposal you send.
+
+## Company Information
+
+Start with your business identity. Put all of this at the top:
+
+- Business name and logo
+- Physical address (builds trust — PO boxes look sketchy)
+- Phone number
+- Email address
+- License number
+- Insurance certificate references (general liability and workers comp)
+- Website
+
+If any of this is missing, a portion of homeowners will eliminate you from consideration before reading further. Licensing and insurance especially — serious homeowners look for those.
+
+## Customer Information
+
+Next, list who the proposal is for:
+
+- Homeowner name (both names if married)
+- Property address (where the work will be done)
+- Email and phone number
+- Date of the proposal
+- A proposal expiration date (30 days is standard)
+
+Small point on the expiration: it subtly creates urgency without feeling pushy. It also protects you from a homeowner trying to hold a six-month-old quote against current material prices.
+
+## Clear Scope of Work
+
+This is where most proposals fail. Do not write "re-roof" and call it done. Break it all the way down. The more specific you are, the more credible you look, and the fewer misunderstandings you will have after the job starts.
+
+Include every one of these for a tear-off and reroof:
+
+- Tear off existing roofing (specify number of layers you found or expect)
+- Dispose of old material (and any permit fees)
+- Inspect the deck and replace any rotten or damaged sheathing (include a unit price for extra sheets)
+- Install ice and water shield in eaves and valleys
+- Install synthetic underlayment (or specify felt if that is what you use)
+- Install drip edge along rakes and eaves
+- Install starter strip
+- Install the main shingle (brand, line, color)
+- Install ridge vent
+- Install new pipe flashings
+- Reuse or replace step flashing (specify)
+- Install ridge cap shingles
+- Clean up all debris and magnet-sweep the yard
+
+For every line item, specify the product brand and model when applicable. "IKO Cambridge Architectural, color Driftshake" is much more credible than "Architectural shingles."
+
+## Photos of the Job Site
+
+Include 3-5 photos of the current roof. Show the damage. Show the areas of concern. Photos do three things:
+
+1. They prove you actually looked at the roof, not just guessed.
+2. They give the homeowner context for the scope of work you are proposing.
+3. They create a visual record you can reference later if there is a dispute.
+
+Make sure the photos are well-lit, in focus, and labeled with captions explaining what they show.
+
+## Itemized Pricing
+
+Show the price clearly. Do not bury it or leave it vague.
+
+Two acceptable approaches:
+
+**Option 1 — Bundled price.** One total for the whole job. Simpler for the homeowner. Good when you want to protect your margins from line-item negotiation.
+
+**Option 2 — Itemized pricing.** Show materials, labor, and any extras separately. More transparent. Better for insurance work where the adjuster wants to see the breakdown.
+
+Pick one and stick with it. Both work. Whatever you do, include the final total in a prominent, easy-to-find place on the proposal.
+
+## Payment Terms
+
+Tell the homeowner exactly how and when you want to be paid:
+
+- Deposit amount and when it is due (typically 10-30% upon signing)
+- Progress payment (optional, often at halfway point)
+- Final payment upon completion
+
+Also specify what payment methods you accept — check, card, bank transfer. Modern tools like SnapQuote let you collect the deposit online right from the proposal, which dramatically improves conversion.
+
+## Warranty Terms
+
+State the warranty clearly:
+
+- Manufacturer warranty on the shingles (usually 25-50 years)
+- Your workmanship warranty (typically 1-10 years depending on your company)
+- What is covered and what is not
+
+A clearly explained warranty builds massive trust. Most homeowners never read the fine print, but they notice whether it is there.
+
+## Terms and Conditions
+
+Standard boilerplate that protects you legally:
+
+- Change order policy (extra work requires a signed change order)
+- Weather delay clause
+- Deck replacement clause (if rot is found, it\u2019s extra at a stated per-sheet price)
+- Dispute resolution
+- Cancellation policy
+
+Use the same terms on every proposal so you are consistent and your process is repeatable.
+
+## Clear Call to Action
+
+End with a single, obvious next step. Make it easy to say yes.
+
+"Sign and return this proposal along with your deposit to get on the schedule." Then provide a signature block or — better — a digital signature link the homeowner can tap on their phone.
+
+Proposals without a clear CTA die in inboxes.
+
+## The Bottom Line
+
+The roofing proposal that wins is the one that is specific, visual, transparent, and professional. Every section above matters — skip any of them and you are giving the homeowner a reason to call the next contractor. Build a template you use on every job, then make it fast to fill out. Speed and thoroughness are the combination that actually wins roofing sales.`,
+  },
+  {
+    slug: 'roofing-estimate-vs-proposal-whats-the-difference',
+    title: "Roofing Estimate vs Proposal: What's the Difference and Which Should You Send?",
+    excerpt:
+      "Estimates and proposals are not the same thing. Get the distinction wrong and you either close fewer jobs or expose yourself to legal liability. Here is how to use both.",
+    metaDescription:
+      'Estimate vs proposal in roofing — the legal and sales difference, when to use each, and which one actually closes more jobs.',
+    date: '2026-04-09',
+    category: 'Sales',
+    readingTime: '6 min read',
+    targetKeyword: 'roofing estimate vs proposal',
+    content: `## They Are Not the Same Thing
+
+Most roofers use "estimate" and "proposal" interchangeably. That is a mistake. The two words describe different documents with different purposes, different legal weight, and different sales impact. Understanding the difference helps you close more jobs and avoid legal headaches.
+
+## What Is an Estimate?
+
+An estimate is a rough, non-binding approximation of what a job will cost. Key characteristics:
+
+- Typically a ballpark number or a small range ("somewhere in the $8,000-$11,000 range")
+- Usually delivered verbally or in an email
+- Not legally binding
+- Often based on limited information — maybe a phone call and some photos the homeowner sent
+- Used early in the sales process to give the homeowner a sense of whether they can afford the work
+
+An estimate is a starting point, not a contract.
+
+## What Is a Proposal?
+
+A proposal is a formal, detailed, written offer to do the work for a specific price under specific terms. Key characteristics:
+
+- Exact prices (not a range)
+- Detailed scope of work
+- Payment terms and schedule
+- Warranty terms
+- Signature block (both parties sign)
+- Legally binding once signed
+- Based on a thorough site inspection
+- Used to actually close the job
+
+A proposal is a contract. When the homeowner signs, you are legally obligated to deliver what the proposal describes.
+
+## Why the Distinction Matters Legally
+
+If you send an "estimate" of $8,000 and then invoice $12,000 after the job, you are in dangerous territory. The homeowner can argue you misrepresented the price. Courts are often sympathetic to homeowners in these disputes.
+
+But if you send a detailed proposal for $8,000 and have the homeowner sign it, you both know exactly what they are getting for that price. Change orders are handled separately and in writing. Everyone is protected.
+
+## Why the Distinction Matters for Sales
+
+Here is where it gets interesting. Many roofers deliver what they call a "free estimate" because that is what homeowners ask for. But a vague estimate is a weak close. The homeowner hears "ballpark" and feels no urgency to make a decision. They get estimates from three other contractors, compare ranges, and take a week to decide.
+
+A formal proposal changes the dynamic. It is specific, detailed, signable, and professional. Homeowners who get proposals close faster than homeowners who get estimates, because a proposal feels like a decision to be made right now.
+
+## The Practical Workflow
+
+Here is how to use both effectively in your sales process:
+
+**Step 1 — Initial call or walk-up.** Homeowner asks for an "estimate." Give them a verbal ballpark range over the phone or after a quick look at the roof. This is an actual estimate — non-binding, fast, used to qualify the job and schedule a real inspection.
+
+**Step 2 — Schedule the site inspection.** This is where you walk the roof, take photos, measure, and talk to the homeowner in detail.
+
+**Step 3 — Send a formal proposal.** Not an estimate. A full written proposal with exact prices, detailed scope, terms, warranty, and a signature block. This is what actually closes the job.
+
+The key insight is that the word matters. Call it a proposal when you are trying to close. Estimates are for qualifying; proposals are for winning.
+
+## The Fast Proposal Advantage
+
+The traditional proposal process is slow — that is why most roofers keep defaulting to loose estimates. Writing a real proposal with all the details, pricing, scope, and branding takes 15-30 minutes per job, which adds up fast.
+
+But the roofers who send fast proposals close dramatically more jobs than the roofers who send estimates. Modern tools like SnapQuote let you generate a full proposal from job site photos in about 60 seconds, so you never have to choose between thorough and fast. You can send a real signable proposal in the time it used to take you to jot down an estimate.
+
+## The Bottom Line
+
+Estimate and proposal are not the same word. Use estimates for early qualifying and vague ballpark conversations. Use proposals — formal, detailed, signable — when you actually want to close the job. Proposals close more jobs, protect you legally, and set you apart from every roofer who is still sending loose estimates written on a notepad.`,
+  },
+  {
+    slug: 'how-to-use-ai-to-quote-roofing-jobs',
+    title: "How to Use AI to Quote Roofing Jobs in Under a Minute",
+    excerpt:
+      "AI can read your roof photos, identify the scope, and draft a proposal before you even leave the driveway. Here is how working roofers are using AI in 2026 — and what to watch out for.",
+    metaDescription:
+      'How working roofers are using AI to quote roofing jobs in 60 seconds. Photo-based scope detection, automated pricing, and the catch nobody tells you about.',
+    date: '2026-04-10',
+    category: 'Technology',
+    readingTime: '7 min read',
+    targetKeyword: 'AI roofing quote',
+    content: `## AI Is Changing How Roofers Quote Jobs
+
+Three years ago, AI in construction meant spam ads for "smart estimating software" that was really just a fancy spreadsheet. Today, AI vision models like Claude Vision can genuinely read a roof photo, identify the material, estimate scope, and draft a professional proposal in about 10 seconds. Small roofers who are using this are closing jobs their competitors lose every week.
+
+If you have been hearing about AI roofing quotes and are not sure what is real and what is hype, this is the plain-English version.
+
+## What AI Can Actually Do in Roofing Today
+
+Here is what the current generation of AI vision models genuinely does well:
+
+**Identify materials.** Given a clear photo of a roof, the AI can tell you whether it\u2019s architectural shingles, 3-tab, metal, tile, flat rubber, or something else. It can often identify manufacturer lines when they have distinctive patterns.
+
+**Estimate condition.** AI can spot visible damage — missing shingles, hail impacts, wear patterns, moss buildup, lifted edges — and describe the severity.
+
+**Draft a scope of work.** Given enough photos, the AI can draft a list of line items: tear off, underlayment, flashing, ridge cap, vents, disposal, labor. The draft is usually 80-90% right for a typical residential roof.
+
+**Generate proposal copy.** The AI writes the proposal narrative in professional language so the roofer does not have to type it out. This alone saves 10+ minutes per quote.
+
+**Handle pricing.** When configured with the roofer\u2019s own material costs and labor rates, the AI can produce pricing that is realistic and tailored to that contractor\u2019s margins.
+
+## What AI Cannot Do (Yet)
+
+Let\u2019s also be honest about the limits.
+
+**AI cannot measure a roof from the ground.** It can estimate from photos, but it does not replace an actual measurement. For precise quoting you still need to walk the roof or use satellite measurement tools like EagleView or the built-in ones in Roofr.
+
+**AI cannot spot hidden damage.** If the deck is rotten under the shingles, the AI cannot see it. You still have to tell the homeowner that deck replacement is extra and priced on discovery.
+
+**AI cannot negotiate with homeowners.** The sales conversation is still yours. AI gives you a professional proposal fast; closing the job is on you.
+
+**AI is not perfect.** Every draft should be reviewed by a real roofer before sending. Think of the AI as a first-pass assistant, not the final word.
+
+## The Workflow That Actually Works
+
+Based on how small roofers are using AI tools in 2026, the fastest effective workflow is:
+
+1. **Walk the roof.** Take 5-10 good photos covering the main roof planes, any damage, flashing, ridge, valleys, and the gutters.
+2. **Upload or snap through an app.** Apps like SnapQuote let you capture photos directly into a guided workflow.
+3. **Let the AI draft the quote.** In 5-10 seconds, you get a full scope of work with line items, quantities, and pricing.
+4. **Review and tweak.** You know things the AI does not — specific brand preferences, homeowner conversations, condition of the flashing you saw from the attic. Adjust the draft in the editor.
+5. **Send immediately.** From the app, you send the proposal as a text link. The homeowner gets it before you leave the driveway.
+
+From walk to sent proposal: about 60 seconds once you are comfortable with the tool.
+
+## The One Catch
+
+Here is the one thing nobody tells you about AI roofing tools: they are only as good as the photos you give them. Blurry, dark, or partial photos produce mediocre drafts. Clear, well-lit photos from multiple angles produce drafts that are nearly ready to send with no edits.
+
+Spend an extra two minutes taking good photos on every roof walk. It pays back tenfold in faster, more accurate quotes.
+
+## Should You Use an AI Tool?
+
+If your bottleneck is quoting speed — and for most small roofers it is — then yes. AI roofing tools are past the "interesting idea" phase and into the "actively closing jobs for people using them" phase. The roofers who adopted them in 2025 and 2026 are already quoting 2-3 times as fast as the roofers who are still building proposals in Word documents at night.
+
+The best way to evaluate is to try one on your next real job. Most AI roofing tools, including SnapQuote, offer free trials. Walk a real roof, let the AI draft a real proposal, and see for yourself whether the output is closer to 20% useful or 90% useful. (For most roofers, it is the latter.)
+
+## The Bottom Line
+
+AI is not replacing roofers. It is replacing the yellow legal pad. The part of your business that used to take 20 minutes at the kitchen table now takes 60 seconds in the truck. That gives you back hours of every day and dramatically improves your close rate because your proposals are the first ones in the homeowner\u2019s hand. If you are a small roofer trying to grow in 2026, this is the single highest-leverage tool change you can make.`,
+  },
 ];
 
 export function getArticleBySlug(slug: string): BlogArticle | undefined {
