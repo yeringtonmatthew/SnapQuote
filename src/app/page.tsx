@@ -67,31 +67,24 @@ export default function Home() {
           <div className="flex flex-col items-center gap-16 lg:flex-row lg:items-center lg:gap-20">
             {/* Left: Copy */}
             <div className="flex-1 text-center lg:text-left">
-              {/* Social proof — small, real, trust-building */}
-              <div className="mb-8 inline-flex items-center gap-2.5 rounded-full border border-gray-200/80 bg-white/80 px-4 py-2 shadow-sm backdrop-blur-sm">
-                <span className="flex -space-x-2">
-                  <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-blue-600 text-[10px] font-bold text-white ring-2 ring-white">MR</span>
-                  <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-emerald-600 text-[10px] font-bold text-white ring-2 ring-white">ST</span>
-                  <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-amber-500 text-[10px] font-bold text-white ring-2 ring-white">JD</span>
+              {/* Positioning pill — the one thing to remember */}
+              <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-brand-200/60 bg-brand-50/70 px-4 py-1.5 shadow-sm backdrop-blur-sm">
+                <span className="relative flex h-2 w-2">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand-400 opacity-60" />
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-brand-600" />
                 </span>
-                <span className="text-[13px] text-gray-600">
-                  Built by contractors, for contractors
-                </span>
-                <span className="flex gap-0.5">
-                  {[...Array(5)].map((_, i) => (
-                    <svg key={i} className="h-3 w-3 text-yellow-400" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10.868 2.884c-.321-.772-1.415-.772-1.736 0l-1.83 4.401-4.753.381c-.833.067-1.171 1.107-.536 1.651l3.62 3.102-1.106 4.637c-.194.813.691 1.456 1.405 1.02L10 15.591l4.069 2.485c.713.436 1.598-.207 1.404-1.02l-1.106-4.637 3.62-3.102c.635-.544.297-1.584-.536-1.65l-4.752-.382-1.831-4.401z" clipRule="evenodd" /></svg>
-                  ))}
+                <span className="text-[12px] font-semibold uppercase tracking-wider text-brand-700">
+                  Built by a roofer &middot; Powered by AI
                 </span>
               </div>
 
-              <h1 className="text-[clamp(2.5rem,6vw,4.5rem)] font-bold leading-[1.05] tracking-tight text-gray-900">
-                Professional quotes<br className="hidden sm:block" /> in 60{' '}
-                <TypewriterHero />
+              <h1 className="text-[clamp(2.5rem,6vw,4.5rem)] font-bold leading-[1.02] tracking-tight text-gray-900">
+                Quote. Sign. Paid.<br className="hidden sm:block" />
+                <span className="block">In 60 <TypewriterHero /></span>
               </h1>
 
-              <p className="mt-6 text-[18px] leading-relaxed text-gray-500 lg:max-w-[480px] sm:text-[20px]">
-                Snap photos. AI builds the estimate. Your customer signs and pays.{' '}
-                <span className="text-gray-900 font-medium">All from your iPhone.</span>
+              <p className="mt-6 text-[18px] leading-relaxed text-gray-600 lg:max-w-[520px] sm:text-[20px]">
+                The AI-powered CRM <span className="text-gray-900 font-semibold">built by a contractor, for contractors.</span> Snap photos, AI writes the proposal, your customer signs and pays &mdash; all before you leave the driveway.
               </p>
 
               {/* CTA cluster */}
@@ -100,7 +93,7 @@ export default function Home() {
                   href="/auth/signup"
                   className="group relative overflow-hidden rounded-full bg-brand-600 px-10 py-4 text-center text-[17px] font-semibold text-white shadow-lg shadow-brand-600/25 transition-all hover:shadow-xl hover:shadow-brand-600/30 hover:brightness-110 active:scale-[0.97]"
                 >
-                  Start 14-Day Free Trial
+                  Start Free &mdash; No Card Needed
                 </Link>
                 <a
                   href="#how-it-works"
@@ -110,18 +103,30 @@ export default function Home() {
                 </a>
               </div>
 
-              {/* App Store badge + reassurance */}
-              <div className="mt-8 flex flex-col items-center gap-4 sm:flex-row lg:justify-start">
-                <Link href="/auth/signup" className="flex items-center gap-2.5 rounded-xl bg-gray-900 px-5 py-2.5 text-white shadow-sm transition hover:bg-gray-800 active:scale-[0.97]">
-                  <svg className="h-6 w-6" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z" />
-                  </svg>
-                  <div className="leading-tight">
-                    <p className="text-[10px] font-medium text-gray-400">Download on the</p>
-                    <p className="text-[15px] font-semibold -mt-0.5">App Store</p>
+              {/* Price crusher &mdash; the kicker */}
+              <div className="mt-8 flex flex-col items-center gap-4 lg:items-start">
+                <div className="inline-flex items-baseline gap-2 rounded-2xl bg-gray-900 px-5 py-2.5 text-white shadow-lg shadow-gray-900/10">
+                  <span className="text-[13px] font-medium text-gray-400">Starting at</span>
+                  <span className="text-[22px] font-bold tabular-nums">$79</span>
+                  <span className="text-[13px] text-gray-400">/mo</span>
+                  <span className="mx-2 h-4 w-px bg-gray-700" />
+                  <span className="text-[12px] font-medium text-gray-400">Jobber <span className="line-through text-gray-500">$169</span></span>
+                  <span className="hidden sm:inline text-[12px] font-medium text-gray-400">&middot; ServiceTitan <span className="line-through text-gray-500">$398</span></span>
+                </div>
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-1.5">
+                    <svg className="h-4 w-4 text-green-600" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+                    <p className="text-[13px] font-medium text-gray-600">14-day free trial</p>
                   </div>
-                </Link>
-                <p className="text-[13px] text-gray-400">14-day free trial &middot; No card required</p>
+                  <div className="flex items-center gap-1.5">
+                    <svg className="h-4 w-4 text-green-600" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+                    <p className="text-[13px] font-medium text-gray-600">No credit card</p>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <svg className="h-4 w-4 text-green-600" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+                    <p className="text-[13px] font-medium text-gray-600">Cancel anytime</p>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -295,6 +300,64 @@ export default function Home() {
       </section>
 
       {/* ═══════════════════════════════════════════════════════
+          FOUNDER NOTE — The thing no competitor can copy:
+          SnapQuote was built by a contractor, not a VC.
+          ═══════════════════════════════════════════════════════ */}
+      <section className="relative overflow-hidden bg-white py-24 sm:py-32">
+        <div className="pointer-events-none absolute inset-0">
+          <div className="absolute left-1/2 top-0 h-[400px] w-[700px] -translate-x-1/2 rounded-full bg-brand-50/80 blur-[120px]" />
+        </div>
+        <div className="relative mx-auto max-w-4xl px-6">
+          <ScrollFadeIn>
+            <div className="text-center mb-10">
+              <p className="text-[13px] font-semibold uppercase tracking-widest text-brand-600">A note from the founder</p>
+              <h2 className="mt-3 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl lg:text-[2.75rem]">
+                I built SnapQuote because I needed it.
+              </h2>
+            </div>
+          </ScrollFadeIn>
+
+          <ScrollFadeIn delay={80}>
+            <div className="relative mx-auto max-w-3xl rounded-3xl bg-white p-8 sm:p-12 shadow-xl shadow-gray-900/[0.04] ring-1 ring-gray-100">
+              {/* Open quote mark */}
+              <svg className="absolute left-8 top-6 h-10 w-10 text-brand-100" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M4.583 17.321C3.553 16.227 3 15 3 13.011c0-3.5 2.457-6.637 6.03-8.188l.893 1.378c-3.335 1.804-3.987 4.145-4.247 5.621.537-.278 1.24-.375 1.929-.311 1.804.167 3.226 1.648 3.226 3.489a3.5 3.5 0 01-3.5 3.5c-1.073 0-2.099-.49-2.748-1.179zm10 0C13.553 16.227 13 15 13 13.011c0-3.5 2.457-6.637 6.03-8.188l.893 1.378c-3.335 1.804-3.987 4.145-4.247 5.621.537-.278 1.24-.375 1.929-.311 1.804.167 3.226 1.648 3.226 3.489a3.5 3.5 0 01-3.5 3.5c-1.073 0-2.099-.49-2.748-1.179z" />
+              </svg>
+
+              <div className="relative pl-0 sm:pl-14">
+                <p className="text-[18px] leading-[1.7] text-gray-700 sm:text-[19px]">
+                  I spent years running a contracting business &mdash; measuring roofs, writing quotes on my tailgate, chasing customers for signatures, and losing jobs to the guy who got his proposal in first. I tried{' '}
+                  <span className="font-semibold text-gray-900">Jobber</span>. Too clunky. I tried{' '}
+                  <span className="font-semibold text-gray-900">ServiceTitan</span>. Too expensive and too enterprise. Spreadsheets felt faster than half of them.
+                </p>
+                <p className="mt-5 text-[18px] leading-[1.7] text-gray-700 sm:text-[19px]">
+                  So I built SnapQuote &mdash; the app I wish I&apos;d had on my tailgate. Snap a few photos, AI writes the quote, customer signs and pays before you leave the driveway. No 6-week onboarding. No $400/month price tag. No consultant required.
+                </p>
+                <p className="mt-5 text-[18px] leading-[1.7] text-gray-900 font-semibold sm:text-[19px]">
+                  If you&apos;ve ever lost a job because your quote took too long, this is for you.
+                </p>
+
+                {/* Signature block */}
+                <div className="mt-10 flex items-center gap-4 border-t border-gray-100 pt-8">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-brand-500 to-brand-700 text-[15px] font-bold text-white ring-4 ring-brand-50">
+                    M
+                  </div>
+                  <div>
+                    <p className="text-[15px] font-semibold text-gray-900">Matt Yerington</p>
+                    <p className="text-[13px] text-gray-500">Founder, SnapQuote &middot; Former contractor</p>
+                  </div>
+                  <div className="ml-auto hidden sm:flex items-center gap-1.5 rounded-full bg-brand-50 px-3 py-1.5 text-[12px] font-semibold text-brand-700 ring-1 ring-brand-100">
+                    <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    Verified founder
+                  </div>
+                </div>
+              </div>
+            </div>
+          </ScrollFadeIn>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════════
           HOW IT WORKS — Three steps. Dead simple.
           ═══════════════════════════════════════════════════════ */}
       <section id="how-it-works" className="bg-gray-50/50 py-24 sm:py-32">
@@ -445,6 +508,123 @@ export default function Home() {
       </section>
 
       {/* ═══════════════════════════════════════════════════════
+          COMPETITOR SHOWDOWN — Head to head. No hand-waving.
+          Shows: SnapQuote vs Jobber vs ServiceTitan vs Roofr
+          ═══════════════════════════════════════════════════════ */}
+      <section className="relative overflow-hidden bg-white py-24 sm:py-32">
+        <div className="pointer-events-none absolute inset-0">
+          <div className="absolute top-1/2 left-1/2 h-[500px] w-[900px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-brand-50/60 blur-[140px]" />
+        </div>
+
+        <div className="relative mx-auto max-w-6xl px-6">
+          <ScrollFadeIn>
+            <div className="mx-auto max-w-2xl text-center">
+              <p className="text-[13px] font-semibold uppercase tracking-widest text-brand-600">Head to head</p>
+              <h2 className="mt-3 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl lg:text-[2.75rem]">
+                Why contractors switch to SnapQuote
+              </h2>
+              <p className="mt-4 text-lg text-gray-500">
+                Every major feature of the big guys. Half the price. None of the 6-week onboarding.
+              </p>
+            </div>
+          </ScrollFadeIn>
+
+          <ScrollFadeIn delay={100}>
+            <div className="mt-16 overflow-hidden rounded-3xl bg-white shadow-xl shadow-gray-900/[0.06] ring-1 ring-gray-100">
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[680px] border-collapse">
+                  <thead>
+                    <tr className="border-b border-gray-100">
+                      <th className="py-6 px-6 text-left text-[13px] font-semibold uppercase tracking-wider text-gray-400 bg-gray-50/50 sm:w-[32%]">
+                        Feature
+                      </th>
+                      {/* SnapQuote — highlighted */}
+                      <th className="relative py-6 px-4 text-center bg-gradient-to-b from-brand-50 to-white ring-x-2 ring-brand-200">
+                        <div className="flex flex-col items-center gap-0.5">
+                          <div className="inline-flex items-center gap-1 rounded-full bg-brand-600 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white shadow-sm">
+                            <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10.868 2.884c-.321-.772-1.415-.772-1.736 0l-1.83 4.401-4.753.381c-.833.067-1.171 1.107-.536 1.651l3.62 3.102-1.106 4.637c-.194.813.691 1.456 1.405 1.02L10 15.591l4.069 2.485c.713.436 1.598-.207 1.404-1.02l-1.106-4.637 3.62-3.102c.635-.544.297-1.584-.536-1.65l-4.752-.382-1.831-4.401z" clipRule="evenodd" /></svg>
+                            You Pick
+                          </div>
+                          <span className="mt-1 text-[15px] font-bold text-gray-900">SnapQuote</span>
+                        </div>
+                      </th>
+                      <th className="py-6 px-4 text-center">
+                        <span className="text-[15px] font-semibold text-gray-500">Jobber</span>
+                      </th>
+                      <th className="py-6 px-4 text-center">
+                        <span className="text-[15px] font-semibold text-gray-500">ServiceTitan</span>
+                      </th>
+                      <th className="py-6 px-4 text-center">
+                        <span className="text-[15px] font-semibold text-gray-500">Roofr</span>
+                      </th>
+                      <th className="py-6 px-4 text-center">
+                        <span className="text-[15px] font-semibold text-gray-500">JobNimbus</span>
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="text-[14px]">
+                    {[
+                      { label: 'Starting price', sq: '$79/mo', jobber: '$169/mo', st: '$398/mo', roofr: '$129/mo', jn: '$200/mo', isPrice: true },
+                      { label: 'AI-generated quotes from photos', sq: 'yes', jobber: 'no', st: 'no', roofr: 'partial', jn: 'no' },
+                      { label: 'Create a quote in 60 seconds', sq: 'yes', jobber: 'no', st: 'no', roofr: 'yes', jn: 'no' },
+                      { label: 'Good / Better / Best proposals', sq: 'yes', jobber: 'partial', st: 'yes', roofr: 'yes', jn: 'partial' },
+                      { label: 'E-signatures & Stripe payments', sq: 'yes', jobber: 'yes', st: 'yes', roofr: 'yes', jn: 'yes' },
+                      { label: 'CRM pipeline & scheduling', sq: 'yes', jobber: 'yes', st: 'yes', roofr: 'yes', jn: 'yes' },
+                      { label: 'iPhone app (offline capture)', sq: 'yes', jobber: 'yes', st: 'yes', roofr: 'partial', jn: 'yes' },
+                      { label: 'Built by an actual contractor', sq: 'yes', jobber: 'no', st: 'no', roofr: 'no', jn: 'no' },
+                      { label: 'Setup time', sq: '2 min', jobber: '1-2 weeks', st: '4-6 weeks', roofr: '1 day', jn: '1 week', isText: true },
+                      { label: 'Contract required', sq: 'Cancel anytime', jobber: 'Annual', st: 'Annual+', roofr: 'Monthly', jn: 'Monthly', isText: true },
+                    ].map((row, i) => (
+                      <tr key={row.label} className={`border-b border-gray-100 ${i % 2 === 0 ? 'bg-white' : 'bg-gray-50/30'}`}>
+                        <td className="py-4 px-6 text-left font-medium text-gray-700">{row.label}</td>
+                        {/* SnapQuote column - always highlighted */}
+                        <td className="py-4 px-4 text-center bg-gradient-to-b from-brand-50/60 to-brand-50/20">
+                          {row.isPrice ? (
+                            <span className="inline-flex items-center gap-1 font-bold text-brand-700 text-[15px]">{row.sq}</span>
+                          ) : row.isText ? (
+                            <span className="font-semibold text-brand-700">{row.sq}</span>
+                          ) : (
+                            <svg className="mx-auto h-5 w-5 text-brand-600" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+                          )}
+                        </td>
+                        {/* Competitor columns */}
+                        {[row.jobber, row.st, row.roofr, row.jn].map((val, j) => (
+                          <td key={j} className="py-4 px-4 text-center">
+                            {row.isPrice || row.isText ? (
+                              <span className="text-gray-500">{val}</span>
+                            ) : val === 'yes' ? (
+                              <svg className="mx-auto h-5 w-5 text-gray-300" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+                            ) : val === 'partial' ? (
+                              <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-amber-50 text-amber-500 text-[12px] font-bold">~</span>
+                            ) : (
+                              <svg className="mx-auto h-5 w-5 text-gray-300" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                            )}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              {/* Footnote */}
+              <div className="flex flex-col items-center gap-4 bg-gray-50/60 px-6 py-5 sm:flex-row sm:justify-between">
+                <p className="text-[12px] text-gray-500">
+                  Competitor pricing from public websites as of 2026. Trademarks property of their owners.
+                </p>
+                <Link
+                  href="/auth/signup"
+                  className="inline-flex items-center gap-1.5 rounded-full bg-brand-600 px-5 py-2 text-[13px] font-semibold text-white shadow-sm transition hover:bg-brand-500"
+                >
+                  Switch in 2 minutes
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
+                </Link>
+              </div>
+            </div>
+          </ScrollFadeIn>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════════
           ROI CALCULATOR — Make it personal
           ═══════════════════════════════════════════════════════ */}
       <section className="bg-white py-24 sm:py-32">
@@ -570,34 +750,37 @@ export default function Home() {
       </section>
 
       {/* ═══════════════════════════════════════════════════════
-          FINAL CTA — Make it impossible to say no
+          FINAL CTA — Make it impossible to say no.
+          Risk reversal + price anchor + social proof stacked.
           ═══════════════════════════════════════════════════════ */}
       <section className="relative overflow-hidden py-28 sm:py-36">
         {/* Rich gradient background */}
         <div className="absolute inset-0 bg-gray-900" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(59,130,246,0.15),transparent_60%)]" />
-        <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-brand-400/40 to-transparent" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(59,130,246,0.22),transparent_60%)]" />
+        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-brand-400/40 to-transparent" />
+        <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-brand-400/40 to-transparent" />
 
         <div className="relative mx-auto max-w-3xl px-6 text-center">
           <ScrollFadeIn>
             {/* Launch pulse */}
             <div className="mb-10 inline-flex items-center gap-2.5 rounded-full bg-white/[0.08] px-5 py-2 text-[13px] font-semibold text-white ring-1 ring-white/[0.12] backdrop-blur-sm">
               <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand-400 opacity-75" />
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-brand-400" />
               </span>
-              Available on the App Store
+              Now live on the App Store
             </div>
           </ScrollFadeIn>
 
           <ScrollFadeIn delay={80}>
-            <h2 className="text-[clamp(2rem,5vw,3.25rem)] font-bold tracking-tight text-white leading-[1.1]">
+            <h2 className="text-[clamp(2rem,5vw,3.5rem)] font-bold tracking-tight text-white leading-[1.05]">
               Stop losing jobs<br className="hidden sm:block" /> to slow quotes.
             </h2>
           </ScrollFadeIn>
 
           <ScrollFadeIn delay={160}>
-            <p className="mx-auto mt-6 max-w-lg text-[18px] leading-relaxed text-gray-400">
-              Join hundreds of contractors sending proposals in seconds, not hours. Try free for 14 days.
+            <p className="mx-auto mt-6 max-w-xl text-[18px] leading-relaxed text-gray-300">
+              Join contractors closing more jobs in less time with the AI-powered CRM built by one of their own. Everything the big guys offer &mdash; at <span className="text-white font-semibold">$79/month, not $400</span>.
             </p>
           </ScrollFadeIn>
 
@@ -607,7 +790,7 @@ export default function Home() {
                 href="/auth/signup"
                 className="rounded-full bg-white px-12 py-[18px] text-[17px] font-semibold text-gray-900 shadow-xl shadow-white/10 transition-all hover:bg-gray-100 active:scale-[0.97]"
               >
-                Start Free Trial
+                Start Your 14-Day Free Trial
               </Link>
               <Link
                 href="/auth/signup"
@@ -618,6 +801,28 @@ export default function Home() {
                 </svg>
                 Download for iOS
               </Link>
+            </div>
+          </ScrollFadeIn>
+
+          {/* Risk reversal row */}
+          <ScrollFadeIn delay={320}>
+            <div className="mt-10 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-[13px] text-gray-400">
+              <div className="flex items-center gap-1.5">
+                <svg className="h-4 w-4 text-green-400" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+                14-day free trial
+              </div>
+              <div className="flex items-center gap-1.5">
+                <svg className="h-4 w-4 text-green-400" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+                No credit card
+              </div>
+              <div className="flex items-center gap-1.5">
+                <svg className="h-4 w-4 text-green-400" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+                Cancel anytime
+              </div>
+              <div className="flex items-center gap-1.5">
+                <svg className="h-4 w-4 text-green-400" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+                30-day money back
+              </div>
             </div>
           </ScrollFadeIn>
         </div>

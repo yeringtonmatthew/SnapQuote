@@ -4,34 +4,49 @@ import { useState } from 'react';
 
 const faqs = [
   {
-    question: 'How much does SnapQuote cost?',
+    question: 'Why is SnapQuote so much cheaper than Jobber, ServiceTitan, and Roofr?',
     answer:
-      '$79/month gets you everything — unlimited quotes, AI generation, automated follow-ups, pipeline, payments, the works. Every account starts with a 14-day free trial, no credit card required. One closed job pays for years of SnapQuote.',
+      "Because we built it from scratch on modern tech (AI, iPhone-first, cloud) instead of bolting features onto legacy software. We don't have a 300-person sales team or a $50M marketing budget to pay for. That saving gets passed to you. At $79/mo flat, you get every feature the $200-400/mo competitors charge extra for — unlimited quotes, AI, payments, CRM, scheduling, the works.",
   },
   {
-    question: 'How does the AI generate quotes?',
+    question: 'Is it really built by a contractor?',
     answer:
-      'Upload photos of the job site. Our AI analyzes each image to identify damage, materials, and scope of work. It then generates detailed line items with pricing, writes professional inspection findings, and assembles everything into a polished proposal — all in about 60 seconds.',
+      "Yes. SnapQuote was built by Matt Yerington, who spent years running a contracting business. He got tired of losing jobs because his quotes took too long — and tired of $400/mo software that required a consultant to set up. Every feature in SnapQuote exists because he wished he had it on a tailgate, in the rain, at 6pm with a customer waiting.",
+  },
+  {
+    question: 'How does the AI generate quotes from photos?',
+    answer:
+      "Walk the job site and snap photos of the roof, the damage, or the scope of work. Our AI analyzes each image to identify materials, square footage, damage types, and line items. It writes detailed inspection findings and generates a Good/Better/Best proposal — all in about 60 seconds. You can edit anything before you send it.",
+  },
+  {
+    question: 'Will I lose data if I switch from Jobber / ServiceTitan / JobNimbus?',
+    answer:
+      "No. We'll help you import your existing customer list, active jobs, and past quotes in a couple of minutes. Most contractors are fully migrated inside their first 14-day free trial — and then keep both running in parallel for a month to make sure nothing slips.",
   },
   {
     question: 'Can my customers pay online?',
     answer:
-      'Absolutely. Every proposal includes a secure payment link powered by Stripe. Customers can pay a deposit or the full amount right from their phone. You get notified instantly and funds hit your account in 2 business days.',
+      "Yes. Every proposal includes a secure payment link powered by Stripe. Customers can pay a deposit or the full amount right from their phone. You get notified instantly and funds hit your account in about 2 business days.",
   },
   {
-    question: 'Does it work offline?',
+    question: 'Does it work offline on a job site?',
     answer:
-      'Yes. You can capture photos and start building quotes even without cell service on the job site. Everything syncs automatically when you get back online.',
+      "Yes. You can capture photos and start building quotes even without cell service on the roof. Everything syncs automatically the second you're back online.",
   },
   {
-    question: 'Can I customize my proposals with my branding?',
+    question: 'Can I customize proposals with my branding?',
     answer:
-      'With SnapQuote, you can add your logo, company colors, license numbers, and custom terms. Your proposals look like they came from a Fortune 500 company — but with your brand front and center.',
+      "Add your logo, company colors, license numbers, insurance info, and custom terms. Your proposals look like they came from a Fortune 500 company — but with your brand front and center. No 'Powered by SnapQuote' watermark on your work.",
   },
   {
-    question: 'How is this different from Jobber or ServiceTitan?',
+    question: "What if I don't roof — I'm HVAC, plumbing, electrical, painting?",
     answer:
-      'Those are full-blown field service management platforms that cost $100-300+/month and take weeks to set up. SnapQuote does one thing incredibly well: help you create, send, and close quotes fast. You can be up and running in 2 minutes and use it alongside whatever FSM you already have.',
+      "SnapQuote works for every trade that quotes jobs. Roofing is our largest vertical, but HVAC techs, plumbers, electricians, painters, landscapers, and general contractors all use it daily. The AI adapts line items to your trade, and you can build your own pricing library in about 10 minutes.",
+  },
+  {
+    question: "What's the catch with the 14-day free trial?",
+    answer:
+      "No catch. No credit card. No auto-charge. You get the full app — unlimited quotes, AI, payments, everything — for 14 days. If you don't love it, you walk away and owe nothing. If you do love it, one closed job pays for your entire first year.",
   },
 ];
 
@@ -65,11 +80,11 @@ export default function FAQAccordion() {
             <div
               className="overflow-hidden transition-all duration-300 ease-in-out"
               style={{
-                maxHeight: isOpen ? '300px' : '0px',
+                maxHeight: isOpen ? '600px' : '0px',
                 opacity: isOpen ? 1 : 0,
               }}
             >
-              <p className="pb-5 text-sm leading-relaxed text-gray-500">{faq.answer}</p>
+              <p className="pb-5 text-[15px] leading-relaxed text-gray-600">{faq.answer}</p>
             </div>
           </div>
         );
