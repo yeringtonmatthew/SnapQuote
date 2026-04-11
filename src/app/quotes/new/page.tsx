@@ -839,6 +839,11 @@ export default function NewQuotePage() {
     // Open blank window NOW (synchronous user gesture) to avoid popup blocker.
     // We'll navigate it to the real URL once the quote is saved.
     const previewWindow = window.open('', '_blank');
+    // If popup is blocked (mobile Safari, strict popup blockers), tell the user immediately.
+    if (!previewWindow) {
+      alert('Unable to open preview — please allow popups for this site, then try again.');
+      return;
+    }
     setPreviewSaving(true);
     setError(null);
     setFieldErrors({});
@@ -887,18 +892,20 @@ export default function NewQuotePage() {
         }),
       });
       if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || 'Failed to save quote');
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || `Save failed (${res.status})`);
       }
       const savedQuote = await res.json();
-      if (previewWindow) {
-        previewWindow.location.href = `/q/${savedQuote.id}`;
-      } else {
-        window.open(`/q/${savedQuote.id}`, '_blank');
-      }
+      if (!savedQuote?.id) throw new Error('Quote saved but no ID returned');
+      previewWindow.location.href = `/q/${savedQuote.id}`;
     } catch (err) {
-      if (previewWindow) previewWindow.close();
-      setError(err instanceof Error ? err.message : 'Something went wrong');
+      previewWindow.close();
+      const msg = err instanceof Error ? err.message : 'Something went wrong';
+      setError(msg);
+      // Scroll to top so the error banner is visible
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      // Also alert so the error is impossible to miss (no toast system)
+      alert(`Preview failed: ${msg}`);
     } finally {
       setPreviewSaving(false);
     }
