@@ -74,6 +74,16 @@ export function AcceptQuoteButton({ quoteId, depositAmount, currentStatus, strip
         <div className="mx-4 max-w-md w-full rounded-3xl bg-white shadow-2xl overflow-hidden" style={{ animation: 'successCardIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.1s both' }}>
           {/* Green gradient header */}
           <div className="bg-gradient-to-br from-green-500 to-emerald-600 px-6 pt-10 pb-7 text-center relative overflow-hidden">
+            {/* Close / back button */}
+            <a
+              href="/dashboard"
+              className="absolute top-3 right-3 flex h-8 w-8 items-center justify-center rounded-full bg-white/20 hover:bg-white/30 transition-colors"
+              aria-label="Back to dashboard"
+            >
+              <svg className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </a>
             {/* Subtle radial glow */}
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_30%,rgba(255,255,255,0.15),transparent_70%)]" />
             <div className="relative">
@@ -130,12 +140,23 @@ export function AcceptQuoteButton({ quoteId, depositAmount, currentStatus, strip
             </div>
 
             {/* Reassurance */}
-            <div className="flex items-center justify-center gap-2 pt-3 pb-1 text-[11px] text-gray-400 border-t border-gray-100">
+            <div className="flex items-center justify-center gap-2 pt-3 text-[11px] text-gray-400 border-t border-gray-100">
               <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
               </svg>
               Secure payment processed. You&apos;re in good hands.
             </div>
+
+            {/* Back to app */}
+            <a
+              href="/dashboard"
+              className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-gray-900 py-3.5 text-[15px] font-semibold text-white hover:bg-gray-800 transition-colors"
+            >
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
+              </svg>
+              Back to Dashboard
+            </a>
           </div>
         </div>
         <style>{`
