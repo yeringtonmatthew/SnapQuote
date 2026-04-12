@@ -41,16 +41,22 @@ export default function TermsPage() {
 
           <section>
             <h2 className="mb-2 text-base font-semibold text-gray-900">SMS Messaging Terms</h2>
+            <p className="mb-2">
+              <strong>Program Name:</strong> SnapQuote Quote Notifications
+            </p>
             <ul className="list-disc space-y-1 pl-5">
               <li>SnapQuote sends transactional SMS messages to customers on behalf of contractors</li>
               <li>Messages contain a link to view and approve a quote that was requested by the customer</li>
               <li>No marketing or promotional messages are sent</li>
-              <li>Message frequency: typically one message per quote</li>
+              <li>Message frequency: typically 1–3 messages per quote (delivery, reminders, and payment confirmation)</li>
               <li>Message and data rates may apply</li>
-              <li>Reply STOP to opt out of messages</li>
-              <li>Reply HELP for assistance</li>
+              <li>Text <strong>STOP</strong> to opt out of messages at any time</li>
+              <li>Text <strong>HELP</strong> for assistance</li>
               <li>Contact: support@snapquote.app</li>
             </ul>
+            <p className="mt-2 text-xs text-gray-500">
+              By providing your phone number to a contractor using SnapQuote, you consent to receive transactional SMS messages related to your quote. Consent is not a condition of purchase. Carriers are not liable for delayed or undelivered messages.
+            </p>
           </section>
 
           <section>

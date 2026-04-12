@@ -52,9 +52,11 @@ export default function PrivacyPage() {
             <h2 className="mb-2 text-base font-semibold text-gray-900">SMS Messaging</h2>
             <p>
               We send transactional SMS messages to customers only when a contractor explicitly
-              requests to send a quote. Customers receive a single message containing a link to
-              view their quote. No marketing or recurring messages are sent. Message and data rates
-              may apply. Reply STOP to opt out. Reply HELP for help.
+              requests to send a quote. Customers typically receive 1–3 messages per quote
+              (delivery, reminders, and payment confirmation). No marketing messages are sent.
+              Message and data rates may apply. Text <strong>STOP</strong> to opt out at any time.
+              Text <strong>HELP</strong> for help. Consent to receive messages is not a condition
+              of purchase. For questions, contact support@snapquote.app.
             </p>
           </section>
 
