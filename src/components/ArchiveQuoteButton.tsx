@@ -28,7 +28,7 @@ export function ArchiveQuoteButton({ quoteId, isArchived = false }: ArchiveQuote
       });
       if (res.ok) {
         haptic('medium');
-        router.push('/quotes');
+        router.push('/dashboard');
         router.refresh();
       }
     } catch {

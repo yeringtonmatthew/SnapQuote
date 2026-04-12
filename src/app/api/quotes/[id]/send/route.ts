@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { rateLimit } from '@/lib/rate-limit';
 import { Resend } from 'resend';
 import { escapeHtml } from '@/lib/escape-html';
+import { sendSms } from '@/lib/twilio';
 
 export async function POST(
   _request: Request,
@@ -48,23 +49,24 @@ export async function POST(
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://snapquote.dev';
     const proposalUrl = `${appUrl}/q/${params.id}`;
 
+    // Fetch profile once for both email and SMS
+    const { data: profile } = await supabase
+      .from('users')
+      .select('business_name, full_name, logo_url, brand_color')
+      .eq('id', user.id)
+      .single();
+
+    const businessName = profile?.business_name || profile?.full_name || 'Licensed Professional';
+    const brandColor = profile?.brand_color || '#4f46e5';
+    const amount = Number(quote.total ?? quote.subtotal).toLocaleString('en-US', { minimumFractionDigits: 2 });
+
     // Send email if customer has email
     let emailSent = false;
     let emailError: string | undefined;
 
     if (quote.customer_email && process.env.RESEND_API_KEY) {
       try {
-        const { data: profile } = await supabase
-          .from('users')
-          .select('business_name, full_name, logo_url, brand_color')
-          .eq('id', user.id)
-          .single();
-
-        const businessName = profile?.business_name || profile?.full_name || 'Licensed Professional';
-        const brandColor = profile?.brand_color || '#4f46e5';
-        const amount = Number(quote.total ?? quote.subtotal).toLocaleString('en-US', { minimumFractionDigits: 2 });
         const fromAddress = process.env.RESEND_FROM_EMAIL || 'SnapQuote <quotes@snapquote.dev>';
-
         const resend = new Resend(process.env.RESEND_API_KEY);
         const { error: resendErr } = await resend.emails.send({
           from: fromAddress,
@@ -80,6 +82,20 @@ export async function POST(
         }
       } catch (err) {
         emailError = err instanceof Error ? err.message : 'Email failed';
+      }
+    }
+
+    // Send SMS if customer has a phone number
+    let smsSent = false;
+    let smsError: string | undefined;
+
+    if (quote.customer_phone) {
+      try {
+        const smsBody = `Hi ${quote.customer_name}, you have a new quote from ${businessName} for $${amount}. View it here: ${proposalUrl}`;
+        await sendSms(quote.customer_phone, smsBody);
+        smsSent = true;
+      } catch (err) {
+        smsError = err instanceof Error ? err.message : 'SMS failed';
       }
     }
 
@@ -99,7 +115,9 @@ export async function POST(
       success: true,
       url: proposalUrl,
       emailSent,
+      smsSent,
       ...(emailError ? { emailError } : {}),
+      ...(smsError ? { smsError } : {}),
     });
   } catch (err) {
     console.error('[send] Unhandled error:', err);
