@@ -6,7 +6,7 @@ import PageTransition from '@/components/PageTransition';
 import InvoicesList from '@/components/InvoicesList';
 import type { InvoiceStatus } from '@/types/database';
 
-export const metadata = { title: 'Invoices | SnapQuote' };
+export const metadata = { title: 'Invoices | SnapQuote', robots: { index: false, follow: false } };
 
 export default async function InvoicesPage() {
   const supabase = createClient();

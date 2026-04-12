@@ -343,7 +343,14 @@ export default async function CustomerProposalPage({
       {!hasTiers && (
         <div className="sticky top-0 z-20 px-4 py-3 bg-[#f7f7f8]/80 backdrop-blur-xl border-b border-black/5" data-no-print>
           <div className="mx-auto max-w-lg">
-            {isExpired ? (
+            {quote.status === 'draft' ? (
+              <div className="flex items-center justify-center gap-2 rounded-2xl bg-amber-50 border border-amber-100 px-4 py-3">
+                <svg className="h-5 w-5 text-amber-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125" />
+                </svg>
+                <span className="text-[14px] font-medium text-amber-700">This quote is still being prepared</span>
+              </div>
+            ) : isExpired ? (
               <div className="flex items-center justify-center gap-2 rounded-2xl bg-gray-100 px-4 py-3">
                 <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -1091,7 +1098,19 @@ export default async function CustomerProposalPage({
             </div>
           )}
           <div className="px-5 pt-5 pb-6 space-y-4">
-            {isExpired ? (
+            {quote.status === 'draft' ? (
+              <div className="text-center py-2">
+                <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-white/10">
+                  <svg className="h-6 w-6 text-white/40" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125" />
+                  </svg>
+                </div>
+                <p className="text-[17px] font-bold text-white">Quote still being prepared</p>
+                <p className="text-[13px] text-white/40 mt-1">
+                  {businessName} is finalizing your quote. Check back soon.
+                </p>
+              </div>
+            ) : isExpired ? (
               <div className="text-center py-2">
                 <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-white/10">
                   <svg className="h-6 w-6 text-white/40" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">

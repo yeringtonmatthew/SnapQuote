@@ -1275,7 +1275,7 @@ export default function NewQuotePage() {
                 id="jobDescription"
                 value={jobDescription}
                 onChange={(e) => setJobDescription(e.target.value)}
-                placeholder="e.g. Replace 50-gallon water heater, Bradford White. Old unit is leaking from bottom."
+                placeholder="e.g. Complete tear-off and reroof, GAF Timberline HDZ 30-yr shingles, all valleys and eaves."
                 rows={3}
                 className="input-field resize-none"
               />

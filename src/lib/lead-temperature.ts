@@ -135,6 +135,7 @@ function coldReason(daysSent: number): string {
 }
 
 function atRiskReason(daysSent: number): string {
+  if (daysSent >= 999) return 'No response — likely lost';
   if (daysSent > 21) return `${daysSent} days silent — likely lost`;
   return `${daysSent}+ days, no engagement`;
 }

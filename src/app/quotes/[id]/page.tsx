@@ -41,6 +41,17 @@ const statusLabels: Record<string, string> = {
   cancelled: 'Cancelled',
 };
 
+export async function generateMetadata({ params }: { params: { id: string } }) {
+  const { createClient: createServiceClient } = await import('@supabase/supabase-js');
+  const sb = createServiceClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
+  const { data: quote } = await sb.from('quotes').select('customer_name, total, subtotal, quote_number').eq('id', params.id).single();
+  if (!quote) return { title: 'Quote | SnapQuote' };
+  const { formatQuoteNumber: fmt } = await import('@/lib/format-quote-number');
+  const num = quote.quote_number ? `${fmt(quote.quote_number)} · ` : '';
+  const total = '$' + Number(quote.total ?? quote.subtotal).toLocaleString('en-US', { maximumFractionDigits: 0 });
+  return { title: `${num}${quote.customer_name} — ${total} | SnapQuote` };
+}
+
 export default async function QuoteDetailPage({
   params,
 }: {

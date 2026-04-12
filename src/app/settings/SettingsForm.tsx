@@ -666,7 +666,7 @@ export function SettingsForm({ profile, userId, email, stripeConnected, stripeSt
             </div>
           </FormField>
 
-          <FormField label="Default Deposit %" htmlFor="depositPercent">
+          <FormField label="Default Deposit" htmlFor="depositPercent">
             <div className="relative">
               <input
                 id="depositPercent"
@@ -683,7 +683,7 @@ export function SettingsForm({ profile, userId, email, stripeConnected, stripeSt
           </FormField>
 
           <div>
-            <FormField label="Default Tax Rate (%)" htmlFor="defaultTaxRate">
+            <FormField label="Default Tax Rate" htmlFor="defaultTaxRate">
               <div className="relative">
                 <input
                   id="defaultTaxRate"
