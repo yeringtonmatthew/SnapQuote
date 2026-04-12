@@ -771,6 +771,8 @@ export default function NewQuotePage() {
           if (!uploadError) {
             const { data: urlData } = supabase.storage.from('photos').getPublicUrl(filePath);
             finalPhotoUrls.push(urlData.publicUrl);
+          } else {
+            throw new Error(`Photo upload failed: ${uploadError.message}`);
           }
         }
       }
@@ -812,11 +814,20 @@ export default function NewQuotePage() {
 
       if (status === 'sent') {
         try {
-          await fetch(`/api/quotes/${savedQuote.id}/send`, { method: 'POST' });
-          // Trigger confetti on successful send
-          triggerConfetti();
+          const sendRes = await fetch(`/api/quotes/${savedQuote.id}/send`, { method: 'POST' });
+          const sendData = await sendRes.json().catch(() => ({}));
+          if (!sendRes.ok) {
+            // Quote is saved; send failed. Warn user but still redirect.
+            setError(`Quote saved but delivery failed: ${sendData.error || `HTTP ${sendRes.status}`}. You can retry from the quote page.`);
+          } else if (sendData.emailError) {
+            // API returned 200 but email delivery failed
+            setError(`Quote sent but email delivery failed: ${sendData.emailError}. Customer may not have received it.`);
+          } else {
+            triggerConfetti();
+          }
         } catch {
-          // Send failed but quote is saved
+          // Network error — quote is saved, just couldn't reach send endpoint
+          setError('Quote saved but could not send. Check your connection and retry from the quote page.');
         }
       }
 
@@ -861,6 +872,8 @@ export default function NewQuotePage() {
           if (!uploadError) {
             const { data: urlData } = supabase.storage.from('photos').getPublicUrl(filePath);
             finalPhotoUrls.push(urlData.publicUrl);
+          } else {
+            throw new Error(`Photo upload failed: ${uploadError.message}`);
           }
         }
       }

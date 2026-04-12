@@ -61,7 +61,7 @@ export async function POST(
           .single();
 
         const businessName = profile?.business_name || profile?.full_name || 'Licensed Professional';
-        const brandColor = '#2563eb';
+        const brandColor = profile?.brand_color || '#4f46e5';
         const amount = Number(quote.total ?? quote.subtotal).toLocaleString('en-US', { minimumFractionDigits: 2 });
         const fromAddress = process.env.RESEND_FROM_EMAIL || 'SnapQuote <quotes@snapquote.dev>';
 
