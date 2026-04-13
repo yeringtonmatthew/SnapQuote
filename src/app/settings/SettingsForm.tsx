@@ -12,7 +12,6 @@ import type { User } from '@/types/database';
 import { TeamSection } from './TeamSection';
 import { LeadIntegrationsSection } from './LeadIntegrationsSection';
 import { DeleteAccountButton } from '@/components/DeleteAccountButton';
-import { isNativeAppClient } from '@/lib/subscription';
 
 interface Props {
   profile: User;
@@ -60,21 +59,7 @@ export function SettingsForm({ profile, userId, email, stripeConnected, stripeSt
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<Tab>('Account');
   const [saving, setSaving] = useState(false);
-  const isNative = useMemo(() => isNativeAppClient(), []);
-
-  // Hide Payments tab from native iOS users (Apple Guideline 3.1.1)
-  const filteredSections = useMemo(() => {
-    if (!isNative) return SECTIONS;
-    return SECTIONS.map((section) => {
-      if (section.group === 'Connected Apps') {
-        return {
-          ...section,
-          tabs: section.tabs.filter((t) => t !== 'Payments') as unknown as typeof section.tabs,
-        };
-      }
-      return section;
-    });
-  }, [isNative]);
+  const filteredSections = SECTIONS;
 
   // Account tab state
   const [editingEmail, setEditingEmail] = useState(false);
@@ -882,7 +867,7 @@ export function SettingsForm({ profile, userId, email, stripeConnected, stripeSt
       )}
 
       {/* Payments Tab — hidden from native iOS (Apple Guideline 3.1.1) */}
-      {activeTab === 'Payments' && !isNative && (
+      {activeTab === 'Payments' && (
         <div className="card space-y-5">
           <div>
             <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">Payments</p>
