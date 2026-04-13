@@ -840,19 +840,12 @@ export default function NewQuotePage() {
     }
   }
 
-  // Save as draft and open customer preview in new tab
+  // Save as draft and navigate to customer preview in same tab
+  // (avoids mobile Safari popup blocker — user can tap Back to return to editing)
   async function handleSaveForPreview() {
     const hasLineItem = lineItems.some(item => item.description?.trim());
     if (!hasLineItem) {
       setFieldErrors({ lineItems: 'Add at least one line item with a description' });
-      return;
-    }
-    // Open blank window NOW (synchronous user gesture) to avoid popup blocker.
-    // We'll navigate it to the real URL once the quote is saved.
-    const previewWindow = window.open('', '_blank');
-    // If popup is blocked (mobile Safari, strict popup blockers), tell the user immediately.
-    if (!previewWindow) {
-      alert('Unable to open preview — please allow popups for this site, then try again.');
       return;
     }
     setPreviewSaving(true);
@@ -910,9 +903,8 @@ export default function NewQuotePage() {
       }
       const savedQuote = await res.json();
       if (!savedQuote?.id) throw new Error('Quote saved but no ID returned');
-      previewWindow.location.href = `/q/${savedQuote.id}`;
+      router.push(`/q/${savedQuote.id}`);
     } catch (err) {
-      previewWindow.close();
       const msg = err instanceof Error ? err.message : 'Something went wrong';
       setError(msg);
       // Scroll to top so the error banner is visible
