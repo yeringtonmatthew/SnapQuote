@@ -10,6 +10,7 @@ import { DownloadPdfButton } from '@/components/DownloadPdfButton';
 import { PrintButton } from '@/components/PrintButton';
 import { ViewTracker } from '@/components/ViewTracker';
 import { formatQuoteNumber } from '@/lib/format-quote-number';
+import { getCustomerQuoteLabel } from '@/lib/customer-quote-label';
 import PageTransition from '@/components/PageTransition';
 import CustomerPhotoGallery from '@/components/CustomerPhotoGallery';
 import { CustomerShareButton } from '@/components/CustomerShareButton';
@@ -149,6 +150,12 @@ export default async function CustomerProposalPage({
     || 'Licensed Professional';
   const stripeEnabled = !!profile?.stripe_account_id;
   const lineItems: { description: string; quantity: number; unit: string; unit_price: number; total: number }[] = quote.line_items || [];
+  const customerQuoteLabel = getCustomerQuoteLabel({
+    tradeType: profile?.trade_type,
+    scopeOfWork: quote.scope_of_work,
+    aiDescription: quote.ai_description,
+    lineItems,
+  });
   const quoteOptions: { name: string; description: string; line_items: { description: string; quantity: number; unit: string; unit_price: number; total: number }[]; recommended?: boolean }[] | null = quote.quote_options && Array.isArray(quote.quote_options) && quote.quote_options.length > 0 ? quote.quote_options : null;
   const hasTiers = !!quoteOptions;
   const photos: string[] = quote.photos || [];
@@ -276,7 +283,7 @@ export default async function CustomerProposalPage({
             <PrintButton variant="icon" />
             {isContractor && <DownloadPdfButton quoteId={params.id} />}
             <span className="rounded-full bg-white/15 backdrop-blur-sm px-3 py-1 text-[11px] font-semibold text-white/80 tracking-wider uppercase">
-              {isContractor ? 'Preview' : (quote.quote_number ? `Quote ${formatQuoteNumber(quote.quote_number)}` : 'Quote')}
+              {isContractor ? 'Preview' : customerQuoteLabel}
             </span>
           </div>
         </div>
@@ -343,7 +350,7 @@ export default async function CustomerProposalPage({
       {!hasTiers && (
         <div className="sticky top-0 z-20 px-4 py-3 bg-[#f7f7f8]/80 backdrop-blur-xl border-b border-black/5" data-no-print>
           <div className="mx-auto max-w-lg">
-            {quote.status === 'draft' ? (
+            {quote.status === 'draft' && lineItems.length === 0 ? (
               <div className="flex items-center justify-center gap-2 rounded-2xl bg-amber-50 border border-amber-100 px-4 py-3">
                 <svg className="h-5 w-5 text-amber-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125" />
@@ -1098,7 +1105,7 @@ export default async function CustomerProposalPage({
             </div>
           )}
           <div className="px-5 pt-5 pb-6 space-y-4">
-            {quote.status === 'draft' ? (
+            {quote.status === 'draft' && lineItems.length === 0 ? (
               <div className="text-center py-2">
                 <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-white/10">
                   <svg className="h-6 w-6 text-white/40" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
@@ -1172,7 +1179,7 @@ export default async function CustomerProposalPage({
           <div className="rounded-2xl bg-white px-5 py-4 shadow-sm ring-1 ring-black/[0.04] text-center" data-no-print>
             <p className="text-[13px] text-gray-400 mb-2.5">Have questions or need adjustments?</p>
             <a
-              href={`mailto:${contractorEmail}?subject=Question about Quote ${quote.quote_number ? formatQuoteNumber(quote.quote_number) : ''}&body=Hi ${profile?.full_name || businessName},%0D%0A%0D%0AI have a question about the quote for ${quote.job_address || 'my project'}:%0D%0A%0D%0A`}
+              href={`mailto:${contractorEmail}?subject=Question about my ${customerQuoteLabel.toLowerCase()}${quote.quote_number ? ` (${formatQuoteNumber(quote.quote_number)})` : ''}&body=Hi ${profile?.full_name || businessName},%0D%0A%0D%0AI have a question about the quote for ${quote.job_address || 'my project'}:%0D%0A%0D%0A`}
               className="inline-flex items-center gap-2 rounded-xl border-2 border-gray-200 px-5 py-2.5 text-[14px] font-semibold text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-all press-scale"
             >
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
