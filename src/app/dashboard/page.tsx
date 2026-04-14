@@ -41,14 +41,14 @@ export default async function DashboardPage() {
     <PageTransition>
     <DesktopSidebar active="home" />
     <DashboardPullToRefresh>
-    <div className="min-h-dvh bg-[#f2f2f7] dark:bg-gray-950 pb-28 lg:pb-8 lg:pl-[220px]">
+    <div className="min-h-dvh bg-[#f2f2f7] dark:bg-gray-950 pb-28 lg:pb-8 lg:pl-[236px]">
 
       {/* ── Header — renders instantly ─────────────────────────────── */}
-      <header className="sticky top-0 z-10 bg-[#f2f2f7]/90 dark:bg-gray-950/90 backdrop-blur-xl border-b border-black/5 dark:border-white/5 px-5 pt-14 lg:pt-6 pb-4">
+      <header className="sticky top-0 z-10 border-b border-black/5 bg-[#f2f2f7]/92 px-5 pb-5 pt-14 backdrop-blur-xl dark:border-white/5 dark:bg-gray-950/92 lg:px-8 lg:pt-7">
         <div className="mx-auto max-w-7xl flex items-center justify-between">
           <div>
-            <p className="text-[12px] text-gray-400 dark:text-gray-500 font-medium">{todayFormatted}</p>
-            <h1 className="text-[28px] font-bold tracking-tight text-gray-900 dark:text-gray-100 leading-tight">
+            <p className="text-[13px] font-medium text-gray-500 dark:text-gray-400 lg:text-[14px]">{todayFormatted}</p>
+            <h1 className="text-[32px] font-bold leading-tight tracking-tight text-gray-900 dark:text-gray-100 lg:text-[40px]">
               {greeting}, {firstName}
             </h1>
           </div>
@@ -67,7 +67,7 @@ export default async function DashboardPage() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-7xl px-5 pt-5 space-y-6 lg:px-8 lg:grid lg:grid-cols-[1fr_380px] lg:gap-8 lg:space-y-0 lg:auto-rows-min">
+      <main className="mx-auto max-w-7xl space-y-7 px-5 pt-6 lg:grid lg:auto-rows-min lg:grid-cols-[minmax(0,1fr)_400px] lg:gap-8 lg:space-y-0 lg:px-8">
 
         {/* Stats + SmartActionsBar + Revenue Chart + Revenue Intelligence — streams in */}
         <Suspense fallback={<StatsSkeleton />}>

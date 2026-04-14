@@ -1,7 +1,10 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { useEffect } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
 import { haptic } from '@/lib/haptic';
+import { APP_ROUTE_PREFETCHES, getActiveMoreMenuRoute } from '@/lib/native-app-routing';
 
 interface MoreMenuProps {
   open: boolean;
@@ -28,7 +31,7 @@ const menuItems = [
     ),
   },
   {
-    label: 'Pipeline',
+    label: 'Quote Board',
     href: '/pipeline',
     icon: (
       <svg className="h-[22px] w-[22px]" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor" aria-hidden="true">
@@ -59,6 +62,14 @@ const menuItems = [
 
 export default function MoreMenu({ open, onClose }: MoreMenuProps) {
   const router = useRouter();
+  const pathname = usePathname();
+  const activeRoute = getActiveMoreMenuRoute(pathname);
+
+  useEffect(() => {
+    APP_ROUTE_PREFETCHES.forEach((route) => {
+      router.prefetch(route);
+    });
+  }, [router]);
 
   if (!open) return null;
 
@@ -81,20 +92,34 @@ export default function MoreMenu({ open, onClose }: MoreMenuProps) {
 
         {/* Menu items */}
         <div className="px-4 pb-2">
-          {menuItems.map((item) => (
-            <button
+          {menuItems.map((item) => {
+            const isActive = activeRoute === item.href;
+
+            return (
+            <Link
               key={item.href}
+              href={item.href}
+              prefetch
+              aria-current={isActive ? 'page' : undefined}
               onClick={() => {
                 haptic('light');
                 onClose();
-                router.push(item.href);
               }}
-              className="flex w-full items-center gap-4 rounded-2xl px-4 py-3.5 text-[15px] font-medium text-gray-800 dark:text-gray-200 active:bg-gray-100 dark:active:bg-gray-800 transition-colors"
+              className={`flex w-full items-center gap-4 rounded-2xl px-4 py-3.5 text-[15px] font-medium transition-colors ${
+                isActive
+                  ? 'bg-brand-50 text-brand-700 dark:bg-brand-950/40 dark:text-brand-300'
+                  : 'text-gray-800 dark:text-gray-200 active:bg-gray-100 dark:active:bg-gray-800'
+              }`}
             >
-              <span className="text-gray-500 dark:text-gray-400">{item.icon}</span>
-              {item.label}
-            </button>
-          ))}
+              <span className={isActive ? 'text-brand-600 dark:text-brand-400' : 'text-gray-500 dark:text-gray-400'}>
+                {item.icon}
+              </span>
+              <span className="flex-1">{item.label}</span>
+              {isActive && (
+                <span className="h-2 w-2 rounded-full bg-brand-500 dark:bg-brand-400" aria-hidden="true" />
+              )}
+            </Link>
+          )})}
         </div>
       </div>
     </div>

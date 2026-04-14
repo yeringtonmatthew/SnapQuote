@@ -16,29 +16,58 @@ import { cn } from "@/lib/utils";
 
 const inter = Inter({subsets:['latin'],variable:'--font-sans'});
 
-export const metadata: Metadata = {
-  title: 'SnapQuote — AI-Powered Quotes for Contractors',
+const organizationLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  name: 'SnapQuote',
+  url: 'https://snapquote.dev',
+  logo: 'https://snapquote.dev/icon-512.png',
+};
+
+const websiteLd = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: 'SnapQuote',
+  url: 'https://snapquote.dev',
   description:
-    'Create professional quotes in seconds. Snap a photo, let AI generate line items, and send it to your customer via SMS or email.',
+    'AI roofing proposal software for contractors. Snap a photo, build the proposal, and get the signature and deposit faster.',
+};
+
+export const metadata: Metadata = {
+  title: 'SnapQuote — AI Roofing Proposal Software for Contractors',
+  description:
+    'Snap a roof photo and let AI build a polished proposal with scope, signature, and deposit built in. Roofing-first quoting software for contractors.',
   manifest: '/manifest.json',
   metadataBase: new URL('https://snapquote.dev'),
   alternates: {
     canonical: '/',
   },
-  robots: 'index, follow',
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+      'max-video-preview': -1,
+    },
+  },
   openGraph: {
-    title: 'SnapQuote — AI-Powered Quotes for Contractors',
+    title: 'SnapQuote — AI Roofing Proposal Software for Contractors',
     description:
-      'Create professional quotes in seconds. Snap a photo, let AI generate line items, and send it to your customer via SMS or email.',
+      'Snap a roof photo and let AI build a polished proposal with scope, signature, and deposit built in. Roofing-first quoting software for contractors.',
     type: 'website',
     url: 'https://snapquote.dev',
-    images: [{ url: 'https://snapquote.dev/api/og?title=SnapQuote&subtitle=AI-Powered+Quotes+for+Contractors', width: 1200, height: 630 }],
+    siteName: 'SnapQuote',
+    images: [{ url: 'https://snapquote.dev/api/og?title=SnapQuote&subtitle=AI+Roofing+Proposal+Software', width: 1200, height: 630 }],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'SnapQuote — AI-Powered Quotes for Contractors',
+    title: 'SnapQuote — AI Roofing Proposal Software for Contractors',
     description:
-      'Create professional quotes in seconds. Snap a photo, let AI generate line items, and send it to your customer via SMS or email.',
+      'Snap a roof photo and let AI build a polished proposal with scope, signature, and deposit built in. Roofing-first quoting software for contractors.',
+    images: ['https://snapquote.dev/api/og?title=SnapQuote&subtitle=AI+Roofing+Proposal+Software'],
   },
   icons: {
     icon: [
@@ -80,6 +109,8 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning className={cn("font-sans", inter.variable)}>
       <head>
         <meta name="google-site-verification" content="rBkPmUVQTkBYWNVh7wRQmPIzQ45PPTd7icDW8AFwqBI" />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationLd) }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteLd) }} />
         {/* Apple splash screens for common iOS devices */}
         <link rel="apple-touch-startup-image" href="/icon-512.png" media="(device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3)" />
         <link rel="apple-touch-startup-image" href="/icon-512.png" media="(device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3)" />

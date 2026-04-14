@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { CONTRACTOR_STAGE_LABELS } from '@/lib/crm-stage-labels';
 
 interface Job {
   id: string;
@@ -24,25 +25,25 @@ type FilterTab = 'all' | 'active' | 'scheduled' | 'completed';
 
 const STAGE_CONFIG: Record<string, { label: string; color: string; bg: string; text: string }> = {
   deposit_collected: {
-    label: 'Deposit Paid',
+    label: CONTRACTOR_STAGE_LABELS.deposit_collected,
     color: 'bg-green-500',
     bg: 'bg-green-50 dark:bg-green-950/30',
     text: 'text-green-700 dark:text-green-400',
   },
   job_scheduled: {
-    label: 'Scheduled',
+    label: CONTRACTOR_STAGE_LABELS.job_scheduled,
     color: 'bg-amber-500',
     bg: 'bg-amber-50 dark:bg-amber-950/30',
     text: 'text-amber-700 dark:text-amber-400',
   },
   in_progress: {
-    label: 'In Progress',
+    label: CONTRACTOR_STAGE_LABELS.in_progress,
     color: 'bg-indigo-500',
     bg: 'bg-indigo-50 dark:bg-indigo-950/30',
     text: 'text-indigo-700 dark:text-indigo-400',
   },
   completed: {
-    label: 'Completed',
+    label: CONTRACTOR_STAGE_LABELS.completed,
     color: 'bg-emerald-500',
     bg: 'bg-emerald-50 dark:bg-emerald-950/30',
     text: 'text-emerald-700 dark:text-emerald-400',
@@ -59,7 +60,11 @@ const FILTER_TABS: { key: FilterTab; label: string }[] = [
 function filterJobs(jobs: Job[], filter: FilterTab): Job[] {
   switch (filter) {
     case 'active':
-      return jobs.filter((j) => j.pipeline_stage === 'in_progress' || j.pipeline_stage === 'deposit_collected');
+      return jobs.filter((j) =>
+        j.pipeline_stage === 'deposit_collected' ||
+        j.pipeline_stage === 'job_scheduled' ||
+        j.pipeline_stage === 'in_progress'
+      );
     case 'scheduled':
       return jobs.filter((j) => j.pipeline_stage === 'job_scheduled');
     case 'completed':
@@ -71,13 +76,13 @@ function filterJobs(jobs: Job[], filter: FilterTab): Job[] {
 
 function formatDate(dateStr: string): string {
   const date = new Date(dateStr);
-  return date.toLocaleDateString('en-AU', { day: 'numeric', month: 'short' });
+  return date.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
 }
 
 function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat('en-AU', {
+  return new Intl.NumberFormat('en-US', {
     style: 'currency',
-    currency: 'AUD',
+    currency: 'USD',
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   }).format(amount);
@@ -150,12 +155,14 @@ export default function JobsList({ jobs }: { jobs: Job[] }) {
             </div>
             <h2 className="text-[22px] font-bold text-gray-900 dark:text-gray-100 mb-2 tracking-tight">
               {activeFilter === 'all'
-                ? 'No active jobs yet'
-                : `No ${activeFilter} jobs`}
+                ? 'No jobs yet'
+                : activeFilter === 'active'
+                  ? 'No open jobs'
+                  : `No ${activeFilter} jobs`}
             </h2>
             <p className="text-[15px] leading-relaxed text-gray-500 dark:text-gray-400 max-w-[280px]">
               {activeFilter === 'all'
-                ? 'Jobs will appear here once a customer pays a deposit.'
+                ? 'Jobs show up here after a customer says yes and pays the deposit.'
                 : 'No jobs match this filter right now.'}
             </p>
           </div>

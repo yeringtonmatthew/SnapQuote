@@ -35,6 +35,8 @@ interface EventCreateSheetProps {
   onSave: (event: Partial<CalendarEvent> & { client_id?: string | null }) => void;
   defaultDate?: string;
   defaultTime?: string;
+  defaultEventType?: EventType;
+  createLabel?: string;
   quotes?: QuoteOption[];
   editingEvent?: CalendarEvent;
   saveError?: string | null;
@@ -46,6 +48,8 @@ export default function EventCreateSheet({
   onSave,
   defaultDate,
   defaultTime,
+  defaultEventType,
+  createLabel,
   quotes = [],
   editingEvent,
   saveError,
@@ -118,7 +122,7 @@ export default function EventCreateSheet({
         setLinkedType(editingEvent.quote_id ? 'quote' : (editingEvent as CalendarEvent & { client_id?: string | null }).client_id ? 'client' : null);
       } else {
         setTitle('');
-        setEventType('job_scheduled');
+        setEventType(defaultEventType || 'job_scheduled');
         setEventDate(defaultDate || new Date().toISOString().split('T')[0]);
         setStartTime(defaultTime || '09:00');
         setEndTime(defaultTime ? `${String(Number(defaultTime.split(':')[0]) + 1).padStart(2, '0')}:00` : '10:00');
@@ -134,7 +138,7 @@ export default function EventCreateSheet({
       setClientResults([]);
       setSaving(false);
     }
-  }, [isOpen, editingEvent, defaultDate, defaultTime, searchClients]);
+  }, [isOpen, editingEvent, defaultDate, defaultTime, defaultEventType, searchClients]);
 
   // Filter quotes client-side (small list passed as prop)
   const filteredQuotes = searchQuery.trim()
@@ -142,6 +146,12 @@ export default function EventCreateSheet({
     : quotes.slice(0, 5);
 
   const hasResults = clientResults.length > 0 || filteredQuotes.length > 0;
+  const createSheetTitle = editingEvent ? 'Edit Event' : (createLabel || 'New Event');
+  const titlePlaceholder = !editingEvent && createLabel === 'Add Task'
+    ? 'Task title'
+    : !editingEvent && createLabel === 'Schedule Job'
+      ? 'Job title'
+      : 'Event title';
 
   const handleSelectClient = (client: ClientOption) => {
     setClientId(client.id);
@@ -238,7 +248,7 @@ export default function EventCreateSheet({
             Cancel
           </button>
           <h2 className="text-[16px] font-bold text-gray-900 dark:text-gray-100">
-            {editingEvent ? 'Edit Event' : 'New Event'}
+            {createSheetTitle}
           </h2>
           <button
             onClick={handleSave}
@@ -376,7 +386,7 @@ export default function EventCreateSheet({
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Event title"
+              placeholder={titlePlaceholder}
               className="w-full rounded-xl bg-gray-100 dark:bg-gray-800 px-4 py-3 text-[15px] text-gray-900 dark:text-gray-100 placeholder-gray-400 outline-none focus:ring-2 focus:ring-brand-500/20 transition-all"
             />
           </div>

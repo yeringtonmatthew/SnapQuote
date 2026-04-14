@@ -144,24 +144,25 @@ export default function InvoicesList({ invoices }: { invoices: InvoiceRow[] }) {
           </div>
         </div>
 
-        {/* Filter tabs */}
-        <div className="px-4 lg:px-8 pb-3">
-          <div className="flex gap-2 overflow-x-auto no-scrollbar">
-            {FILTER_TABS.map((tab) => (
-              <button
-                key={tab.key}
-                onClick={() => setActiveFilter(tab.key)}
-                className={`shrink-0 rounded-full px-3.5 py-1.5 text-[13px] font-semibold transition-colors press-scale ${
-                  activeFilter === tab.key
-                    ? 'bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900'
-                    : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
+        {invoices.length > 0 && (
+          <div className="px-4 lg:px-8 pb-3">
+            <div className="flex gap-2 overflow-x-auto no-scrollbar">
+              {FILTER_TABS.map((tab) => (
+                <button
+                  key={tab.key}
+                  onClick={() => setActiveFilter(tab.key)}
+                  className={`shrink-0 rounded-full px-3.5 py-1.5 text-[13px] font-semibold transition-colors press-scale ${
+                    activeFilter === tab.key
+                      ? 'bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900'
+                      : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Invoice list */}

@@ -1,10 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import QuickAddMenu from './QuickAddMenu';
 import MoreMenu from './MoreMenu';
 import { haptic } from '@/lib/haptic';
+import { APP_ROUTE_PREFETCHES } from '@/lib/native-app-routing';
 
 interface BottomNavProps {
   active: 'home' | 'schedule' | 'new' | 'search' | 'more';
@@ -96,7 +98,14 @@ const TABS: (TabDef | 'fab')[] = [
 ];
 
 export default function BottomNav({ active, notificationCount }: BottomNavProps) {
+  const router = useRouter();
   const [showMore, setShowMore] = useState(false);
+
+  useEffect(() => {
+    APP_ROUTE_PREFETCHES.forEach((route) => {
+      router.prefetch(route);
+    });
+  }, [router]);
 
   return (
     <>
@@ -153,7 +162,9 @@ export default function BottomNav({ active, notificationCount }: BottomNavProps)
               <Link
                 key={tab.key}
                 href={tab.href}
+                prefetch
                 aria-current={isActive ? 'page' : undefined}
+                onClick={() => haptic('light')}
                 className="relative flex flex-col items-center gap-0.5 tab-press rounded-lg px-3 py-1 focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
               >
                 <div className="relative flex h-7 w-7 items-center justify-center">

@@ -21,6 +21,7 @@ const nextConfig = {
     const cspDirectives = [
       "default-src 'self'",
       "script-src 'self' 'unsafe-inline' js.stripe.com va.vercel-scripts.com",
+      "worker-src 'self' blob:",
       "style-src 'self' 'unsafe-inline' fonts.googleapis.com",
       "img-src 'self' data: blob: *.supabase.co *.stripe.com",
       "font-src 'self' fonts.gstatic.com",

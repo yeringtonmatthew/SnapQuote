@@ -70,16 +70,16 @@ export function getSmartAction(quote: Quote, now: Date = new Date()): SmartActio
     return {
       type: 'follow_up',
       priority: isStale ? 'high' : 'medium',
-      headline: needsReminder ? `Follow up with ${quote.customer_name}` : 'Waiting on follow-up',
+      headline: needsReminder ? `Check in with ${quote.customer_name}` : 'Waiting to check back',
       description: isStale
-        ? `In follow-up for ${daysSinceCreated} days — send a quote or reach out before they go cold`
-        : `Follow-up lead — ${total > 0 ? fmt(total) + ' potential' : 'reach out to qualify'}`,
+        ? `Waiting ${daysSinceCreated} days — send the quote or reach out before they go cold`
+        : `${total > 0 ? fmt(total) + ' job potential' : 'Reach out to qualify this lead'}`,
       value: total,
       score: isStale ? 75 : needsReminder ? 60 : 30,
       cta: { label: needsReminder ? 'Call Now' : 'Send Quote', variant: needsReminder ? 'call' : 'send' },
       badge: isStale
         ? { label: 'Going Cold', color: 'amber' }
-        : { label: 'Follow Up', color: 'blue' },
+        : { label: 'Check In', color: 'blue' },
     };
   }
 
@@ -98,7 +98,7 @@ export function getSmartAction(quote: Quote, now: Date = new Date()): SmartActio
       score: urgency === 'high' ? 80 : 60,
       cta: { label: status === 'draft' ? 'Edit & Send' : 'Send Quote', variant: 'send' },
       badge: daysSinceCreated > 2
-        ? { label: 'Send', color: 'amber' }
+        ? { label: 'Send Quote', color: 'amber' }
         : { label: 'Draft', color: 'gray' },
     };
   }
@@ -112,11 +112,11 @@ export function getSmartAction(quote: Quote, now: Date = new Date()): SmartActio
         type: 'collect_deposit',
         priority: daysSinceApproved > 2 ? 'critical' : 'high',
         headline: `Collect deposit — ${fmt(deposit)}`,
-        description: `Approved ${daysSinceApproved > 0 ? daysSinceApproved + ' days ago' : 'today'} — collect the ${fmt(deposit)} deposit to lock it in`,
+        description: `Approved ${daysSinceApproved > 0 ? daysSinceApproved + ' days ago' : 'today'} — collect the ${fmt(deposit)} deposit to lock this job in`,
         value: total,
         score: 95 + Math.min(daysSinceApproved, 10),
         cta: { label: 'Share Proposal', variant: 'link' },
-        badge: { label: 'Collect', color: 'green' },
+        badge: { label: 'Deposit', color: 'green' },
       };
     }
 
@@ -132,7 +132,7 @@ export function getSmartAction(quote: Quote, now: Date = new Date()): SmartActio
         type: 'follow_up',
         priority: 'critical',
         headline: `Follow up — ${fmt(total)} at risk`,
-        description: `No response in ${daysSinceSent} days${isCritical ? ' (critical issues found)' : ''}. This deal needs attention now.`,
+        description: `No reply in ${daysSinceSent} days${isCritical ? ' (critical issues found)' : ''}. This job needs attention now.`,
         value: total,
         score: 90 + Math.min(daysSinceSent, 14),
         cta: { label: 'Call Now', variant: 'call' },
@@ -144,12 +144,12 @@ export function getSmartAction(quote: Quote, now: Date = new Date()): SmartActio
       return {
         type: 'follow_up',
         priority: isHighValue || isCritical ? 'high' : 'medium',
-        headline: `Follow up with ${quote.customer_name}`,
-        description: `Sent ${daysSinceSent} day${daysSinceSent !== 1 ? 's' : ''} ago — ${fmt(total)} opportunity`,
+        headline: `Check in with ${quote.customer_name}`,
+        description: `Sent ${daysSinceSent} day${daysSinceSent !== 1 ? 's' : ''} ago — ${fmt(total)} on the table`,
         value: total,
         score: 70 + Math.min(daysSinceSent * 3, 20) + (isHighValue ? 5 : 0) + (isCritical ? 5 : 0),
         cta: { label: 'Send Follow-Up', variant: 'text' },
-        badge: { label: 'Follow Up', color: 'amber' },
+        badge: { label: 'Check In', color: 'amber' },
       };
     }
 
@@ -193,7 +193,7 @@ export function getSmartAction(quote: Quote, now: Date = new Date()): SmartActio
         priority: 'critical',
         headline: isToday ? 'Start job today' : 'Overdue — start this job',
         description: isToday
-          ? `${quote.customer_name}${quote.scheduled_time ? ` at ${quote.scheduled_time}` : ''} — mark as In Progress when you begin`
+          ? `${quote.customer_name}${quote.scheduled_time ? ` at ${quote.scheduled_time}` : ''} — mark as Working when you begin`
           : `Was scheduled for ${quote.scheduled_date} — needs to be started`,
         value: total,
         score: isToday ? 100 : 105,
@@ -224,10 +224,10 @@ export function getSmartAction(quote: Quote, now: Date = new Date()): SmartActio
     return {
       type: 'complete_job',
       priority: allDone ? 'high' : daysSinceStarted > 14 ? 'high' : 'medium',
-      headline: allDone ? 'Mark complete — all tasks done' : 'Complete this job',
+      headline: allDone ? 'Wrap up — all tasks done' : 'Keep this job moving',
       description: taskTotal > 0
-        ? `${done}/${taskTotal} tasks done${daysSinceStarted > 7 ? ` — in progress for ${daysSinceStarted} days` : ''}`
-        : `In progress${daysSinceStarted > 0 ? ` for ${daysSinceStarted} days` : ''} — upload final photos and mark complete`,
+        ? `${done}/${taskTotal} tasks done${daysSinceStarted > 7 ? ` — working for ${daysSinceStarted} days` : ''}`
+        : `Working${daysSinceStarted > 0 ? ` for ${daysSinceStarted} days` : ''} — upload final photos and mark complete`,
       value: balance,
       score: allDone ? 85 : 50 + Math.min(daysSinceStarted, 20),
       cta: { label: allDone ? 'Mark Complete' : 'Update Progress', variant: 'advance' },
@@ -245,12 +245,12 @@ export function getSmartAction(quote: Quote, now: Date = new Date()): SmartActio
       return {
         type: 'send_invoice',
         priority: 'high',
-        headline: `Collect remaining ${fmt(balance)}`,
-        description: `Job complete — send final invoice to ${quote.customer_name}`,
+        headline: `Send final bill — ${fmt(balance)}`,
+        description: `Job is done — collect the remaining balance from ${quote.customer_name}`,
         value: balance,
         score: 80,
         cta: { label: 'Send Invoice', variant: 'link' },
-        badge: { label: 'Invoice', color: 'green' },
+        badge: { label: 'Final Bill', color: 'green' },
       };
     }
 

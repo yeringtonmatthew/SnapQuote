@@ -34,9 +34,25 @@ const categoryColors: Record<string, string> = {
 
 export default function BlogIndex() {
   const articles = getAllArticles();
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Blog',
+    name: 'SnapQuote Blog',
+    description:
+      'Practical advice for roofing contractors. Learn how to write better proposals, collect deposits, choose estimating software, and grow your business.',
+    url: 'https://snapquote.dev/blog',
+    blogPost: articles.map((article) => ({
+      '@type': 'BlogPosting',
+      headline: article.title,
+      url: `https://snapquote.dev/blog/${article.slug}`,
+      datePublished: article.date,
+      keywords: article.targetKeyword,
+    })),
+  };
 
   return (
     <div className="force-light min-h-dvh bg-[#f2f2f7] antialiased">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       {/* Nav */}
       <nav className="sticky top-0 z-50 bg-white/70 backdrop-blur-2xl backdrop-saturate-[1.8] border-b border-black/[0.04]">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 h-16">
@@ -155,6 +171,42 @@ export default function BlogIndex() {
             </Link>
           ))}
         </div>
+
+        <section className="mt-16 rounded-3xl border border-gray-200 bg-white p-8 shadow-sm">
+          <h2 className="text-2xl font-bold tracking-tight text-gray-900">Turn SEO traffic into signed jobs</h2>
+          <p className="mt-3 max-w-3xl text-[15px] leading-relaxed text-gray-600">
+            If someone is reading your proposal, estimating, or roofing sales content, they are already close to the
+            problem SnapQuote solves. These are the highest-intent next steps on the site.
+          </p>
+          <div className="mt-6 grid gap-4 md:grid-cols-3">
+            {[
+              {
+                href: '/roofing-proposal-template',
+                title: 'Roofing proposal template',
+                body: 'Show visitors what a winning roofing proposal should include.',
+              },
+              {
+                href: '/roofing-proposal-software',
+                title: 'Roofing proposal software',
+                body: 'Route proposal-related readers into the product page built around that exact problem.',
+              },
+              {
+                href: '/compare',
+                title: 'Roofing software comparisons',
+                body: 'Catch buyers already comparing Jobber, Roofr, ServiceTitan, and other tools.',
+              },
+            ].map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="rounded-2xl border border-gray-200 bg-gray-50/60 p-5 transition-all hover:border-blue-200 hover:bg-blue-50/50 hover:shadow-sm"
+              >
+                <p className="text-[16px] font-semibold text-gray-900">{item.title}</p>
+                <p className="mt-2 text-[14px] leading-relaxed text-gray-600">{item.body}</p>
+              </Link>
+            ))}
+          </div>
+        </section>
       </main>
 
       {/* Footer */}
@@ -168,6 +220,30 @@ export default function BlogIndex() {
               </span>
             </div>
             <nav aria-label="Footer" className="flex items-center gap-6">
+              <Link
+                href="/compare"
+                className="text-[13px] text-gray-400 transition hover:text-gray-600"
+              >
+                Compare
+              </Link>
+              <Link
+                href="/roofing-proposal-template"
+                className="text-[13px] text-gray-400 transition hover:text-gray-600"
+              >
+                Proposal Template
+              </Link>
+              <Link
+                href="/tools"
+                className="text-[13px] text-gray-400 transition hover:text-gray-600"
+              >
+                Tools
+              </Link>
+              <Link
+                href="/glossary"
+                className="text-[13px] text-gray-400 transition hover:text-gray-600"
+              >
+                Glossary
+              </Link>
               <Link
                 href="/privacy"
                 className="text-[13px] text-gray-400 transition hover:text-gray-600"

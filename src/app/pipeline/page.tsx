@@ -9,14 +9,14 @@ import DesktopSidebar from '@/components/DesktopSidebar';
 import PageTransition from '@/components/PageTransition';
 
 const COLUMN_DEFS: { stage: string; label: string; color: string }[] = [
-  { stage: 'lead', label: 'Lead', color: 'gray-400' },
-  { stage: 'follow_up', label: 'Follow Up', color: 'orange-500' },
-  { stage: 'quote_created', label: 'Quote Created', color: 'slate-500' },
-  { stage: 'quote_sent', label: 'Quote Sent', color: 'blue-500' },
-  { stage: 'deposit_collected', label: 'Deposit Collected', color: 'green-500' },
+  { stage: 'lead', label: 'New Lead', color: 'gray-400' },
+  { stage: 'follow_up', label: 'Check Back', color: 'orange-500' },
+  { stage: 'quote_created', label: 'Draft Quote', color: 'slate-500' },
+  { stage: 'quote_sent', label: 'Sent', color: 'blue-500' },
+  { stage: 'deposit_collected', label: 'Sold', color: 'green-500' },
   { stage: 'job_scheduled', label: 'Scheduled', color: 'amber-500' },
-  { stage: 'in_progress', label: 'In Progress', color: 'indigo-500' },
-  { stage: 'completed', label: 'Completed', color: 'emerald-600' },
+  { stage: 'in_progress', label: 'Working', color: 'indigo-500' },
+  { stage: 'completed', label: 'Done', color: 'emerald-600' },
 ];
 
 function mapStatusToStage(status: string): string {
@@ -50,7 +50,7 @@ export default async function PipelinePage() {
   const { data: quotes } = await supabase
     .from('quotes')
     .select(
-      'id, customer_name, customer_phone, job_address, total, status, pipeline_stage, quote_number, photos, scheduled_date, job_tasks, created_at, paid_at, sent_at, reminder_sent_at, notes',
+      'id, client_id, customer_name, customer_phone, job_address, total, status, pipeline_stage, quote_number, photos, scheduled_date, job_tasks, created_at, paid_at, sent_at, reminder_sent_at, notes',
     )
     .eq('contractor_id', user.id)
     .neq('status', 'cancelled')
@@ -113,10 +113,10 @@ export default async function PipelinePage() {
               <div className="absolute -bottom-1.5 -left-1.5 h-2 w-2 rounded-full bg-brand-300/40 dark:bg-brand-700/30" />
             </div>
             <h2 className="text-[22px] font-bold text-gray-900 dark:text-gray-100 mb-2 tracking-tight">
-              Your pipeline is empty
+              Your quote board is empty
             </h2>
             <p className="text-[15px] leading-relaxed text-gray-500 dark:text-gray-400 max-w-[280px] mb-8">
-              Create your first quote to start tracking jobs from lead to completion.
+              Create your first quote to start tracking leads, follow-ups, and sold jobs in one place.
             </p>
             <Link
               href="/quotes/new"

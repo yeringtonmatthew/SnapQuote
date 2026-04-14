@@ -35,7 +35,11 @@ const ALTERNATIVES_COMPETITORS = [
 
 const INTENT_LANDING_PAGES = [
   'roof-quote-generator',
+  'roof-inspection-report-template',
+  'roofing-estimate-template',
+  'roofing-proposal-template',
   'roofing-proposal-software',
+  'roofing-quote-template',
   'mobile-roofing-estimate-app',
   'roofing-sales-app',
   'roofing-estimate-software',
@@ -59,8 +63,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const staticPages: MetadataRoute.Sitemap = [
     { url: SITE, lastModified: now, changeFrequency: 'weekly', priority: 1 },
-    { url: `${SITE}/auth/login`, lastModified: now, changeFrequency: 'monthly', priority: 0.5 },
-    { url: `${SITE}/auth/signup`, lastModified: now, changeFrequency: 'monthly', priority: 0.7 },
     { url: `${SITE}/privacy`, lastModified: now, changeFrequency: 'yearly', priority: 0.3 },
     { url: `${SITE}/terms`, lastModified: now, changeFrequency: 'yearly', priority: 0.3 },
 

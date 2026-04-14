@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { formatQuoteNumber } from '@/lib/format-quote-number';
 import { relativeTime } from '@/lib/relative-time';
 import { getSmartAction } from '@/lib/smart-actions';
 import { getLeadScore, temperatureStyles } from '@/lib/lead-temperature';
@@ -9,6 +10,7 @@ import type { Quote } from '@/types/database';
 export interface PipelineCardProps {
   quote: {
     id: string;
+    client_id: string | null;
     customer_name: string;
     customer_phone: string | null;
     job_address: string | null;
@@ -186,7 +188,7 @@ export default function PipelineCard({
               </p>
               {quote.quote_number && (
                 <span className="shrink-0 text-[10px] text-gray-300 dark:text-gray-600 font-medium tabular-nums">
-                  #{String(quote.quote_number).padStart(4, '0')}
+                  {formatQuoteNumber(quote.quote_number)}
                 </span>
               )}
             </div>
@@ -288,10 +290,10 @@ export default function PipelineCard({
               {relativeTime(lastTouchTime)}
             </span>
             <span
-              className={`text-[10px] font-semibold tabular-nums ${temperatureStyles[leadScore.temperature].text}`}
+              className={`text-[10px] font-semibold ${temperatureStyles[leadScore.temperature].text}`}
               title={`${leadScore.score}% close likelihood — ${leadScore.reason}`}
             >
-              {temperatureStyles[leadScore.temperature].icon} {leadScore.score}%
+              {temperatureStyles[leadScore.temperature].icon} {leadScore.label}
             </span>
           </div>
         </div>

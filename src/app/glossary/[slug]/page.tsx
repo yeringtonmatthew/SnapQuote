@@ -111,6 +111,35 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
           </section>
         )}
 
+        <section className="mt-12 grid gap-4 sm:grid-cols-3">
+          {[
+            {
+              href: '/roofing-proposal-template',
+              title: 'Roofing proposal template',
+              body: 'See how real roofing terms show up in a customer-ready proposal.',
+            },
+            {
+              href: '/tools/roofing-square-calculator',
+              title: 'Roofing square calculator',
+              body: 'Move from roofing definitions into the actual measurement math.',
+            },
+            {
+              href: '/roofing-proposal-software',
+              title: 'Roofing proposal software',
+              body: 'Turn roof photos and terminology into a polished proposal in one flow.',
+            },
+          ].map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className="rounded-2xl border border-gray-200 bg-white p-5 transition-all hover:border-blue-200 hover:shadow-md"
+            >
+              <p className="text-[16px] font-semibold text-gray-900">{item.title}</p>
+              <p className="mt-2 text-[14px] leading-relaxed text-gray-600">{item.body}</p>
+            </Link>
+          ))}
+        </section>
+
         <section className="mt-16 rounded-2xl bg-blue-50 border border-blue-100 p-8">
           <h2 className="text-xl font-bold text-gray-900">Quote Roofs Faster with SnapQuote</h2>
           <p className="mt-3 text-gray-600 leading-relaxed">

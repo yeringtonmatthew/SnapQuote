@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { startTransition, useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import ShortcutsModal from '@/components/ShortcutsModal';
 
@@ -27,7 +27,9 @@ export default function KeyboardShortcuts() {
       // Cmd/Ctrl+N: New quote
       if (mod && e.key === 'n') {
         e.preventDefault();
-        router.push('/quotes/new');
+        startTransition(() => {
+          router.push('/quotes/new');
+        });
         return;
       }
 
@@ -45,7 +47,9 @@ export default function KeyboardShortcuts() {
       // Cmd/Ctrl+,: Settings
       if (mod && e.key === ',') {
         e.preventDefault();
-        router.push('/settings');
+        startTransition(() => {
+          router.push('/settings');
+        });
         return;
       }
 
@@ -70,6 +74,7 @@ export default function KeyboardShortcuts() {
 
       {/* Floating "?" button — desktop only */}
       <button
+        type="button"
         onClick={openModal}
         aria-label="Keyboard shortcuts"
         className="fixed bottom-6 right-6 z-40 hidden md:flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-400 dark:text-gray-500 shadow-sm hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-600 dark:hover:text-gray-300 transition-colors text-sm font-medium"

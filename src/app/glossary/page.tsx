@@ -127,6 +127,43 @@ export default function GlossaryPage() {
             Try SnapQuote Free for 14 Days
           </Link>
         </section>
+
+        <section className="mt-16 border-t border-gray-100 pt-10">
+          <h2 className="text-sm font-semibold uppercase tracking-[0.18em] text-gray-400">Best Next Steps</h2>
+          <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {[
+              {
+                href: '/roofing-proposal-template',
+                title: 'Roofing proposal template',
+                body: 'Show readers how roofing terms turn into a clean proposal.',
+              },
+              {
+                href: '/roofing-proposal-software',
+                title: 'Roofing proposal software',
+                body: 'Take visitors from definitions into the actual quoting product.',
+              },
+              {
+                href: '/tools/roofing-square-calculator',
+                title: 'Roofing square calculator',
+                body: 'Capture searchers doing measurement math and route them into SnapQuote.',
+              },
+              {
+                href: '/tools/roof-pitch-calculator',
+                title: 'Roof pitch calculator',
+                body: 'Keep glossary traffic moving into your highest-intent utility pages.',
+              },
+            ].map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="rounded-2xl border border-gray-200 bg-white p-5 transition-all hover:border-blue-200 hover:shadow-md"
+              >
+                <p className="text-[16px] font-semibold text-gray-900">{item.title}</p>
+                <p className="mt-2 text-[14px] leading-relaxed text-gray-600">{item.body}</p>
+              </Link>
+            ))}
+          </div>
+        </section>
       </main>
 
       <footer className="border-t border-gray-100 bg-white py-10">

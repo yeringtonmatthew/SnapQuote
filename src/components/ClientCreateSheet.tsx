@@ -71,7 +71,7 @@ export default function ClientCreateSheet({ open, onClose, onCreated }: ClientCr
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || 'Failed to create client');
+        throw new Error(data.error || 'Failed to create customer');
       }
       const client = await res.json();
       reset();
@@ -94,7 +94,7 @@ export default function ClientCreateSheet({ open, onClose, onCreated }: ClientCr
       className="fixed inset-0 z-50 flex items-end sm:items-center sm:justify-center bg-black/40 backdrop-blur-sm animate-modal-backdrop"
       role="dialog"
       aria-modal="true"
-      aria-label="Create new client"
+      aria-label="Create new customer"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
       <div className="w-full sm:max-w-lg rounded-t-3xl sm:rounded-3xl bg-white dark:bg-gray-900 shadow-2xl flex flex-col overflow-hidden max-h-[92dvh] animate-modal-content">
@@ -110,7 +110,7 @@ export default function ClientCreateSheet({ open, onClose, onCreated }: ClientCr
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
-          <h2 className="text-[17px] font-bold text-gray-900 dark:text-gray-100">New Client</h2>
+          <h2 className="text-[17px] font-bold text-gray-900 dark:text-gray-100">New Customer</h2>
           <div className="w-7" /> {/* Spacer for centering */}
         </div>
 

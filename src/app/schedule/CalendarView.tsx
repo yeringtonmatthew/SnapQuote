@@ -1,9 +1,12 @@
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import type { CalendarEvent, EventType } from '@/types/database';
 import EventCreateSheet from '@/components/EventCreateSheet';
+import AddressActionButton from '@/components/ui/AddressActionButton';
+import CopyableLink from '@/components/ui/CopyableLink';
 
 // ── Constants ────────────────────────────────────────────
 const EVENT_COLORS: Record<EventType, string> = {
@@ -289,15 +292,17 @@ function EventDetailSheet({
           {/* Directions — primary CTA */}
           {addr && (
             <div className="px-5 mb-4">
-              <a
-                href={`maps://maps.apple.com/?daddr=${encodeURIComponent(addr)}`}
+              <AddressActionButton
+                address={addr}
                 className="flex items-center justify-center gap-2 w-full rounded-xl bg-brand-600 py-3.5 text-[15px] font-semibold text-white shadow-sm press-scale"
+                copiedMessage="Address copied"
+                sheetTitle="Directions"
               >
                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.75} stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 6.75V15m6-6v8.25m.503 3.498l4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 00-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0z" />
                 </svg>
                 Directions to {addr}
-              </a>
+              </AddressActionButton>
             </div>
           )}
 
@@ -375,22 +380,37 @@ function EventDetailSheet({
           {(phone || email || addr) && (
             <div className="px-5 mb-5 rounded-2xl mx-5 bg-gray-50 dark:bg-gray-800/60 divide-y divide-gray-100 dark:divide-gray-700/50">
               {phone && (
-                <a href={`tel:${phone}`} className="flex items-center gap-3 py-3 press-scale">
+                <CopyableLink
+                  href={`tel:${phone}`}
+                  value={phone}
+                  copiedMessage="Phone copied"
+                  className="flex items-center gap-3 py-3 press-scale"
+                >
                   <svg className="h-4 w-4 shrink-0 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.75} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z" /></svg>
                   <span className="text-[14px] text-gray-700 dark:text-gray-200">{phone}</span>
-                </a>
+                </CopyableLink>
               )}
               {email && (
-                <a href={`mailto:${email}`} className="flex items-center gap-3 py-3 press-scale">
+                <CopyableLink
+                  href={`mailto:${email}`}
+                  value={email}
+                  copiedMessage="Email copied"
+                  className="flex items-center gap-3 py-3 press-scale"
+                >
                   <svg className="h-4 w-4 shrink-0 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.75} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" /></svg>
                   <span className="text-[14px] text-gray-700 dark:text-gray-200 truncate">{email}</span>
-                </a>
+                </CopyableLink>
               )}
               {addr && (
-                <a href={`maps://maps.apple.com/?daddr=${encodeURIComponent(addr)}`} className="flex items-center gap-3 py-3 press-scale">
+                <AddressActionButton
+                  address={addr}
+                  className="flex w-full items-center gap-3 py-3 text-left press-scale"
+                  copiedMessage="Address copied"
+                  sheetTitle="Open Address"
+                >
                   <svg className="h-4 w-4 shrink-0 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.75} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" /></svg>
                   <span className="text-[14px] text-gray-700 dark:text-gray-200">{addr}</span>
-                </a>
+                </AddressActionButton>
               )}
             </div>
           )}
@@ -871,7 +891,7 @@ function NeedsSchedulingSection({ quotes }: { quotes: UnscheduledQuote[] }) {
     <div className="space-y-2">
       <div className="flex items-center justify-between px-1">
         <p className="text-[12px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-          Needs Scheduling ({quotes.length})
+          Ready to Schedule ({quotes.length})
         </p>
         {quotes.length > 3 && (
           <button
@@ -901,7 +921,7 @@ function NeedsSchedulingSection({ quotes }: { quotes: UnscheduledQuote[] }) {
               )}
             </div>
             <span className="text-[12px] font-medium text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 rounded-full px-2 py-0.5 shrink-0">
-              {q.status === 'deposit_paid' ? 'Paid' : 'Approved'}
+              {q.status === 'deposit_paid' ? 'Deposit In' : 'Approved'}
             </span>
           </Link>
         ))}
@@ -912,12 +932,16 @@ function NeedsSchedulingSection({ quotes }: { quotes: UnscheduledQuote[] }) {
 
 // ── Main CalendarView Component ──────────────────────────
 export function CalendarView({ initialEvents, unscheduledQuotes, allQuotes = [] }: CalendarViewProps) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [view, setView] = useState<ViewType>('month');
   const [selectedDate, setSelectedDate] = useState(() => new Date());
   const [events, setEvents] = useState<CalendarEvent[]>(initialEvents);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState<CalendarEvent | undefined>(undefined);
   const [defaultTime, setDefaultTime] = useState<string | undefined>(undefined);
+  const [defaultEventType, setDefaultEventType] = useState<EventType>('job_scheduled');
+  const [createLabel, setCreateLabel] = useState<string>('New Event');
 
   const today = useMemo(() => new Date(), []);
 
@@ -1036,6 +1060,8 @@ export function CalendarView({ initialEvents, unscheduledQuotes, allQuotes = [] 
 
   const handleEmptySlotTap = useCallback((hour: number) => {
     setDefaultTime(`${String(hour).padStart(2, '0')}:00`);
+    setDefaultEventType('job_scheduled');
+    setCreateLabel('New Event');
     setEditingEvent(undefined);
     setSheetOpen(true);
   }, []);
@@ -1043,8 +1069,31 @@ export function CalendarView({ initialEvents, unscheduledQuotes, allQuotes = [] 
   const openCreateSheet = useCallback(() => {
     setEditingEvent(undefined);
     setDefaultTime(undefined);
+    setDefaultEventType('job_scheduled');
+    setCreateLabel('New Event');
     setSheetOpen(true);
   }, []);
+
+  useEffect(() => {
+    if (searchParams.get('create') !== 'true') return;
+
+    const requestedType = searchParams.get('type');
+    const nextType: EventType = requestedType === 'follow_up'
+      ? 'follow_up'
+      : requestedType === 'job_scheduled'
+        ? 'job_scheduled'
+        : 'job_scheduled';
+
+    setEditingEvent(undefined);
+    setDetailEvent(null);
+    setDefaultTime(undefined);
+    setSaveEventError(null);
+    setDefaultEventType(nextType);
+    setCreateLabel(nextType === 'follow_up' ? 'Add Task' : 'Schedule Job');
+    setSheetOpen(true);
+
+    router.replace('/schedule', { scroll: false });
+  }, [router, searchParams]);
 
   return (
     <>
@@ -1181,11 +1230,15 @@ export function CalendarView({ initialEvents, unscheduledQuotes, allQuotes = [] 
           setSheetOpen(false);
           setEditingEvent(undefined);
           setDefaultTime(undefined);
+          setDefaultEventType('job_scheduled');
+          setCreateLabel('New Event');
           setSaveEventError(null);
         }}
         onSave={handleSaveEvent}
         defaultDate={toDateKey(selectedDate)}
         defaultTime={defaultTime}
+        defaultEventType={defaultEventType}
+        createLabel={createLabel}
         quotes={allQuotes.map((q) => ({
           id: q.id,
           customer_name: q.customer_name,

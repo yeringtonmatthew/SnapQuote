@@ -20,6 +20,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return {
     title: `${article.title} | SnapQuote Blog`,
     description: article.metaDescription,
+    keywords: [article.targetKeyword, 'SnapQuote blog', 'roofing contractors'],
     openGraph: {
       title: article.title,
       description: article.metaDescription,
@@ -121,6 +122,7 @@ export default async function BlogArticlePage({ params }: PageProps) {
     },
     image: `https://snapquote.dev/api/og?title=${encodeURIComponent(article.title)}&subtitle=${encodeURIComponent(article.category)}`,
     articleSection: article.category,
+    keywords: article.targetKeyword,
     wordCount: article.content.split(/\s+/).length,
   };
 
@@ -225,6 +227,35 @@ export default async function BlogArticlePage({ params }: PageProps) {
             prose-a:text-brand-600 prose-a:no-underline hover:prose-a:underline"
           dangerouslySetInnerHTML={{ __html: contentHtml }}
         />
+
+        <section className="mt-14 grid gap-4 border-t border-gray-200 pt-10 sm:grid-cols-3">
+          {[
+            {
+              href: '/roofing-proposal-template',
+              title: 'Roofing proposal template',
+              body: 'See a customer-ready proposal structure you can model or automate.',
+            },
+            {
+              href: '/roofing-proposal-software',
+              title: 'Roofing proposal software',
+              body: 'Route proposal readers into the exact product page that solves this workflow.',
+            },
+            {
+              href: '/compare',
+              title: 'Compare roofing software',
+              body: 'Catch buyers researching Jobber, Roofr, ServiceTitan, and other options.',
+            },
+          ].map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className="rounded-2xl border border-gray-200 bg-white p-5 transition-all hover:border-blue-200 hover:shadow-sm"
+            >
+              <p className="text-[16px] font-semibold text-gray-900">{item.title}</p>
+              <p className="mt-2 text-[14px] leading-relaxed text-gray-600">{item.body}</p>
+            </Link>
+          ))}
+        </section>
 
         {/* CTA Banner */}
         <div className="mt-16 rounded-2xl bg-gray-900 p-8 sm:p-10 text-center">

@@ -21,13 +21,13 @@ export default function PipelineHeader({ activeCount, totalValue, isEmpty }: Pip
         <div className="mx-auto flex items-center justify-between">
           <div>
             <h1 className="text-[28px] font-bold tracking-tight text-gray-900 dark:text-gray-100">
-              Pipeline
+              Quote Board
             </h1>
             {!isEmpty && (
               <div className="flex items-center gap-3 mt-1">
                 <span className="inline-flex items-center gap-1.5 text-[13px] text-gray-500 dark:text-gray-400 tabular-nums">
                   <span className="h-1.5 w-1.5 rounded-full bg-brand-500" />
-                  {activeCount} active
+                  {activeCount} active quotes
                 </span>
                 <span className="text-[13px] font-semibold text-gray-700 dark:text-gray-300 tabular-nums">
                   ${totalValue.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
@@ -50,10 +50,11 @@ export default function PipelineHeader({ activeCount, totalValue, isEmpty }: Pip
               >
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
               </svg>
-              Lead
+              Add Lead
             </button>
             <Link
               href="/quotes/new"
+              prefetch
               className="flex items-center gap-1.5 rounded-full bg-brand-600 px-4 py-2.5 text-[13px] font-semibold text-white shadow-sm press-scale transition-colors focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 min-h-[44px]"
             >
               <svg
@@ -66,7 +67,7 @@ export default function PipelineHeader({ activeCount, totalValue, isEmpty }: Pip
               >
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
               </svg>
-              Quote
+              New Quote
             </Link>
           </div>
         </div>

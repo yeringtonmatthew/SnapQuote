@@ -1,6 +1,8 @@
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
+import { formatQuoteNumber } from '@/lib/format-quote-number';
 import { getSchedulingInsights } from '@/lib/scheduling-intelligence';
+import AddressActionButton from '@/components/ui/AddressActionButton';
 import type { Quote } from '@/types/database';
 
 // ── Event type color mapping ──────────────────────────
@@ -16,6 +18,19 @@ const EVENT_TYPE_COLORS: Record<string, { dot: string; border: string }> = {
 
 function getEventColor(type: string) {
   return EVENT_TYPE_COLORS[type] || EVENT_TYPE_COLORS.default;
+}
+
+const EVENT_TYPE_LABELS: Record<string, string> = {
+  job_scheduled: 'Job',
+  site_visit: 'Site Visit',
+  estimate: 'Estimate',
+  follow_up: 'Check-In',
+  meeting: 'Meeting',
+  reminder: 'Reminder',
+};
+
+function getEventLabel(type: string) {
+  return EVENT_TYPE_LABELS[type] || 'On Calendar';
 }
 
 function formatTime(time: string | null): string {
@@ -147,13 +162,13 @@ export default async function DashboardScheduleSection({ userId }: { userId: str
     <>
       {/* Today's Schedule */}
       <section className="lg:col-start-2 lg:row-start-2 lg:row-span-2">
-        <div className="flex items-center justify-between mb-3 px-1">
+        <div className="mb-3 flex items-center justify-between px-1">
           <div className="flex items-center gap-2">
             <svg className="h-4 w-4 text-blue-500" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
             </svg>
-            <h2 className="text-[13px] font-semibold text-gray-900 dark:text-gray-100">
-              Today
+            <h2 className="text-[15px] font-bold text-gray-900 dark:text-gray-100">
+              Today&apos;s Schedule
             </h2>
             {allTodayEvents.length > 0 && (
               <span className="inline-flex items-center justify-center h-5 min-w-[20px] rounded-full bg-blue-600 px-1.5 text-[10px] font-bold text-white">
@@ -161,8 +176,8 @@ export default async function DashboardScheduleSection({ userId }: { userId: str
               </span>
             )}
           </div>
-          <Link href="/schedule" className="text-[12px] font-medium text-brand-600 dark:text-brand-400 active:opacity-70 transition-opacity">
-            Full Schedule
+          <Link href="/schedule" className="text-[13px] font-semibold text-brand-600 transition-opacity active:opacity-70 dark:text-brand-400">
+            Open Calendar
           </Link>
         </div>
 
@@ -175,19 +190,29 @@ export default async function DashboardScheduleSection({ userId }: { userId: str
               const address = typeof event.job_address === 'string' ? event.job_address : '';
 
               return (
-                <div key={event.id as string} className={`rounded-2xl bg-white dark:bg-gray-900 shadow-sm ring-1 ring-black/[0.04] dark:ring-white/[0.06] border-l-[3px] ${colors.border} overflow-hidden`}>
+                <div key={event.id as string} className={`overflow-hidden rounded-2xl border-l-[3px] bg-white shadow-sm ring-1 ring-black/[0.04] dark:bg-gray-900 dark:ring-white/[0.06] ${colors.border}`}>
                   {quoteId ? (
-                    <Link href={`/jobs/${quoteId}`} className="block px-4 pt-3.5 pb-2.5 active:bg-gray-50 dark:active:bg-gray-800 transition-colors">
+                    <Link href={`/jobs/${quoteId}`} className="block px-5 pb-3.5 pt-4 active:bg-gray-50 transition-colors dark:active:bg-gray-800">
                       <div className="flex items-center gap-3">
                         <div className="flex flex-col items-center">
                           <span className={`h-2.5 w-2.5 rounded-full ${colors.dot}`} />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-[14px] font-semibold text-gray-900 dark:text-gray-100 truncate">
+                          <p className="truncate text-[16px] font-semibold text-gray-900 dark:text-gray-100">
                             {(event.customer_name as string) || (event.title as string)}
                           </p>
+                          <div className="mt-1 flex items-center gap-2">
+                            <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-semibold text-gray-500 dark:bg-gray-800 dark:text-gray-400">
+                              {getEventLabel(eventType)}
+                            </span>
+                            {(event.quote_number as number | null) && (
+                              <span className="text-[12px] text-gray-400 dark:text-gray-500 tabular-nums">
+                                {formatQuoteNumber(event.quote_number as number)}
+                              </span>
+                            )}
+                          </div>
                         </div>
-                        <span className="text-[12px] font-medium text-gray-400 dark:text-gray-500 tabular-nums whitespace-nowrap">
+                        <span className="whitespace-nowrap text-[13px] font-semibold text-gray-400 tabular-nums dark:text-gray-500">
                           {formatTime(event.start_time as string | null)}
                         </span>
                         <svg className="h-4 w-4 text-gray-300 dark:text-gray-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" aria-hidden="true">
@@ -196,31 +221,34 @@ export default async function DashboardScheduleSection({ userId }: { userId: str
                       </div>
                     </Link>
                   ) : (
-                    <div className="px-4 pt-3.5 pb-2.5">
+                    <div className="px-5 pb-3.5 pt-4">
                       <div className="flex items-center gap-3">
                         <span className={`h-2.5 w-2.5 rounded-full ${colors.dot}`} />
-                        <p className="text-[14px] font-semibold text-gray-900 dark:text-gray-100 truncate flex-1">
+                        <p className="flex-1 truncate text-[16px] font-semibold text-gray-900 dark:text-gray-100">
                           {(event.customer_name as string) || (event.title as string)}
                         </p>
-                        <span className="text-[12px] font-medium text-gray-400 dark:text-gray-500 tabular-nums whitespace-nowrap">
+                        <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-semibold text-gray-500 dark:bg-gray-800 dark:text-gray-400">
+                          {getEventLabel(eventType)}
+                        </span>
+                        <span className="whitespace-nowrap text-[13px] font-semibold text-gray-400 tabular-nums dark:text-gray-500">
                           {formatTime(event.start_time as string | null)}
                         </span>
                       </div>
                     </div>
                   )}
                   {address && (
-                    <a
-                      href={`https://maps.google.com/?q=${encodeURIComponent(address)}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-1.5 px-4 pb-3 pt-0 ml-[23px] text-[12px] text-brand-600 dark:text-brand-400 active:text-brand-700"
+                    <AddressActionButton
+                      address={address}
+                      className="ml-[23px] flex items-center gap-1.5 px-5 pb-4 pt-0 text-[13px] text-brand-600 active:text-brand-700 dark:text-brand-400"
+                      copiedMessage="Address copied"
+                      sheetTitle="Directions"
                     >
                       <svg className="h-3 w-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
                         <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
                       </svg>
                       <span className="truncate underline underline-offset-2">{address}</span>
-                    </a>
+                    </AddressActionButton>
                   )}
                 </div>
               );
@@ -228,17 +256,17 @@ export default async function DashboardScheduleSection({ userId }: { userId: str
           </div>
         ) : (
           <div className="rounded-2xl bg-white dark:bg-gray-900 shadow-sm ring-1 ring-black/[0.04] dark:ring-white/[0.06] px-5 py-8 text-center">
-            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-gray-100 dark:bg-gray-800 mb-3">
+            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-gray-100 dark:bg-gray-800">
               <svg className="h-6 w-6 text-gray-400 dark:text-gray-500" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
               </svg>
             </div>
-            <p className="text-[14px] font-medium text-gray-500 dark:text-gray-400">No jobs scheduled today</p>
-            <Link href="/schedule" className="inline-flex items-center gap-1.5 mt-3 rounded-full bg-brand-600 px-4 py-2 text-[13px] font-semibold text-white shadow-sm active:scale-[0.97] transition-all">
+            <p className="text-[15px] font-medium text-gray-500 dark:text-gray-400">Nothing on the calendar today</p>
+            <Link href="/schedule" className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-brand-600 px-4 py-2.5 text-[13px] font-semibold text-white shadow-sm transition-all active:scale-[0.97]">
               <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
               </svg>
-              Schedule a Job
+              Open Calendar
             </Link>
           </div>
         )}
@@ -247,8 +275,8 @@ export default async function DashboardScheduleSection({ userId }: { userId: str
       {/* Scheduling Intelligence */}
       {schedulingInsights.length > 0 && (
         <section className="lg:col-start-2">
-          <h2 className="mb-3 px-1 text-[11px] font-semibold uppercase tracking-widest text-gray-400">
-            Scheduling
+          <h2 className="mb-3 px-1 text-[12px] font-semibold uppercase tracking-[0.16em] text-gray-400">
+            Plan Ahead
           </h2>
           <div className="space-y-2">
             {schedulingInsights.slice(0, 3).map((insight, idx) => {
@@ -279,8 +307,8 @@ export default async function DashboardScheduleSection({ userId }: { userId: str
                     {style.icon}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-[13px] font-semibold text-gray-900 dark:text-gray-100">{insight.headline}</p>
-                    <p className="text-[12px] text-gray-500 dark:text-gray-400 mt-0.5">{insight.description}</p>
+                    <p className="text-[14px] font-semibold text-gray-900 dark:text-gray-100">{insight.headline}</p>
+                    <p className="mt-1 text-[13px] text-gray-500 dark:text-gray-400">{insight.description}</p>
                   </div>
                 </div>
               );

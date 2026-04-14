@@ -1,12 +1,17 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { relativeTime } from '@/lib/relative-time';
 import AddressAutocomplete from '@/components/ui/AddressAutocomplete';
+import AddressActionButton from '@/components/ui/AddressActionButton';
+import CopyableLink from '@/components/ui/CopyableLink';
+import { useLongPressCopy } from '@/components/ui/useLongPressCopy';
 import { LEAD_SOURCES } from '@/lib/constants';
+import { formatQuoteNumber } from '@/lib/format-quote-number';
 import type { LeadSourceValue } from '@/types/database';
+import { CONTRACTOR_STAGE_LABELS } from '@/lib/crm-stage-labels';
 
 interface ClientData {
   id: string;
@@ -35,17 +40,6 @@ interface QuoteItem {
   job_address: string | null;
   photos: string[];
 }
-
-const stageLabels: Record<string, string> = {
-  lead: 'Lead',
-  follow_up: 'Follow Up',
-  quote_created: 'Quote Created',
-  quote_sent: 'Quote Sent',
-  deposit_collected: 'Deposit Collected',
-  job_scheduled: 'Scheduled',
-  in_progress: 'In Progress',
-  completed: 'Completed',
-};
 
 const stageDotColors: Record<string, string> = {
   lead: 'bg-gray-400',
@@ -112,38 +106,6 @@ function PhoneActions({ phone, onClose }: { phone: string; onClose: () => void }
   );
 }
 
-// ── Address action sheet ────────────────────────
-function AddressActions({ address, onClose }: { address: string; onClose: () => void }) {
-  const encoded = encodeURIComponent(address);
-  return (
-    <>
-      <div className="fixed inset-0 z-50 bg-black/40 animate-sheet-backdrop" onClick={onClose} />
-      <div className="fixed inset-x-0 bottom-0 z-50 animate-sheet-up">
-        <div className="mx-auto max-w-lg rounded-t-2xl bg-white dark:bg-gray-900 shadow-2xl pb-8">
-          <div className="flex justify-center pt-3 pb-4">
-            <div className="h-1 w-8 rounded-full bg-gray-300 dark:bg-gray-700" />
-          </div>
-          <p className="text-center text-[14px] text-gray-500 dark:text-gray-400 mb-4 px-5 truncate">{address}</p>
-          <div className="px-5 space-y-2">
-            <a href={`maps://maps.apple.com/?daddr=${encoded}`} className="flex items-center gap-3 rounded-xl bg-gray-50 dark:bg-gray-800 px-4 py-3.5 press-scale">
-              <svg className="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" strokeWidth={1.75} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M9 6.75V15m6-6v8.25m.503 3.498l4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 00-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0z" /></svg>
-              <span className="text-[15px] font-semibold text-gray-900 dark:text-gray-100">Apple Maps</span>
-            </a>
-            <a href={`https://www.google.com/maps/dir/?api=1&destination=${encoded}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 rounded-xl bg-gray-50 dark:bg-gray-800 px-4 py-3.5 press-scale">
-              <svg className="h-5 w-5 text-green-600" fill="none" viewBox="0 0 24 24" strokeWidth={1.75} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" /></svg>
-              <span className="text-[15px] font-semibold text-gray-900 dark:text-gray-100">Google Maps</span>
-            </a>
-            <button onClick={() => { navigator.clipboard.writeText(address); onClose(); }} className="flex items-center gap-3 rounded-xl bg-gray-50 dark:bg-gray-800 px-4 py-3.5 press-scale w-full">
-              <svg className="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" strokeWidth={1.75} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M15.666 3.888A2.25 2.25 0 0013.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 01-.75.75H9.75a.75.75 0 01-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 01-2.25 2.25H6.75A2.25 2.25 0 014.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 011.927-.184" /></svg>
-              <span className="text-[15px] font-semibold text-gray-900 dark:text-gray-100">Copy Address</span>
-            </button>
-          </div>
-        </div>
-      </div>
-    </>
-  );
-}
-
 export default function ClientProfileContent({ client, quotes, totalRevenue, totalQuoted }: Props) {
   const router = useRouter();
   const [editing, setEditing] = useState(false);
@@ -156,13 +118,17 @@ export default function ClientProfileContent({ client, quotes, totalRevenue, tot
   const [leadSource, setLeadSource] = useState<LeadSourceValue | ''>(client.lead_source || '');
   const [saving, setSaving] = useState(false);
   const [showPhoneActions, setShowPhoneActions] = useState(false);
-  const [showAddressActions, setShowAddressActions] = useState(false);
   const [noteText, setNoteText] = useState('');
   const [savingNote, setSavingNote] = useState(false);
   const [generatingReport, setGeneratingReport] = useState(false);
   const [tags, setTags] = useState<string[]>(client.tags || []);
   const [newTag, setNewTag] = useState('');
   const [showTagInput, setShowTagInput] = useState(false);
+  const noteInputRef = useRef<HTMLInputElement>(null);
+  const phoneCopyProps = useLongPressCopy({
+    value: client.phone,
+    successMessage: 'Phone copied',
+  });
 
   const TAG_COLORS = [
     'bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300',
@@ -269,7 +235,12 @@ export default function ClientProfileContent({ client, quotes, totalRevenue, tot
 
   const initial = client.name.charAt(0).toUpperCase();
   const gradientColor = avatarColor(client.name);
-  const activeJobs = quotes.filter((q) => q.pipeline_stage !== 'completed').length;
+  const openItems = quotes.filter((q) => q.pipeline_stage !== 'completed').length;
+
+  const focusNoteComposer = useCallback(() => {
+    noteInputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    window.setTimeout(() => noteInputRef.current?.focus(), 250);
+  }, []);
 
   return (
     <>
@@ -296,16 +267,18 @@ export default function ClientProfileContent({ client, quotes, totalRevenue, tot
           <h1 className="text-[20px] font-bold text-white tracking-tight text-center">{client.name}</h1>
           {client.company && <p className="text-[13px] text-white/50 mt-0.5">{client.company}</p>}
           {client.address && (
-            <button
-              onClick={() => setShowAddressActions(true)}
+            <AddressActionButton
+              address={client.address}
               className="text-[12px] text-white/40 mt-1 flex items-center gap-1 press-scale"
+              copiedMessage="Address copied"
+              sheetTitle="Open Address"
             >
               <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
                 <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
               </svg>
               {client.address}
-            </button>
+            </AddressActionButton>
           )}
         </div>
       </header>
@@ -345,12 +318,17 @@ export default function ClientProfileContent({ client, quotes, totalRevenue, tot
 
           {/* Directions */}
           {client.address ? (
-            <a href={`maps://maps.apple.com/?daddr=${encodeURIComponent(client.address)}`} className="flex flex-col items-center gap-1.5 rounded-2xl bg-white dark:bg-gray-900 pt-5 pb-3 ring-1 ring-black/[0.04] dark:ring-white/[0.06] shadow-sm press-scale">
+            <AddressActionButton
+              address={client.address}
+              className="flex flex-col items-center gap-1.5 rounded-2xl bg-white dark:bg-gray-900 pt-5 pb-3 ring-1 ring-black/[0.04] dark:ring-white/[0.06] shadow-sm press-scale"
+              copiedMessage="Address copied"
+              sheetTitle="Directions"
+            >
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 dark:bg-indigo-950/40">
                 <svg className="h-5 w-5 text-indigo-600" fill="none" viewBox="0 0 24 24" strokeWidth={1.75} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M9 6.75V15m6-6v8.25m.503 3.498l4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 00-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0z" /></svg>
               </div>
               <span className="text-[10px] font-semibold text-gray-500">Directions</span>
-            </a>
+            </AddressActionButton>
           ) : (
             <div className="flex flex-col items-center gap-1.5 rounded-2xl bg-white/60 dark:bg-gray-900/60 pt-5 pb-3 ring-1 ring-black/[0.02] opacity-40">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gray-50"><svg className="h-5 w-5 text-gray-300" fill="none" viewBox="0 0 24 24" strokeWidth={1.75} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M9 6.75V15m6-6v8.25m.503 3.498l4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 00-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0z" /></svg></div>
@@ -358,13 +336,16 @@ export default function ClientProfileContent({ client, quotes, totalRevenue, tot
             </div>
           )}
 
-          {/* Create Job */}
-          <Link href={`/quotes/new?client_id=${client.id}`} className="flex flex-col items-center gap-1.5 rounded-2xl bg-white dark:bg-gray-900 pt-5 pb-3 ring-1 ring-black/[0.04] dark:ring-white/[0.06] shadow-sm press-scale">
+          {/* Quick Note */}
+          <button
+            onClick={focusNoteComposer}
+            className="flex flex-col items-center gap-1.5 rounded-2xl bg-white dark:bg-gray-900 pt-5 pb-3 ring-1 ring-black/[0.04] dark:ring-white/[0.06] shadow-sm press-scale"
+          >
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 dark:bg-amber-950/40">
-              <svg className="h-5 w-5 text-amber-600" fill="none" viewBox="0 0 24 24" strokeWidth={1.75} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+              <svg className="h-5 w-5 text-amber-600" fill="none" viewBox="0 0 24 24" strokeWidth={1.75} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>
             </div>
-            <span className="text-[10px] font-semibold text-gray-500">Job</span>
-          </Link>
+            <span className="text-[10px] font-semibold text-gray-500">Note</span>
+          </button>
 
           {/* Create Quote */}
           <Link href={`/quotes/new?client_id=${client.id}`} className="flex flex-col items-center gap-1.5 rounded-2xl bg-white dark:bg-gray-900 pt-5 pb-3 ring-1 ring-black/[0.04] dark:ring-white/[0.06] shadow-sm press-scale">
@@ -381,15 +362,15 @@ export default function ClientProfileContent({ client, quotes, totalRevenue, tot
         <div className="grid grid-cols-3 gap-3">
           <div className="rounded-xl bg-white dark:bg-gray-900 p-3 ring-1 ring-black/[0.04] dark:ring-white/[0.06] text-center">
             <p className="text-[18px] font-bold text-gray-900 dark:text-gray-100 tabular-nums">${totalRevenue.toLocaleString('en-US', { maximumFractionDigits: 0 })}</p>
-            <p className="text-[11px] text-gray-400 mt-0.5">Revenue</p>
+            <p className="text-[11px] text-gray-400 mt-0.5">Collected</p>
           </div>
           <div className="rounded-xl bg-white dark:bg-gray-900 p-3 ring-1 ring-black/[0.04] dark:ring-white/[0.06] text-center">
-            <p className="text-[18px] font-bold text-gray-900 dark:text-gray-100 tabular-nums">{quotes.length}</p>
-            <p className="text-[11px] text-gray-400 mt-0.5">Total Jobs</p>
+            <p className="text-[18px] font-bold text-gray-900 dark:text-gray-100 tabular-nums">${totalQuoted.toLocaleString('en-US', { maximumFractionDigits: 0 })}</p>
+            <p className="text-[11px] text-gray-400 mt-0.5">Quoted</p>
           </div>
           <div className="rounded-xl bg-white dark:bg-gray-900 p-3 ring-1 ring-black/[0.04] dark:ring-white/[0.06] text-center">
-            <p className="text-[18px] font-bold text-gray-900 dark:text-gray-100 tabular-nums">{activeJobs}</p>
-            <p className="text-[11px] text-gray-400 mt-0.5">Active</p>
+            <p className="text-[18px] font-bold text-gray-900 dark:text-gray-100 tabular-nums">{openItems}</p>
+            <p className="text-[11px] text-gray-400 mt-0.5">Open</p>
           </div>
         </div>
       </div>
@@ -401,7 +382,7 @@ export default function ClientProfileContent({ client, quotes, totalRevenue, tot
           {/* Edit form */}
           {editing && (
             <div className="rounded-2xl bg-white dark:bg-gray-900 p-4 ring-1 ring-black/[0.04] dark:ring-white/[0.06] space-y-3">
-              <h3 className="text-[14px] font-bold text-gray-900 dark:text-gray-100">Edit Client</h3>
+              <h3 className="text-[14px] font-bold text-gray-900 dark:text-gray-100">Edit Customer</h3>
               <input type="text" placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} className="w-full rounded-xl bg-gray-50 dark:bg-gray-800 px-4 py-2.5 text-[14px] text-gray-900 dark:text-gray-100 ring-1 ring-black/[0.04] dark:ring-white/[0.06] focus:outline-none focus:ring-2 focus:ring-brand-500" />
               <input type="tel" placeholder="Phone" value={phone} onChange={(e) => setPhone(e.target.value)} className="w-full rounded-xl bg-gray-50 dark:bg-gray-800 px-4 py-2.5 text-[14px] text-gray-900 dark:text-gray-100 ring-1 ring-black/[0.04] dark:ring-white/[0.06] focus:outline-none focus:ring-2 focus:ring-brand-500" />
               <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full rounded-xl bg-gray-50 dark:bg-gray-800 px-4 py-2.5 text-[14px] text-gray-900 dark:text-gray-100 ring-1 ring-black/[0.04] dark:ring-white/[0.06] focus:outline-none focus:ring-2 focus:ring-brand-500" />
@@ -427,7 +408,11 @@ export default function ClientProfileContent({ client, quotes, totalRevenue, tot
           {!editing && (
             <div className="rounded-2xl bg-white dark:bg-gray-900 ring-1 ring-black/[0.04] dark:ring-white/[0.06] divide-y divide-gray-100 dark:divide-gray-800">
               {client.phone && (
-                <button onClick={() => setShowPhoneActions(true)} className="flex items-center gap-3 px-4 py-3 w-full text-left press-scale">
+                <button
+                  onClick={() => setShowPhoneActions(true)}
+                  className="flex items-center gap-3 px-4 py-3 w-full text-left press-scale"
+                  {...phoneCopyProps}
+                >
                   <svg className="h-4 w-4 text-gray-400 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={1.75} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z" /></svg>
                   <div className="flex-1 min-w-0">
                     <p className="text-[13px] text-gray-900 dark:text-gray-100">{client.phone}</p>
@@ -437,23 +422,33 @@ export default function ClientProfileContent({ client, quotes, totalRevenue, tot
                 </button>
               )}
               {client.email && (
-                <a href={`mailto:${client.email}`} className="flex items-center gap-3 px-4 py-3 press-scale">
+                <CopyableLink
+                  href={`mailto:${client.email}`}
+                  value={client.email}
+                  copiedMessage="Email copied"
+                  className="flex items-center gap-3 px-4 py-3 press-scale"
+                >
                   <svg className="h-4 w-4 text-gray-400 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={1.75} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" /></svg>
                   <div className="flex-1 min-w-0">
                     <p className="text-[13px] text-gray-900 dark:text-gray-100 truncate">{client.email}</p>
                     <p className="text-[11px] text-gray-400">Email</p>
                   </div>
-                </a>
+                </CopyableLink>
               )}
               {client.address && (
-                <button onClick={() => setShowAddressActions(true)} className="flex items-center gap-3 px-4 py-3 w-full text-left press-scale">
+                <AddressActionButton
+                  address={client.address}
+                  className="flex w-full items-center gap-3 px-4 py-3 text-left press-scale"
+                  copiedMessage="Address copied"
+                  sheetTitle="Address Options"
+                >
                   <svg className="h-4 w-4 text-gray-400 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={1.75} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" /></svg>
                   <div className="flex-1 min-w-0">
                     <p className="text-[13px] text-gray-900 dark:text-gray-100 truncate">{client.address}</p>
                     <p className="text-[11px] text-gray-400">Address</p>
                   </div>
                   <svg className="h-3.5 w-3.5 text-gray-300" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
-                </button>
+                </AddressActionButton>
               )}
               {!client.phone && !client.email && !client.address && (
                 <div className="px-4 py-4 text-center">
@@ -540,9 +535,9 @@ export default function ClientProfileContent({ client, quotes, totalRevenue, tot
           </div>
 
           {/* Inline notes */}
-          <div className="rounded-2xl bg-white dark:bg-gray-900 ring-1 ring-black/[0.04] dark:ring-white/[0.06] overflow-hidden">
+          <div id="customer-notes" className="rounded-2xl bg-white dark:bg-gray-900 ring-1 ring-black/[0.04] dark:ring-white/[0.06] overflow-hidden">
             <div className="px-4 pt-3 pb-2 flex items-center justify-between">
-              <h3 className="text-[12px] font-semibold text-gray-400 uppercase tracking-wider">Notes</h3>
+              <h3 className="text-[12px] font-semibold text-gray-400 uppercase tracking-wider">Customer Notes</h3>
               {client.address && (
                 <button
                   onClick={handleGenerateReport}
@@ -560,6 +555,7 @@ export default function ClientProfileContent({ client, quotes, totalRevenue, tot
             <div className="px-4 pb-3">
               <div className="flex gap-2">
                 <input
+                  ref={noteInputRef}
                   type="text"
                   placeholder="Add a note..."
                   value={noteText}
@@ -588,13 +584,13 @@ export default function ClientProfileContent({ client, quotes, totalRevenue, tot
         <div className="mt-4 lg:mt-0 space-y-5">
           <div>
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-[14px] font-bold text-gray-900 dark:text-gray-100">Jobs ({quotes.length})</h3>
+            <h3 className="text-[14px] font-bold text-gray-900 dark:text-gray-100">Work History ({quotes.length})</h3>
             <Link href={`/quotes/new?client_id=${client.id}`} className="text-[12px] font-semibold text-brand-600 press-scale">+ New Quote</Link>
           </div>
 
           {quotes.length === 0 ? (
             <div className="rounded-2xl bg-white dark:bg-gray-900 p-6 ring-1 ring-black/[0.04] dark:ring-white/[0.06] text-center">
-              <p className="text-[13px] text-gray-400">No jobs yet for this client.</p>
+              <p className="text-[13px] text-gray-400">No work yet for this customer.</p>
               <Link href={`/quotes/new?client_id=${client.id}`} className="inline-flex items-center gap-1.5 mt-3 text-[13px] font-semibold text-brand-600 press-scale">
                 <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
                 Create First Quote
@@ -618,14 +614,14 @@ export default function ClientProfileContent({ client, quotes, totalRevenue, tot
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center justify-between gap-2">
                         <div className="flex items-center gap-1.5 min-w-0">
-                          {q.quote_number && <span className="text-[11px] text-gray-400 tabular-nums">#{String(q.quote_number).padStart(4, '0')}</span>}
+                          {q.quote_number && <span className="text-[11px] text-gray-400 tabular-nums">{formatQuoteNumber(q.quote_number)}</span>}
                           <p className="truncate text-[13px] text-gray-500">{q.job_address || 'No address'}</p>
                         </div>
                         <span className="shrink-0 text-[14px] font-semibold text-gray-900 dark:text-gray-100 tabular-nums">${Number(q.total).toLocaleString('en-US', { maximumFractionDigits: 0 })}</span>
                       </div>
                       <div className="flex items-center gap-1.5 mt-1">
                         <span className={`h-1.5 w-1.5 rounded-full ${dotColor}`} />
-                        <span className="text-[11px] text-gray-400">{stageLabels[stage] || stage}</span>
+                        <span className="text-[11px] text-gray-400">{CONTRACTOR_STAGE_LABELS[stage as keyof typeof CONTRACTOR_STAGE_LABELS] || stage}</span>
                         <span className="flex-1" />
                         <span className="text-[11px] text-gray-300 dark:text-gray-600 tabular-nums">{relativeTime(q.created_at)}</span>
                       </div>
@@ -641,7 +637,7 @@ export default function ClientProfileContent({ client, quotes, totalRevenue, tot
           {quotes.length > 0 && (() => {
             const events: { date: string; icon: string; iconBg: string; label: string; detail?: string }[] = [];
             quotes.forEach((q) => {
-              const qLabel = q.quote_number ? `#${String(q.quote_number).padStart(4, '0')}` : '';
+              const qLabel = q.quote_number ? formatQuoteNumber(q.quote_number) : '';
               events.push({ date: q.created_at, icon: '📝', iconBg: 'bg-gray-100', label: `Quote ${qLabel} created`, detail: `$${Number(q.total).toLocaleString()}` });
               if (q.sent_at) events.push({ date: q.sent_at, icon: '📤', iconBg: 'bg-blue-50', label: `Quote ${qLabel} sent` });
               if (q.paid_at) events.push({ date: q.paid_at, icon: '💰', iconBg: 'bg-green-50', label: `Payment received`, detail: `$${Number(q.total).toLocaleString()}` });
@@ -675,7 +671,6 @@ export default function ClientProfileContent({ client, quotes, totalRevenue, tot
 
       {/* Action sheets */}
       {showPhoneActions && client.phone && <PhoneActions phone={client.phone} onClose={() => setShowPhoneActions(false)} />}
-      {showAddressActions && client.address && <AddressActions address={client.address} onClose={() => setShowAddressActions(false)} />}
     </>
   );
 }

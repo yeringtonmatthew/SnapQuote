@@ -25,12 +25,28 @@ function getPasswordStrength(pw: string): 0 | 1 | 2 | 3 {
 
 const strengthLabels = ['', 'Weak', 'Medium', 'Strong'];
 const strengthColors = ['', 'bg-red-500', 'bg-yellow-500', 'bg-green-500'];
+const SOCIAL_AUTH_ENABLED = process.env.NEXT_PUBLIC_SOCIAL_AUTH_ENABLED === 'true';
+
+function getFriendlySignupError(message: string): string {
+  const normalized = message.toLowerCase();
+
+  if (normalized.includes('email rate limit exceeded')) {
+    return 'We just hit our confirmation email sending limit. Please wait a minute and try again.';
+  }
+
+  if (normalized.includes('email address') && normalized.includes('is invalid')) {
+    return 'Enter a valid email address.';
+  }
+
+  return message;
+}
 
 export default function SignupPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
+  const [confirmationEmail, setConfirmationEmail] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -70,23 +86,37 @@ export default function SignupPage() {
     setError(null);
 
     const supabase = createClient();
+    const emailRedirectTo =
+      typeof window !== 'undefined'
+        ? `${window.location.origin}/auth/callback?next=${encodeURIComponent('/onboarding')}`
+        : undefined;
 
-    const { error: signupError } = await supabase.auth.signUp({
+    const { data, error: signupError } = await supabase.auth.signUp({
       email,
       password,
       options: {
         data: { full_name: fullName },
+        ...(emailRedirectTo ? { emailRedirectTo } : {}),
       },
     });
 
     if (signupError) {
-      setError(signupError.message);
+      setError(getFriendlySignupError(signupError.message));
+      setLoading(false);
+      return;
+    }
+
+    // When email confirmation is enabled in Supabase, signUp may not create a
+    // session immediately. In that case keep the user on a success state rather
+    // than bouncing them into /auth/login?next=/onboarding.
+    if (!data.session) {
+      setConfirmationEmail(email);
       setLoading(false);
       return;
     }
 
     // Update the user profile with full name
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = data.user;
     if (user) {
       await supabase
         .from('users')
@@ -99,6 +129,48 @@ export default function SignupPage() {
     }
 
     router.push('/onboarding');
+  }
+
+  if (confirmationEmail) {
+    return (
+      <main className="flex min-h-dvh flex-col justify-center px-6 py-12 bg-white dark:bg-gray-950">
+        <div className="mx-auto w-full max-w-sm animate-fade-up text-center">
+          <SnapQuoteLogo size="lg" variant="mark" className="justify-center" />
+          <div className="mx-auto mt-8 flex h-16 w-16 items-center justify-center rounded-2xl bg-green-50 text-green-600 dark:bg-green-900/20 dark:text-green-400">
+            <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" strokeWidth="1.8" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 8.25v8.25A2.25 2.25 0 0119.5 18.75h-15A2.25 2.25 0 012.25 16.5V8.25m19.5 0A2.25 2.25 0 0019.5 6h-15a2.25 2.25 0 00-2.25 2.25m19.5 0l-8.69 5.517a2.25 2.25 0 01-2.12 0L2.25 8.25" />
+            </svg>
+          </div>
+          <h1 className="mt-6 text-2xl font-bold text-gray-900 dark:text-gray-100">
+            Check your email
+          </h1>
+          <p className="mt-3 text-[15px] leading-relaxed text-gray-500 dark:text-gray-400">
+            We sent a confirmation link to <span className="font-medium text-gray-900 dark:text-gray-100">{confirmationEmail}</span>.
+            Open it to finish setting up your account, and we&apos;ll bring you straight into onboarding.
+          </p>
+
+          <div className="mt-8 rounded-2xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 p-5 text-left">
+            <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">Next step</p>
+            <p className="mt-2 text-sm leading-relaxed text-gray-500 dark:text-gray-400">
+              If the email doesn&apos;t show up in a minute, check spam or promotions and then come back here.
+            </p>
+          </div>
+
+          <div className="mt-8 space-y-3">
+            <Link href="/auth/login" className="btn-primary block">
+              Back to Login
+            </Link>
+            <button
+              type="button"
+              onClick={() => setConfirmationEmail(null)}
+              className="w-full rounded-full px-5 py-3 text-sm font-medium text-gray-500 transition hover:text-gray-700"
+            >
+              Use a different email
+            </button>
+          </div>
+        </div>
+      </main>
+    );
   }
 
   return (
@@ -115,23 +187,27 @@ export default function SignupPage() {
           </p>
         </div>
 
-        {/* Social Auth */}
-        <div className="mt-8">
-          <SocialAuthButtons redirectTo="/onboarding" />
-        </div>
+        {SOCIAL_AUTH_ENABLED && (
+          <>
+            {/* Social Auth */}
+            <div className="mt-8">
+              <SocialAuthButtons redirectTo="/onboarding" />
+            </div>
 
-        {/* Divider */}
-        <div className="relative mt-6">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-gray-200 dark:border-gray-800" />
-          </div>
-          <div className="relative flex justify-center text-sm">
-            <span className="bg-white dark:bg-gray-950 px-4 text-gray-400">or</span>
-          </div>
-        </div>
+            {/* Divider */}
+            <div className="relative mt-6">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-200 dark:border-gray-800" />
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="bg-white dark:bg-gray-950 px-4 text-gray-400">or</span>
+              </div>
+            </div>
+          </>
+        )}
 
         {/* Form */}
-        <form onSubmit={handleSignup} className="mt-6 space-y-5" noValidate>
+        <form onSubmit={handleSignup} method="post" action="/auth/signup" className="mt-6 space-y-5" noValidate>
           {error && (
             <div role="alert" className="rounded-xl bg-red-50 dark:bg-red-950/40 px-4 py-3 text-sm text-red-600 dark:text-red-400">
               {error}

@@ -35,7 +35,7 @@ export default function SmartActionsBar({
 
   if (followUpCount > 0) {
     items.push({
-      label: `${followUpCount} need${followUpCount === 1 ? 's' : ''} follow-up`,
+      label: `${followUpCount} quote${followUpCount === 1 ? '' : 's'} to check on`,
       count: followUpCount,
       href: '/pipeline?stage=quote_sent',
       color: 'orange',
@@ -49,7 +49,7 @@ export default function SmartActionsBar({
 
   if (depositsCount > 0) {
     items.push({
-      label: `${depositsCount} deposit${depositsCount === 1 ? '' : 's'} pending`,
+      label: `${depositsCount} deposit${depositsCount === 1 ? '' : 's'} to collect`,
       count: depositsCount,
       href: '/pipeline?stage=deposit_collected',
       color: 'emerald',
@@ -63,7 +63,7 @@ export default function SmartActionsBar({
 
   if (collectableAmount > 0) {
     items.push({
-      label: `${fmtMoney(collectableAmount)} to collect`,
+      label: `${fmtMoney(collectableAmount)} ready to collect`,
       count: 0,
       value: collectableAmount,
       href: '/pipeline?stage=deposit_collected',
@@ -78,7 +78,7 @@ export default function SmartActionsBar({
 
   if (awaitingCount > 0) {
     items.push({
-      label: `${awaitingCount} awaiting reply`,
+      label: `${awaitingCount} quote${awaitingCount === 1 ? '' : 's'} waiting on reply`,
       count: awaitingCount,
       href: '/pipeline?stage=quote_sent',
       color: 'amber',
@@ -92,7 +92,7 @@ export default function SmartActionsBar({
 
   if (todayJobsCount > 0) {
     items.push({
-      label: `${todayJobsCount} job${todayJobsCount === 1 ? '' : 's'} today`,
+      label: `${todayJobsCount} job${todayJobsCount === 1 ? '' : 's'} scheduled today`,
       count: todayJobsCount,
       href: '/schedule',
       color: 'blue',
@@ -106,7 +106,7 @@ export default function SmartActionsBar({
 
   if (jobsToScheduleCount > 0) {
     items.push({
-      label: `${jobsToScheduleCount} to schedule`,
+      label: `${jobsToScheduleCount} sold job${jobsToScheduleCount === 1 ? '' : 's'} to schedule`,
       count: jobsToScheduleCount,
       href: '/schedule',
       color: 'blue',
@@ -154,24 +154,34 @@ export default function SmartActionsBar({
   };
 
   return (
-    <div className="flex flex-wrap gap-2.5 pb-1">
-      {items.map((item, i) => {
-        const c = colorMap[item.color];
-        return (
-          <Link
-            key={i}
-            href={item.href}
-            className={`flex items-center gap-2.5 rounded-2xl ${c.bg} ring-1 ${c.ring} px-4 py-3 min-h-[52px] active:scale-[0.97] transition-all`}
-          >
-            <div className={`flex h-8 w-8 items-center justify-center rounded-xl ${c.icon}`}>
-              {item.icon}
-            </div>
-            <p className={`text-[13px] font-semibold ${c.text} whitespace-nowrap`}>
-              {item.label}
-            </p>
-          </Link>
-        );
-      })}
-    </div>
+    <section className="space-y-2.5">
+      <div className="flex items-center gap-2 px-1">
+        <svg className="h-4 w-4 text-brand-500" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" aria-hidden="true">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l3-3m0 0l3 3m-3-3v7.5m5.25-10.5h8.25m-8.25 4.5h5.25" />
+        </svg>
+        <h2 className="text-[12px] font-semibold uppercase tracking-[0.16em] text-gray-400">
+          Handle These Today
+        </h2>
+      </div>
+      <div className="flex flex-wrap gap-3 pb-1">
+        {items.map((item, i) => {
+          const c = colorMap[item.color];
+          return (
+            <Link
+              key={i}
+              href={item.href}
+              className={`flex min-h-[56px] items-center gap-3 rounded-2xl ${c.bg} px-5 py-3.5 ring-1 ${c.ring} active:scale-[0.97] transition-all`}
+            >
+              <div className={`flex h-9 w-9 items-center justify-center rounded-xl ${c.icon}`}>
+                {item.icon}
+              </div>
+              <p className={`text-[14px] font-semibold ${c.text} whitespace-nowrap`}>
+                {item.label}
+              </p>
+            </Link>
+          );
+        })}
+      </div>
+    </section>
   );
 }

@@ -10,14 +10,14 @@ interface StagePickerProps {
 }
 
 const STAGES: { value: PipelineStage; label: string; color: string; description: string }[] = [
-  { value: 'lead', label: 'Lead', color: 'bg-gray-400', description: 'New potential customer' },
-  { value: 'follow_up', label: 'Follow Up', color: 'bg-orange-500', description: 'Needs a follow-up call or visit' },
-  { value: 'quote_created', label: 'Quote Created', color: 'bg-slate-500', description: 'Quote drafted, not yet sent' },
-  { value: 'quote_sent', label: 'Quote Sent', color: 'bg-blue-500', description: 'Waiting for customer response' },
-  { value: 'deposit_collected', label: 'Deposit Collected', color: 'bg-green-500', description: 'Payment received, ready to schedule' },
-  { value: 'job_scheduled', label: 'Job Scheduled', color: 'bg-amber-500', description: 'Date confirmed with customer' },
-  { value: 'in_progress', label: 'In Progress', color: 'bg-indigo-500', description: 'Work is underway' },
-  { value: 'completed', label: 'Completed', color: 'bg-emerald-500', description: 'Job finished, collect balance' },
+  { value: 'lead', label: 'New Lead', color: 'bg-gray-400', description: 'New customer or homeowner to work up' },
+  { value: 'follow_up', label: 'Check Back', color: 'bg-orange-500', description: 'Needs a call, visit, or another touch' },
+  { value: 'quote_created', label: 'Draft Quote', color: 'bg-slate-500', description: 'Quote is being built, not sent yet' },
+  { value: 'quote_sent', label: 'Quote Sent', color: 'bg-blue-500', description: 'Waiting on the customer to reply' },
+  { value: 'deposit_collected', label: 'Sold / Deposit In', color: 'bg-green-500', description: 'Deposit is paid, ready to get on the calendar' },
+  { value: 'job_scheduled', label: 'On Calendar', color: 'bg-amber-500', description: 'Job date is locked in' },
+  { value: 'in_progress', label: 'Working', color: 'bg-indigo-500', description: 'Crew is on the job' },
+  { value: 'completed', label: 'Done', color: 'bg-emerald-500', description: 'Job is finished and ready for final payment' },
 ];
 
 // Stages that require confirmation before moving to
@@ -53,7 +53,7 @@ export default function StagePicker({ currentStage, onSelect, onClose }: StagePi
       className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 backdrop-blur-sm animate-modal-backdrop"
       role="dialog"
       aria-modal="true"
-      aria-label="Change pipeline stage"
+      aria-label="Change quote board stage"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
@@ -66,7 +66,7 @@ export default function StagePicker({ currentStage, onSelect, onClose }: StagePi
 
         <div className="px-5 pb-2 space-y-4">
           {/* Title */}
-          <h2 className="text-[18px] font-bold text-gray-900 dark:text-gray-100 pt-2">Move to...</h2>
+          <h2 className="text-[18px] font-bold text-gray-900 dark:text-gray-100 pt-2">Move on quote board</h2>
 
           {/* Confirmation dialog */}
           {confirmStage && (

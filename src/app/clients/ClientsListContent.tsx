@@ -247,10 +247,9 @@ export default function ClientsListContent({ initialClients, totalClients, pageS
           </svg>
           <input
             type="text"
-            placeholder="Search clients..."
+            placeholder="Search customers..."
             value={search}
             onChange={(e) => handleSearchChange(e.target.value)}
-            autoFocus
             className="w-full rounded-xl bg-white dark:bg-gray-900 pl-11 pr-4 py-3 text-[15px] text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 ring-1 ring-black/[0.04] dark:ring-white/[0.06] focus:outline-none focus:ring-2 focus:ring-brand-500 shadow-sm transition-shadow"
           />
           {search && (
@@ -295,7 +294,7 @@ export default function ClientsListContent({ initialClients, totalClients, pageS
             <span className="hidden sm:inline">Import</span>
           </button>
 
-          {/* Add Client button */}
+          {/* Add Customer button */}
           <button
             onClick={() => setShowCreate(true)}
             className="flex items-center gap-1.5 rounded-xl bg-brand-600 px-4 py-2 text-[13px] font-semibold text-white shadow-sm press-scale min-h-[44px]"
@@ -303,7 +302,7 @@ export default function ClientsListContent({ initialClients, totalClients, pageS
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
             </svg>
-            <span className="hidden sm:inline">Add Client</span>
+            <span className="hidden sm:inline">Add Customer</span>
           </button>
         </div>
 
@@ -337,12 +336,12 @@ export default function ClientsListContent({ initialClients, totalClients, pageS
                 </svg>
               </div>
               <h2 className="text-[20px] font-bold text-gray-900 dark:text-gray-100 mb-1.5">
-                {search ? 'No matches' : 'Add your first client'}
+                {search ? 'No matches' : 'Add your first customer'}
               </h2>
               <p className="text-[15px] text-gray-500 dark:text-gray-400 max-w-[260px] mb-7 leading-relaxed">
                 {search
                   ? 'Try a different search term or clear the filter.'
-                  : 'Start building your client list to track jobs, revenue, and communication.'}
+                  : 'Start building your customer list to track jobs, money, and follow-ups.'}
               </p>
               {!search && (
                 <div className="flex flex-col gap-3 w-full max-w-[240px]">
@@ -353,7 +352,7 @@ export default function ClientsListContent({ initialClients, totalClients, pageS
                     <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                     </svg>
-                    Add Client
+                    Add Customer
                   </button>
                   <button
                     onClick={() => setShowImport(true)}

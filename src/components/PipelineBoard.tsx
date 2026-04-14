@@ -3,7 +3,9 @@
 import { useState, useCallback, useRef, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { formatQuoteNumber } from '@/lib/format-quote-number';
 import PipelineCard, { type PipelineCardProps } from './PipelineCard';
+import PipelineCustomerGroupCard, { type PipelineCustomerGroup } from './PipelineCustomerGroupCard';
 import LeadCreateSheet from './LeadCreateSheet';
 import { haptic } from '@/lib/haptic';
 
@@ -19,14 +21,14 @@ interface PipelineBoardProps {
 }
 
 const STAGE_OPTIONS = [
-  { stage: 'lead', label: 'Lead', color: 'gray-400' },
-  { stage: 'follow_up', label: 'Follow Up', color: 'orange-500' },
-  { stage: 'quote_created', label: 'Quote Created', color: 'slate-500' },
-  { stage: 'quote_sent', label: 'Quote Sent', color: 'blue-500' },
-  { stage: 'deposit_collected', label: 'Deposit Collected', color: 'green-500' },
+  { stage: 'lead', label: 'New Lead', color: 'gray-400' },
+  { stage: 'follow_up', label: 'Check Back', color: 'orange-500' },
+  { stage: 'quote_created', label: 'Draft Quote', color: 'slate-500' },
+  { stage: 'quote_sent', label: 'Sent', color: 'blue-500' },
+  { stage: 'deposit_collected', label: 'Sold', color: 'green-500' },
   { stage: 'job_scheduled', label: 'Scheduled', color: 'amber-500' },
-  { stage: 'in_progress', label: 'In Progress', color: 'indigo-500' },
-  { stage: 'completed', label: 'Completed', color: 'emerald-600' },
+  { stage: 'in_progress', label: 'Working', color: 'indigo-500' },
+  { stage: 'completed', label: 'Done', color: 'emerald-600' },
 ];
 
 // Map color strings to Tailwind bg classes for the dot
@@ -41,11 +43,75 @@ const dotColorMap: Record<string, string> = {
   'emerald-600': 'bg-emerald-600',
 };
 
+const borderColorMap: Record<string, string> = {
+  'gray-400': 'border-gray-400',
+  'orange-500': 'border-orange-500',
+  'slate-500': 'border-slate-500',
+  'blue-500': 'border-blue-500',
+  'green-500': 'border-green-500',
+  'amber-500': 'border-amber-500',
+  'indigo-500': 'border-indigo-500',
+  'emerald-600': 'border-emerald-600',
+};
+
 /** Abbreviate dollar amounts: $1,234 -> $1.2K, $134,230 -> $134K */
 function abbrevDollars(cents: number): string {
   if (cents >= 1_000_000) return `$${(cents / 1_000_000).toFixed(1).replace(/\.0$/, '')}M`;
   if (cents >= 1_000) return `$${(cents / 1_000).toFixed(cents >= 10_000 ? 0 : 1).replace(/\.0$/, '')}K`;
   return `$${cents.toLocaleString()}`;
+}
+
+function getQuoteLastTouch(quote: PipelineCardProps['quote']): string {
+  const timestamps = [quote.created_at, quote.paid_at, quote.sent_at, quote.reminder_sent_at]
+    .filter(Boolean) as string[];
+  timestamps.sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
+  return timestamps[0];
+}
+
+function getCustomerGroupKey(quote: PipelineCardProps['quote']): string {
+  if (quote.client_id) return `client:${quote.client_id}`;
+
+  const normalizedName = quote.customer_name.trim().toLowerCase();
+  const normalizedPhone = quote.customer_phone?.replace(/\D/g, '').slice(-10) || 'no-phone';
+
+  return `${normalizedName}|${normalizedPhone}`;
+}
+
+function groupQuotesByCustomer(quotes: PipelineCardProps['quote'][]): PipelineCustomerGroup[] {
+  const groups = new Map<string, PipelineCustomerGroup>();
+
+  for (const quote of quotes) {
+    const key = getCustomerGroupKey(quote);
+    const lastActivity = getQuoteLastTouch(quote);
+    const existing = groups.get(key);
+
+    if (existing) {
+      existing.total += Number(quote.total);
+      existing.quotes.push(quote);
+
+      if (new Date(lastActivity).getTime() > new Date(existing.lastActivity).getTime()) {
+        existing.lastActivity = lastActivity;
+      }
+    } else {
+      groups.set(key, {
+        key,
+        customerName: quote.customer_name,
+        customerPhone: quote.customer_phone,
+        total: Number(quote.total),
+        lastActivity,
+        quotes: [quote],
+      });
+    }
+  }
+
+  return Array.from(groups.values())
+    .map((group) => ({
+      ...group,
+      quotes: [...group.quotes].sort(
+        (a, b) => new Date(getQuoteLastTouch(b)).getTime() - new Date(getQuoteLastTouch(a)).getTime(),
+      ),
+    }))
+    .sort((a, b) => new Date(b.lastActivity).getTime() - new Date(a.lastActivity).getTime());
 }
 
 export default function PipelineBoard({ columns: initialColumns }: PipelineBoardProps) {
@@ -271,27 +337,46 @@ export default function PipelineBoard({ columns: initialColumns }: PipelineBoard
     [columns, quickFilter, filterQuote],
   );
 
+  const columnViews = useMemo(
+    () =>
+      displayColumns.map((col) => {
+        let filteredQuotes = col.quotes;
+
+        if (col.stage === 'job_scheduled' && scheduledFilter !== 'all') {
+          filteredQuotes = col.quotes.filter((q) => {
+            const notes = (q.notes || '').toLowerCase();
+            if (scheduledFilter === 'shingle') return notes.includes('shingle');
+            if (scheduledFilter === 'metal') return notes.includes('metal');
+            return true;
+          });
+        }
+
+        return {
+          ...col,
+          filteredQuotes,
+          total: filteredQuotes.reduce((sum, q) => sum + Number(q.total), 0),
+          groups: groupQuotesByCustomer(filteredQuotes),
+        };
+    }),
+    [displayColumns, scheduledFilter],
+  );
+
   // Filter pill definitions
   const FILTER_PILLS: { key: QuickFilter; label: string }[] = [
     { key: 'all', label: 'All' },
-    { key: 'this_week', label: 'This Week' },
-    { key: 'high_value', label: 'High Value' },
-    { key: 'needs_follow_up', label: 'Follow Up' },
+    { key: 'this_week', label: 'New This Week' },
+    { key: 'high_value', label: 'Big Jobs' },
+    { key: 'needs_follow_up', label: 'Need Attention' },
   ];
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState(
-    // Start on the first column that has jobs
-    Math.max(0, displayColumns.findIndex((c) => c.quotes.length > 0)),
+    Math.max(0, initialColumns.findIndex((c) => c.quotes.length > 0)),
   );
-
-  // Precompute column totals for pills
-  const columnTotals = useMemo(
-    () => displayColumns.map((col) => col.quotes.reduce((s, q) => s + Number(q.total), 0)),
-    [displayColumns],
-  );
+  const activeColumn = columnViews[activeIndex] || columnViews[0];
 
   const scrollToColumn = useCallback((index: number) => {
+    setActiveIndex(index);
     if (!scrollRef.current) return;
     const children = scrollRef.current.children;
     if (children[index]) {
@@ -301,7 +386,6 @@ export default function PipelineBoard({ columns: initialColumns }: PipelineBoard
         inline: 'start',
       });
     }
-    setActiveIndex(index);
   }, []);
 
   // Track which column is visible during scroll
@@ -309,10 +393,10 @@ export default function PipelineBoard({ columns: initialColumns }: PipelineBoard
     if (!scrollRef.current) return;
     const container = scrollRef.current;
     const scrollLeft = container.scrollLeft;
-    const colWidth = container.scrollWidth / displayColumns.length;
+    const colWidth = container.scrollWidth / columnViews.length;
     const idx = Math.round(scrollLeft / colWidth);
-    setActiveIndex(Math.min(idx, displayColumns.length - 1));
-  }, [displayColumns.length]);
+    setActiveIndex(Math.min(idx, columnViews.length - 1));
+  }, [columnViews.length]);
 
   return (
     <>
@@ -341,10 +425,10 @@ export default function PipelineBoard({ columns: initialColumns }: PipelineBoard
       {/* Tappable stage pills -- horizontally scrollable */}
       <div className="overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] mb-3">
         <div className="flex gap-1.5 px-4" style={{ width: 'max-content' }}>
-          {displayColumns.map((col, i) => {
+          {columnViews.map((col, i) => {
             const isActive = activeIndex === i;
-            const count = col.quotes.length;
-            const total = columnTotals[i];
+            const count = col.filteredQuotes.length;
+            const total = col.total;
             return (
               <button
                 key={col.stage}
@@ -373,28 +457,95 @@ export default function PipelineBoard({ columns: initialColumns }: PipelineBoard
         </div>
       </div>
 
-      {/* Kanban columns */}
+      {/* Mobile stage view */}
+      <div className="px-4 pb-4 lg:hidden">
+        {activeColumn && (
+          <div className="rounded-[26px] bg-white/85 dark:bg-gray-900/85 p-4 ring-1 ring-black/[0.04] dark:ring-white/[0.06] shadow-[0_6px_24px_rgba(15,23,42,0.05)]">
+            <div className="flex items-center gap-2">
+              <span
+                className={`h-2.5 w-2.5 rounded-full shrink-0 ${dotColorMap[activeColumn.color] || 'bg-gray-400'}`}
+              />
+              <span className="text-[15px] font-semibold tracking-tight text-gray-900 dark:text-gray-100">
+                {activeColumn.label}
+              </span>
+              <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-semibold text-gray-500 dark:bg-gray-800 dark:text-gray-400">
+                {activeColumn.filteredQuotes.length}
+              </span>
+              <span className="ml-auto text-[13px] font-semibold text-gray-500 dark:text-gray-400 tabular-nums">
+                {abbrevDollars(activeColumn.total)}
+              </span>
+            </div>
+
+            <p className="mt-2 text-[12px] leading-relaxed text-gray-500 dark:text-gray-400">
+              Quotes are grouped by customer here, so repeat jobs stay together and are easier to work from on your phone.
+            </p>
+
+            {activeColumn.stage === 'job_scheduled' && (
+              <div className="mt-3 flex gap-1.5">
+                {([
+                  { key: 'all', label: 'All' },
+                  { key: 'shingle', label: 'Shingle' },
+                  { key: 'metal', label: 'Metal' },
+                ] as const).map((tab) => (
+                  <button
+                    key={tab.key}
+                    onClick={() => setScheduledFilter(tab.key)}
+                    className={`rounded-full px-3 py-1.5 text-[11px] font-semibold transition-all press-scale ${
+                      scheduledFilter === tab.key
+                        ? 'bg-amber-500 text-white shadow-sm'
+                        : 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400'
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            <div className="mt-4 space-y-3">
+              {activeColumn.filteredQuotes.length === 0 && activeColumn.stage === 'lead' ? (
+                <button
+                  onClick={() => setShowLeadSheet(true)}
+                  className="flex w-full flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-gray-200 py-10 text-gray-400 dark:border-gray-700 dark:text-gray-500"
+                >
+                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                  </svg>
+                  <span className="text-[14px] font-medium">Add your first lead</span>
+                </button>
+              ) : activeColumn.filteredQuotes.length === 0 ? (
+                <div className="rounded-2xl border border-dashed border-gray-200 px-5 py-10 text-center dark:border-gray-700">
+                  <p className="text-[15px] font-semibold text-gray-900 dark:text-gray-100">
+                    Nothing in {activeColumn.label}
+                  </p>
+                  <p className="mt-1 text-[13px] leading-relaxed text-gray-500 dark:text-gray-400">
+                    When quotes land here, you&apos;ll see them grouped by customer for quicker follow-up on mobile.
+                  </p>
+                </div>
+              ) : (
+                activeColumn.groups.map((group) => (
+                  <PipelineCustomerGroupCard
+                    key={group.key}
+                    accentClass={borderColorMap[activeColumn.color] || 'border-gray-400'}
+                    group={group}
+                    onQuickActions={handleQuickActions}
+                  />
+                ))
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Desktop kanban columns */}
       <div
-        className="overflow-x-auto snap-x snap-mandatory [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] -webkit-overflow-scrolling-touch"
+        className="hidden overflow-x-auto snap-x snap-mandatory [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] -webkit-overflow-scrolling-touch lg:block"
         onScroll={handleScroll}
       >
         <div ref={scrollRef} className="flex gap-3 px-4 pb-4" style={{ width: 'max-content' }}>
-          {displayColumns.map((col) => {
-            // Apply sub-filters
+          {columnViews.map((col) => {
             const isScheduled = col.stage === 'job_scheduled';
-            let filteredQuotes = col.quotes;
-
-            if (isScheduled && scheduledFilter !== 'all') {
-              filteredQuotes = col.quotes.filter((q) => {
-                const notes = (q.notes || '').toLowerCase();
-                if (scheduledFilter === 'shingle') return notes.includes('shingle');
-                if (scheduledFilter === 'metal') return notes.includes('metal');
-                return true;
-              });
-            }
-
-            const colTotal = filteredQuotes.reduce((s, q) => s + Number(q.total), 0);
-            const formattedTotal = abbrevDollars(colTotal);
+            const formattedTotal = abbrevDollars(col.total);
             const isDragOver = dragOverStage === col.stage;
 
             return (
@@ -419,7 +570,7 @@ export default function PipelineBoard({ columns: initialColumns }: PipelineBoard
                       {col.label}
                     </span>
                     <span className="rounded-full bg-gray-200/60 dark:bg-gray-800 px-1.5 py-0.5 text-[11px] font-medium text-gray-500 dark:text-gray-400 tabular-nums leading-none">
-                      {filteredQuotes.length}
+                      {col.filteredQuotes.length}
                     </span>
                     <span className="ml-auto text-[12px] text-gray-400 dark:text-gray-500 tabular-nums font-medium">
                       {formattedTotal}
@@ -452,11 +603,11 @@ export default function PipelineBoard({ columns: initialColumns }: PipelineBoard
 
                 {/* Cards */}
                 <div className="flex-1 space-y-2 overflow-y-auto max-h-[calc(100dvh-280px)] pr-0.5 pb-2">
-                  {filteredQuotes.length === 0 && col.stage !== 'lead' ? (
+                  {col.filteredQuotes.length === 0 && col.stage !== 'lead' ? (
                     <div className="flex items-center justify-center py-10">
                       <span className="text-[14px] text-gray-300 dark:text-gray-700 select-none">&mdash;</span>
                     </div>
-                  ) : filteredQuotes.length === 0 && col.stage === 'lead' ? (
+                  ) : col.filteredQuotes.length === 0 && col.stage === 'lead' ? (
                     <button
                       onClick={() => setShowLeadSheet(true)}
                       className="flex w-full flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-gray-200 dark:border-gray-700 py-8 text-gray-400 dark:text-gray-500 hover:border-brand-300 hover:text-brand-500 dark:hover:border-brand-700 dark:hover:text-brand-400 transition-colors press-scale"
@@ -467,7 +618,7 @@ export default function PipelineBoard({ columns: initialColumns }: PipelineBoard
                       <span className="text-[13px] font-medium">Add your first lead</span>
                     </button>
                   ) : (
-                    filteredQuotes.map((quote, qi) => (
+                    col.filteredQuotes.map((quote, qi) => (
                       <div
                         key={quote.id}
                         draggable
@@ -484,7 +635,7 @@ export default function PipelineBoard({ columns: initialColumns }: PipelineBoard
                   )}
 
                   {/* Add Lead button at bottom of Lead column when it has items */}
-                  {col.stage === 'lead' && filteredQuotes.length > 0 && (
+                  {col.stage === 'lead' && col.filteredQuotes.length > 0 && (
                     <button
                       onClick={() => setShowLeadSheet(true)}
                       className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-gray-200 dark:border-gray-700 py-2.5 text-[13px] font-medium text-gray-400 dark:text-gray-500 hover:border-brand-300 hover:text-brand-500 dark:hover:border-brand-700 dark:hover:text-brand-400 transition-colors press-scale"
@@ -492,7 +643,7 @@ export default function PipelineBoard({ columns: initialColumns }: PipelineBoard
                       <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                       </svg>
-                      Add Lead
+                      New Lead
                     </button>
                   )}
                 </div>
@@ -523,7 +674,7 @@ export default function PipelineBoard({ columns: initialColumns }: PipelineBoard
               </h3>
               {quickActionsQuote.quote_number && (
                 <p className="text-[12px] text-gray-400 mt-0.5 tabular-nums">
-                  Quote #{String(quickActionsQuote.quote_number).padStart(4, '0')}
+                  {formatQuoteNumber(quickActionsQuote.quote_number)}
                 </p>
               )}
             </div>
@@ -568,25 +719,27 @@ export default function PipelineBoard({ columns: initialColumns }: PipelineBoard
               {/* View Proposal */}
               <Link
                 href={`/q/${quickActionsQuote.id}`}
+                prefetch
                 onClick={closeQuickActions}
                 className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-[14px] font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 active:bg-gray-100 dark:active:bg-gray-800 transition-colors press-scale"
               >
                 <svg className="h-5 w-5 text-gray-400 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
                 </svg>
-                View Proposal
+                Open Proposal
               </Link>
 
               {/* Add Note */}
               <Link
                 href={`/jobs/${quickActionsQuote.id}#activity`}
+                prefetch
                 onClick={closeQuickActions}
                 className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-[14px] font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 active:bg-gray-100 dark:active:bg-gray-800 transition-colors press-scale"
               >
                 <svg className="h-5 w-5 text-gray-400 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
                 </svg>
-                Add Note
+                Open Job Notes
               </Link>
 
               {/* Move Stage */}
@@ -597,7 +750,7 @@ export default function PipelineBoard({ columns: initialColumns }: PipelineBoard
                 <svg className="h-5 w-5 text-gray-400 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
                 </svg>
-                Move Stage
+                Move on Board
               </button>
 
               {/* Delete */}
@@ -669,7 +822,7 @@ export default function PipelineBoard({ columns: initialColumns }: PipelineBoard
           >
             <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-gray-200 dark:bg-gray-700" />
             <h3 className="text-[15px] font-semibold text-gray-900 dark:text-gray-100 mb-3">
-              Move to stage
+              Move on quote board
             </h3>
             <div className="space-y-0.5">
               {STAGE_OPTIONS.map((opt) => {

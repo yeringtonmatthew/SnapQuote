@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { JobDetailTabs } from '@/components/JobDetailTabs';
@@ -10,26 +10,17 @@ import { JobPhotoManager } from '@/components/JobPhotoManager';
 import StagePicker from '@/components/StagePicker';
 import { BeforeAfterGenerator } from '@/components/BeforeAfterGenerator';
 import { SmartFollowUpButton } from '@/components/SmartFollowUpButton';
+import AddressActionButton from '@/components/ui/AddressActionButton';
 import type { PipelineStage, Quote, JobPhoto, LineItem, User } from '@/types/database';
 import { formatQuoteNumber } from '@/lib/format-quote-number';
 import { haptic } from '@/lib/haptic';
 import { getLeadScore, temperatureStyles } from '@/lib/lead-temperature';
+import { CONTRACTOR_STAGE_LABELS, getDefaultJobDetailTab } from '@/lib/crm-stage-labels';
 
 const fmt = (n: number) =>
   '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 const capitalize = (s: string) => s.replace(/\b\w/g, c => c.toUpperCase());
-
-const stageLabels: Record<string, string> = {
-  lead: 'Lead',
-  follow_up: 'Follow Up',
-  quote_created: 'Quote Created',
-  quote_sent: 'Quote Sent',
-  deposit_collected: 'Deposit Collected',
-  job_scheduled: 'Scheduled',
-  in_progress: 'In Progress',
-  completed: 'Completed',
-};
 
 const stageDotColors: Record<string, string> = {
   lead: 'bg-gray-400',
@@ -82,7 +73,7 @@ interface Props {
 
 export function JobDetailContent({ quote, profile, brandColor, totalPaid, payments }: Props) {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<'quote' | 'job' | 'activity'>('quote');
+  const [activeTab, setActiveTab] = useState<'quote' | 'job' | 'activity'>(() => getDefaultJobDetailTab(quote.pipeline_stage));
   const [showStagePicker, setShowStagePicker] = useState(false);
   const [currentStage, setCurrentStage] = useState<PipelineStage>(quote.pipeline_stage);
   const [copiedInvoice, setCopiedInvoice] = useState(false);
@@ -109,6 +100,10 @@ export function JobDetailContent({ quote, profile, brandColor, totalPaid, paymen
 
   const beforePhotos = (quote.job_photos || []).filter((p: JobPhoto) => p.category === 'before');
   const afterPhotos = (quote.job_photos || []).filter((p: JobPhoto) => p.category === 'after');
+
+  useEffect(() => {
+    setActiveTab(getDefaultJobDetailTab(quote.pipeline_stage));
+  }, [quote.id]);
 
   async function handleStageChange(stage: PipelineStage) {
     setCurrentStage(stage);
@@ -264,9 +259,9 @@ export function JobDetailContent({ quote, profile, brandColor, totalPaid, paymen
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
             </svg>
           ),
-          headline: 'Send Quote',
-          description: 'Create and send a quote to move this lead forward.',
-          actionLabel: 'Edit Quote',
+          headline: 'Build Quote',
+          description: 'Finish the scope and turn this lead into a quote the customer can review.',
+          actionLabel: 'Open Quote',
           actionHref: `/quotes/${quote.id}`,
           borderColor: 'border-l-blue-500',
           bgColor: 'bg-blue-50/50',
@@ -283,7 +278,7 @@ export function JobDetailContent({ quote, profile, brandColor, totalPaid, paymen
             </svg>
           ),
           headline: 'Send Quote',
-          description: 'This quote is ready — send it to the customer.',
+          description: 'This draft is ready to go out. Send it so the customer can review it.',
           actionLabel: 'Send Quote',
           actionHref: `/quotes/${quote.id}`,
           borderColor: 'border-l-blue-500',
@@ -301,9 +296,9 @@ export function JobDetailContent({ quote, profile, brandColor, totalPaid, paymen
                 <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z" />
               </svg>
             ),
-            headline: 'Collect Deposit',
-            description: 'Quote approved — share the proposal to collect payment.',
-            actionLabel: 'Share Proposal',
+            headline: 'Get Deposit',
+            description: 'The customer said yes. Open the proposal and collect the deposit to lock in the job.',
+            actionLabel: 'Open Proposal',
             actionHref: `/q/${quote.id}`,
             borderColor: 'border-l-green-500',
             bgColor: 'bg-green-50/50',
@@ -318,9 +313,9 @@ export function JobDetailContent({ quote, profile, brandColor, totalPaid, paymen
               <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z" />
             </svg>
           ),
-          headline: 'Follow Up',
-          description: `${daysSinceSent} day${daysSinceSent !== 1 ? 's' : ''} since sent — follow up with the customer.`,
-          actionLabel: 'Call',
+          headline: 'Check Back',
+          description: `${daysSinceSent} day${daysSinceSent !== 1 ? 's' : ''} since you sent it. Reach out and keep this quote moving.`,
+          actionLabel: 'Call Customer',
           actionHref: quote.customer_phone ? `tel:${quote.customer_phone}` : undefined,
           borderColor: 'border-l-amber-500',
           bgColor: 'bg-amber-50/50',
@@ -336,9 +331,9 @@ export function JobDetailContent({ quote, profile, brandColor, totalPaid, paymen
               <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
             </svg>
           ),
-          headline: 'Schedule Job',
-          description: 'Deposit collected — schedule the job with the customer.',
-          actionLabel: 'Schedule',
+          headline: 'Schedule Work',
+          description: 'Deposit is in. Pick a day and get this job on the calendar.',
+          actionLabel: 'Pick Date',
           actionHandler: () => setShowScheduleSheet(true),
           borderColor: 'border-l-indigo-500',
           bgColor: 'bg-indigo-50/50',
@@ -354,11 +349,11 @@ export function JobDetailContent({ quote, profile, brandColor, totalPaid, paymen
               <path strokeLinecap="round" strokeLinejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z" />
             </svg>
           ),
-          headline: 'Start Job',
+          headline: 'Start Work',
           description: localScheduledDate
             ? `Scheduled for ${new Date(localScheduledDate + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}${localScheduledTime ? ` at ${localScheduledTime}` : ''}`
-            : 'Move to In Progress when you begin work.',
-          actionLabel: 'Start Job',
+            : 'Move this job into working status when the crew starts.',
+          actionLabel: 'Mark Working',
           actionHandler: () => advanceStage('in_progress'),
           borderColor: 'border-l-indigo-500',
           bgColor: 'bg-indigo-50/50',
@@ -374,11 +369,11 @@ export function JobDetailContent({ quote, profile, brandColor, totalPaid, paymen
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           ),
-          headline: 'Complete Job',
+          headline: 'Wrap Up Job',
           description: tasksTotal > 0
-            ? `${tasksDone}/${tasksTotal} tasks done — upload photos and mark complete.`
-            : 'Upload completion photos and mark complete.',
-          actionLabel: 'Mark Complete',
+            ? `${tasksDone}/${tasksTotal} tasks done. Finish the job, upload photos, and close it out.`
+            : 'Finish the work, upload completion photos, and close it out.',
+          actionLabel: 'Mark Done',
           actionHandler: () => advanceStage('completed'),
           borderColor: 'border-l-purple-500',
           bgColor: 'bg-purple-50/50',
@@ -395,8 +390,8 @@ export function JobDetailContent({ quote, profile, brandColor, totalPaid, paymen
                 <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z" />
               </svg>
             ),
-            headline: 'Collect Remaining Balance',
-            description: `${fmt(balance)} remaining — record a payment to close out this job.`,
+            headline: 'Collect Final Payment',
+            description: `${fmt(balance)} is still outstanding. Record the final payment to close this job out.`,
             actionLabel: 'Record Payment',
             actionHref: `/quotes/${quote.id}`,
             borderColor: 'border-l-amber-500',
@@ -412,9 +407,9 @@ export function JobDetailContent({ quote, profile, brandColor, totalPaid, paymen
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           ),
-          headline: 'All Done',
+          headline: 'Job Closed Out',
           description: 'This job is complete and fully paid.',
-          actionLabel: 'Done',
+          actionLabel: 'Paid in Full',
           borderColor: 'border-l-green-500',
           bgColor: 'bg-green-50/50',
           textColor: 'text-green-700',
@@ -449,7 +444,7 @@ export function JobDetailContent({ quote, profile, brandColor, totalPaid, paymen
             </Link>
             <div className="flex items-center gap-2">
               {quote.quote_number && (
-                <span className="text-[12px] font-medium text-gray-400 tabular-nums">#{formatQuoteNumber(quote.quote_number)}</span>
+                <span className="text-[12px] font-medium text-gray-400 tabular-nums">{formatQuoteNumber(quote.quote_number)}</span>
               )}
               <span className="rounded-full bg-white/80 dark:bg-gray-800/80 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 ring-1 ring-black/[0.04] dark:ring-white/[0.06]">
                 {statusLabels[quote.status] || quote.status}
@@ -466,19 +461,18 @@ export function JobDetailContent({ quote, profile, brandColor, totalPaid, paymen
                 {capitalize(quote.customer_name)}
               </h1>
               {quote.job_address && (
-                <a
-                  href={`https://maps.apple.com/?daddr=${encodeURIComponent(quote.job_address)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <AddressActionButton
+                  address={quote.job_address}
                   className="mt-0.5 flex items-center gap-1 text-[13px] text-gray-400 hover:text-brand-500 transition-colors truncate"
-                  onClick={(e) => e.stopPropagation()}
+                  copiedMessage="Address copied"
+                  sheetTitle="Open Address"
                 >
                   <svg className="h-3 w-3 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
                     <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
                   </svg>
                   <span className="truncate">{quote.job_address}</span>
-                </a>
+                </AddressActionButton>
               )}
               <div className="mt-1.5 flex items-center gap-1.5">
                 <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold ${tempStyle.bg} ${tempStyle.text} ring-1 ${tempStyle.ring}`}>
@@ -497,7 +491,7 @@ export function JobDetailContent({ quote, profile, brandColor, totalPaid, paymen
               >
                 <span className={`h-2 w-2 rounded-full ${stageDotColors[currentStage] || 'bg-gray-400'}`} />
                 <span className={`text-[11px] font-semibold ${stageTextColors[currentStage] || 'text-gray-600'}`}>
-                  {stageLabels[currentStage] || currentStage}
+                  {CONTRACTOR_STAGE_LABELS[currentStage] || currentStage}
                 </span>
                 <svg className="h-3 w-3 text-gray-300" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 15L12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9" />
@@ -612,11 +606,11 @@ export function JobDetailContent({ quote, profile, brandColor, totalPaid, paymen
 
             {/* Navigate */}
             {quote.job_address ? (
-              <a
-                href={`https://maps.apple.com/?daddr=${encodeURIComponent(quote.job_address)}`}
-                target="_blank"
-                rel="noopener noreferrer"
+              <AddressActionButton
+                address={quote.job_address}
                 className="flex flex-col items-center gap-1 group"
+                copiedMessage="Address copied"
+                sheetTitle="Directions"
               >
                 <span className="flex h-11 w-11 items-center justify-center rounded-full bg-white dark:bg-gray-800 shadow-sm ring-1 ring-black/[0.04] dark:ring-white/[0.06] group-active:scale-95 transition-all">
                   <svg className="h-[18px] w-[18px] text-gray-600" fill="none" viewBox="0 0 24 24" strokeWidth={1.75} stroke="currentColor">
@@ -624,7 +618,7 @@ export function JobDetailContent({ quote, profile, brandColor, totalPaid, paymen
                   </svg>
                 </span>
                 <span className="text-[11px] font-medium text-gray-500">Navigate</span>
-              </a>
+              </AddressActionButton>
             ) : null}
 
             {/* On My Way */}
@@ -983,7 +977,7 @@ export function JobDetailContent({ quote, profile, brandColor, totalPaid, paymen
                 })}
               </div>
               <p className={`mt-3 text-center text-[13px] font-semibold ${stageTextColors[currentStage] || 'text-gray-600'}`}>
-                {stageLabels[currentStage]}
+                  {CONTRACTOR_STAGE_LABELS[currentStage]}
               </p>
             </div>
 

@@ -25,6 +25,7 @@ export interface ComparisonTemplateProps {
 
 export function ComparisonTemplate({
   competitorName,
+  competitorSlug,
   headline,
   intro,
   features,
@@ -47,9 +48,35 @@ export function ComparisonTemplate({
     },
   };
 
+  const breadcrumbLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: 'SnapQuote',
+        item: 'https://snapquote.dev',
+      },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: 'Compare',
+        item: 'https://snapquote.dev/compare',
+      },
+      {
+        '@type': 'ListItem',
+        position: 3,
+        name: `SnapQuote vs ${competitorName}`,
+        item: `https://snapquote.dev${urlPath}`,
+      },
+    ],
+  };
+
   return (
     <div className="force-light min-h-dvh bg-white antialiased">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }} />
 
       {/* Nav */}
       <nav className="sticky top-0 z-50 bg-white/70 backdrop-blur-2xl backdrop-saturate-[1.8] border-b border-black/[0.04]">
@@ -160,6 +187,35 @@ export function ComparisonTemplate({
             ))}
           </div>
         </section>
+
+        <section className="mt-12 grid gap-4 border-t border-gray-100 pt-10 sm:grid-cols-3">
+          {[
+            {
+              href: `/alternatives/${competitorSlug}`,
+              title: `${competitorName} alternative`,
+              body: `See the focused SnapQuote alternative page for ${competitorName}.`,
+            },
+            {
+              href: '/roofing-proposal-software',
+              title: 'Roofing proposal software',
+              body: 'See how SnapQuote turns roof photos into customer-ready proposals.',
+            },
+            {
+              href: '/roofing-proposal-template',
+              title: 'Roofing proposal template',
+              body: 'Review the sections every roofing proposal should include before you send it.',
+            },
+          ].map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className="rounded-2xl border border-gray-200 bg-white p-5 transition-all hover:border-blue-200 hover:shadow-md"
+            >
+              <p className="text-[16px] font-semibold text-gray-900">{item.title}</p>
+              <p className="mt-2 text-[14px] leading-relaxed text-gray-600">{item.body}</p>
+            </Link>
+          ))}
+        </section>
       </main>
 
       <footer className="border-t border-gray-100 bg-white py-10">
@@ -173,6 +229,8 @@ export function ComparisonTemplate({
               <Link href="/compare" className="text-[13px] text-gray-400 transition hover:text-gray-600">Compare</Link>
               <Link href="/alternatives" className="text-[13px] text-gray-400 transition hover:text-gray-600">Alternatives</Link>
               <Link href="/tools" className="text-[13px] text-gray-400 transition hover:text-gray-600">Tools</Link>
+              <Link href="/roofing-proposal-template" className="text-[13px] text-gray-400 transition hover:text-gray-600">Proposal Template</Link>
+              <Link href="/glossary" className="text-[13px] text-gray-400 transition hover:text-gray-600">Glossary</Link>
               <Link href="/blog" className="text-[13px] text-gray-400 transition hover:text-gray-600">Blog</Link>
               <Link href="/privacy" className="text-[13px] text-gray-400 transition hover:text-gray-600">Privacy</Link>
               <Link href="/terms" className="text-[13px] text-gray-400 transition hover:text-gray-600">Terms</Link>

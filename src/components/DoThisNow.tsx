@@ -117,7 +117,7 @@ export default function DoThisNow({ actions, leadScores }: Props) {
     return (
       <div
         key={`${action.quoteId}-${idx}`}
-        className={`flex items-center gap-3 rounded-2xl bg-white dark:bg-gray-900 shadow-sm ring-1 ring-black/[0.04] dark:ring-white/[0.06] border-l-[3px] ${colors.border} pl-3 pr-2 py-2.5 transition-all ${completedIds.has(action.quoteId) ? 'opacity-40 scale-95' : ''}`}
+        className={`flex items-center gap-3 rounded-2xl border-l-[3px] bg-white py-3 pl-3 pr-3 shadow-sm ring-1 ring-black/[0.04] transition-all dark:bg-gray-900 dark:ring-white/[0.06] ${colors.border} ${completedIds.has(action.quoteId) ? 'scale-95 opacity-40' : ''}`}
         style={{ animationDelay: `${idx * 0.05}s` }}
       >
         {/* Priority number */}
@@ -128,7 +128,7 @@ export default function DoThisNow({ actions, leadScores }: Props) {
         {/* Content */}
         <Link href={`/jobs/${action.quoteId}`} className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5">
-            <p className="text-[14px] font-semibold text-gray-900 dark:text-gray-100 truncate leading-tight">
+            <p className="truncate text-[15px] font-semibold leading-tight text-gray-900 dark:text-gray-100">
               {action.headline}
             </p>
             {lead && (
@@ -137,7 +137,7 @@ export default function DoThisNow({ actions, leadScores }: Props) {
               </span>
             )}
           </div>
-          <p className="text-[12px] text-gray-500 dark:text-gray-400 truncate mt-0.5">
+          <p className="mt-1 text-[13px] text-gray-500 dark:text-gray-400 truncate">
             {action.customerName}
             {action.value > 0 && <span className="text-gray-400"> · {fmtValue(action.value)}</span>}
           </p>
@@ -152,7 +152,7 @@ export default function DoThisNow({ actions, leadScores }: Props) {
                 handleAdvance(action.quoteId, oneTap.targetStage!);
               }}
               disabled={isAdvancing}
-              className="flex items-center gap-1 rounded-xl bg-brand-600 px-3 py-1.5 text-[11px] font-semibold text-white press-scale transition-all disabled:opacity-60"
+              className="flex items-center gap-1 rounded-xl bg-brand-600 px-3.5 py-2 text-[12px] font-semibold text-white press-scale transition-all disabled:opacity-60"
             >
               {isAdvancing ? (
                 <svg className="h-3 w-3 animate-spin" viewBox="0 0 24 24" fill="none">
@@ -173,7 +173,7 @@ export default function DoThisNow({ actions, leadScores }: Props) {
                   setCompletedIds(prev => new Set(prev).add(action.quoteId));
                 }, 500);
               }}
-              className="flex items-center gap-1 rounded-xl bg-emerald-600 px-3 py-1.5 text-[11px] font-semibold text-white press-scale transition-all"
+              className="flex items-center gap-1 rounded-xl bg-emerald-600 px-3.5 py-2 text-[12px] font-semibold text-white press-scale transition-all"
             >
               {oneTap.label}
             </a>
@@ -186,7 +186,7 @@ export default function DoThisNow({ actions, leadScores }: Props) {
                   setCompletedIds(prev => new Set(prev).add(action.quoteId));
                 }, 500);
               }}
-              className="flex items-center gap-1 rounded-xl bg-blue-600 px-3 py-1.5 text-[11px] font-semibold text-white press-scale transition-all"
+              className="flex items-center gap-1 rounded-xl bg-blue-600 px-3.5 py-2 text-[12px] font-semibold text-white press-scale transition-all"
             >
               {oneTap.label}
             </a>
@@ -194,14 +194,14 @@ export default function DoThisNow({ actions, leadScores }: Props) {
             <Link
               href={oneTap.href!}
               target={oneTap.external ? '_blank' : undefined}
-              className="flex items-center gap-1 rounded-xl bg-gray-100 dark:bg-gray-800 px-3 py-1.5 text-[11px] font-semibold text-gray-600 dark:text-gray-300 press-scale transition-all"
+              className="flex items-center gap-1 rounded-xl bg-gray-100 px-3.5 py-2 text-[12px] font-semibold text-gray-600 press-scale transition-all dark:bg-gray-800 dark:text-gray-300"
             >
               {oneTap.label}
             </Link>
           ) : (
             <Link
               href={`/jobs/${action.quoteId}`}
-              className="flex items-center gap-1 rounded-xl bg-gray-100 dark:bg-gray-800 px-3 py-1.5 text-[11px] font-semibold text-gray-600 dark:text-gray-300 press-scale transition-all"
+              className="flex items-center gap-1 rounded-xl bg-gray-100 px-3.5 py-2 text-[12px] font-semibold text-gray-600 press-scale transition-all dark:bg-gray-800 dark:text-gray-300"
             >
               View
             </Link>
@@ -218,19 +218,19 @@ export default function DoThisNow({ actions, leadScores }: Props) {
         <svg className="h-4 w-4 text-brand-500" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" aria-hidden="true">
           <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
         </svg>
-        <h2 className="text-[11px] font-semibold uppercase tracking-widest text-gray-400">
+        <h2 className="text-[12px] font-semibold uppercase tracking-[0.16em] text-gray-400">
           Do This Now
         </h2>
 
         {/* Summary chips */}
         <div className="flex items-center gap-1.5 ml-auto">
           {totalMoney > 0 && (
-            <span className="inline-flex items-center rounded-full bg-emerald-50 dark:bg-emerald-950/30 px-2 py-0.5 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">
-              {fmtValue(totalMoney)} collectible
+            <span className="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-400">
+              {fmtValue(totalMoney)} ready to collect
             </span>
           )}
           {totalAtRisk > 0 && (
-            <span className="inline-flex items-center rounded-full bg-red-50 dark:bg-red-950/30 px-2 py-0.5 text-[10px] font-semibold text-red-600 dark:text-red-400">
+            <span className="inline-flex items-center rounded-full bg-red-50 px-2.5 py-0.5 text-[11px] font-semibold text-red-600 dark:bg-red-950/30 dark:text-red-400">
               {fmtValue(totalAtRisk)} at risk
             </span>
           )}
@@ -286,10 +286,10 @@ function getOneTapAction(action: SmartActionItem): {
           ? { type: 'call', label: 'Call' }
           : { type: 'sms', label: 'Text' };
       }
-      return { type: 'link', label: 'Follow Up', href: `/jobs/${action.quoteId}` };
+      return { type: 'link', label: 'Open', href: `/jobs/${action.quoteId}` };
 
     case 'collect_deposit':
-      return { type: 'link', label: 'Share Link', href: `/q/${action.quoteId}`, external: true };
+      return { type: 'link', label: 'Get Deposit', href: `/q/${action.quoteId}`, external: true };
 
     case 'schedule_job':
       return { type: 'link', label: 'Schedule', href: `/jobs/${action.quoteId}` };
@@ -301,12 +301,12 @@ function getOneTapAction(action: SmartActionItem): {
       return { type: 'advance', label: 'Complete', targetStage: 'completed' };
 
     case 'send_quote':
-      return { type: 'link', label: 'Send', href: `/jobs/${action.quoteId}` };
+      return { type: 'link', label: 'Open Quote', href: `/jobs/${action.quoteId}` };
 
     case 'send_invoice':
-      return { type: 'link', label: 'Invoice', href: `/jobs/${action.quoteId}` };
+      return { type: 'link', label: 'Send Bill', href: `/jobs/${action.quoteId}` };
 
     default:
-      return { type: 'default', label: 'View' };
+      return { type: 'default', label: 'Open' };
   }
 }

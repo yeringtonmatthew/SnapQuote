@@ -273,7 +273,7 @@ export default async function DashboardStatsSection({ userId }: { userId: string
           {/* Mobile: collapsible */}
           <details className="lg:hidden rounded-2xl bg-white dark:bg-gray-900 shadow-sm ring-1 ring-black/[0.04] dark:ring-white/[0.06] overflow-hidden">
             <summary className="flex cursor-pointer items-center justify-between px-5 py-4 [&::-webkit-details-marker]:hidden [&::marker]:hidden list-none">
-              <span className="text-[11px] font-semibold uppercase tracking-widest text-gray-500 dark:text-gray-400">Revenue Trend</span>
+              <span className="text-[12px] font-semibold uppercase tracking-[0.16em] text-gray-500 dark:text-gray-400">Revenue Trend</span>
               <svg className="h-4 w-4 text-gray-400 transition-transform [[open]>&]:rotate-180" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
               </svg>
@@ -285,7 +285,7 @@ export default async function DashboardStatsSection({ userId }: { userId: string
           {/* Desktop: always visible */}
           <div className="hidden lg:block rounded-2xl bg-white dark:bg-gray-900 shadow-sm ring-1 ring-black/[0.04] dark:ring-white/[0.06] overflow-hidden">
             <div className="px-5 py-4">
-              <span className="text-[11px] font-semibold uppercase tracking-widest text-gray-500 dark:text-gray-400">Revenue Trend</span>
+              <span className="text-[12px] font-semibold uppercase tracking-[0.16em] text-gray-500 dark:text-gray-400">Revenue Trend</span>
             </div>
             <div className="px-4 pb-4">
               <RevenueChart data={revenueData} />

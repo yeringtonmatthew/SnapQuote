@@ -66,140 +66,72 @@
   },
   "suites": [
     {
-      "title": "section-screenshots.spec.ts",
-      "file": "section-screenshots.spec.ts",
+      "title": "dashboard-readability.spec.ts",
+      "file": "dashboard-readability.spec.ts",
       "column": 0,
       "line": 0,
-      "specs": [
+      "specs": [],
+      "suites": [
         {
-          "title": "Landing — capture every section at full width",
-          "ok": true,
-          "tags": [],
-          "tests": [
+          "title": "dashboard readability and quote presentation polish",
+          "file": "dashboard-readability.spec.ts",
+          "line": 9,
+          "column": 6,
+          "specs": [
             {
-              "timeout": 60000,
-              "annotations": [],
-              "expectedStatus": "passed",
-              "projectId": "chromium",
-              "projectName": "chromium",
-              "results": [
+              "title": "dashboard is easier to read on desktop and public quotes use a better label",
+              "ok": true,
+              "tags": [],
+              "tests": [
                 {
-                  "workerIndex": 0,
-                  "parallelIndex": 0,
-                  "status": "passed",
-                  "duration": 2549,
-                  "errors": [],
-                  "stdout": [
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
                     {
-                      "text": "\n--- Section 0 ---\n"
-                    },
-                    {
-                      "text": "AI-Powered QuotingSend Professional Quotes in 60 SecondsSnap photos. AI builds the quote. Customer signs and pays. All from your phone.Start Free — No Credit CardSee How It WorksFree forever for your \n"
-                    },
-                    {
-                      "text": "BBox: {\"x\":0,\"y\":73,\"width\":1440,\"height\":576.5}\n"
-                    },
-                    {
-                      "text": "\n--- Section 1 ---\n"
-                    },
-                    {
-                      "text": "60sAverage time to create a quote40%Average increase in close rate$2,100Average upsell per signed quote4.9★Customer satisfaction rating\n"
-                    },
-                    {
-                      "text": "BBox: {\"x\":0,\"y\":649.5,\"width\":1440,\"height\":206}\n"
-                    },
-                    {
-                      "text": "\n--- Section 2 ---\n"
-                    },
-                    {
-                      "text": "How It WorksThree steps. No learning curve. Start closing deals today.01Snap PhotosTake photos of the job site from your phone. Roof damage, gutters, siding — capture everything the AI needs.02AI Does\n"
-                    },
-                    {
-                      "text": "BBox: {\"x\":0,\"y\":855.5,\"width\":1440,\"height\":626}\n"
-                    },
-                    {
-                      "text": "\n--- Section 3 ---\n"
-                    },
-                    {
-                      "text": "Everything You Need to Win More JobsBuilt for contractors who want to look professional and get paid faster.AI QuotesProposalsPaymentsPipelineScheduleAI-Powered Quote GenerationUpload job site photos \n"
-                    },
-                    {
-                      "text": "BBox: {\"x\":0,\"y\":1481.5,\"width\":1440,\"height\":752}\n"
-                    },
-                    {
-                      "text": "\n--- Section 4 ---\n"
-                    },
-                    {
-                      "text": "Contractors Love SnapQuoteReal results from real contractors.“I went from spending 2 hours on quotes to under 5 minutes. My close rate jumped 42% in the first month. SnapQuote paid for itself on day o\n"
-                    },
-                    {
-                      "text": "BBox: {\"x\":0,\"y\":2233.5,\"width\":1440,\"height\":671}\n"
-                    },
-                    {
-                      "text": "\n--- Section 5 ---\n"
-                    },
-                    {
-                      "text": "How Much Could You Save?Drag the slider to see your potential time and revenue gains.How many quotes do you send per month?2015hours saved per month20 quotes x 45 min saved each$6,720additional revenu\n"
-                    },
-                    {
-                      "text": "BBox: {\"x\":0,\"y\":2904.5,\"width\":1440,\"height\":804}\n"
-                    },
-                    {
-                      "text": "\n--- Section 6 ---\n"
-                    },
-                    {
-                      "text": "Simple, Transparent PricingPays for itself with your first quote.FreeEverything you need to get started$0/month10 quotes per monthAI quote generationSMS & email deliveryOnline payments via StripeE-sig\n"
-                    },
-                    {
-                      "text": "BBox: {\"x\":0,\"y\":3708.5,\"width\":1440,\"height\":912}\n"
-                    },
-                    {
-                      "text": "\n--- Section 7 ---\n"
-                    },
-                    {
-                      "text": "Frequently Asked QuestionsIs SnapQuote really free?Yes. You get 10 free quotes every month, forever. No credit card required, no trial period, no catch. When you need unlimited quotes and advanced fea\n"
-                    },
-                    {
-                      "text": "BBox: {\"x\":0,\"y\":4620.5,\"width\":1440,\"height\":789.25}\n"
-                    },
-                    {
-                      "text": "\n--- Section 8 ---\n"
-                    },
-                    {
-                      "text": "Stop Losing Jobs to Slow QuotesJoin thousands of contractors who close more deals with AI-powered proposals.Get Started FreeNo credit card required. Set up in 2 minutes.\n"
-                    },
-                    {
-                      "text": "BBox: {\"x\":0,\"y\":5409.75,\"width\":1440,\"height\":488}\n"
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 7066,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-04-14T06:07:43.631Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/Users/mattyerington/Desktop/SnapQuote/e2e-tests/test-artifacts/dashboard-readability-dash-2a11e-c-quotes-use-a-better-label-chromium/test-finished-1.png"
+                        },
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/Users/mattyerington/Desktop/SnapQuote/e2e-tests/test-artifacts/dashboard-readability-dash-2a11e-c-quotes-use-a-better-label-chromium/test-finished-2.png"
+                        }
+                      ]
                     }
                   ],
-                  "stderr": [],
-                  "retry": 0,
-                  "startTime": "2026-04-04T04:37:00.741Z",
-                  "annotations": [],
-                  "attachments": [
-                    {
-                      "name": "screenshot",
-                      "contentType": "image/png",
-                      "path": "/Users/mattyerington/Desktop/SnapQuote/e2e-tests/test-artifacts/section-screenshots-Landin-15e9b-every-section-at-full-width-chromium/test-finished-1.png"
-                    }
-                  ]
+                  "status": "expected"
                 }
               ],
-              "status": "expected"
+              "id": "823651c5b0ae9d149edc-bde71f20f58240f596b2",
+              "file": "dashboard-readability.spec.ts",
+              "line": 12,
+              "column": 7
             }
-          ],
-          "id": "592f65b43da32ad36b7d-ba9b8d4c044d4da4550c",
-          "file": "section-screenshots.spec.ts",
-          "line": 7,
-          "column": 5
+          ]
         }
       ]
     }
   ],
   "errors": [],
   "stats": {
-    "startTime": "2026-04-04T04:37:00.385Z",
-    "duration": 3149.5550000000003,
+    "startTime": "2026-04-14T06:07:43.236Z",
+    "duration": 7611.184,
     "expected": 1,
     "skipped": 0,
     "unexpected": 0,

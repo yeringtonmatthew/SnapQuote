@@ -8,23 +8,23 @@ export default function NotFound() {
           404
         </p>
         <h1 className="mt-2 text-2xl font-semibold text-gray-900 dark:text-white sm:text-3xl">
-          Page not found
+          We couldn&apos;t find that page
         </h1>
         <p className="mt-2 text-base text-gray-500 dark:text-gray-400">
-          The page you&apos;re looking for doesn&apos;t exist or has been moved.
+          The link may be old, incomplete, or no longer available.
         </p>
         <div className="mt-8 flex flex-col items-center gap-3">
           <Link
-            href="/dashboard"
+            href="/"
             className="inline-flex items-center justify-center rounded-xl bg-brand-600 px-6 py-3 text-sm font-medium text-white shadow-sm transition hover:bg-brand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600"
           >
-            Back to Dashboard
+            Back to SnapQuote
           </Link>
           <Link
-            href="/"
+            href="/auth/login"
             className="text-sm font-medium text-gray-500 transition hover:text-gray-700"
           >
-            Go Home
+            Log In
           </Link>
         </div>
       </div>

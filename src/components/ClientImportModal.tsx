@@ -352,7 +352,7 @@ export default function ClientImportModal({ isOpen, onClose, onComplete }: Clien
           {step === 'upload' && (
             <div className="space-y-4">
               <div className="text-center mb-2">
-                <h2 className="text-[20px] font-bold text-gray-900 dark:text-gray-100">Import Clients from CSV</h2>
+                <h2 className="text-[20px] font-bold text-gray-900 dark:text-gray-100">Import Customers from CSV</h2>
                 <p className="text-[13px] text-gray-500 dark:text-gray-400 mt-1">
                   Supports exports from Jobber, Housecall Pro, ServiceTitan, and most CRMs.
                 </p>
@@ -413,7 +413,7 @@ export default function ClientImportModal({ isOpen, onClose, onComplete }: Clien
                   Preview Import
                 </h2>
                 <p className="text-[13px] text-gray-500 dark:text-gray-400 mt-0.5">
-                  {rows.length.toLocaleString()} client{rows.length !== 1 ? 's' : ''} found in <span className="font-medium text-gray-600 dark:text-gray-300">{fileName}</span>
+                  {rows.length.toLocaleString()} customer{rows.length !== 1 ? 's' : ''} found in <span className="font-medium text-gray-600 dark:text-gray-300">{fileName}</span>
                 </p>
               </div>
 
@@ -506,7 +506,7 @@ export default function ClientImportModal({ isOpen, onClose, onComplete }: Clien
             <div className="flex flex-col items-center justify-center py-12 space-y-4">
               <Spinner size="md" />
               <div className="text-center">
-                <h2 className="text-[18px] font-bold text-gray-900 dark:text-gray-100">Importing clients...</h2>
+                <h2 className="text-[18px] font-bold text-gray-900 dark:text-gray-100">Importing customers...</h2>
                 <p className="text-[13px] text-gray-500 dark:text-gray-400 mt-1">
                   {progress}% complete
                 </p>
@@ -536,7 +536,7 @@ export default function ClientImportModal({ isOpen, onClose, onComplete }: Clien
                     <svg className="h-4 w-4 text-green-500" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
                     </svg>
-                    <span className="text-[13px] font-medium text-green-700 dark:text-green-400">{results.imported} clients imported</span>
+                    <span className="text-[13px] font-medium text-green-700 dark:text-green-400">{results.imported} customers imported</span>
                   </div>
                 </div>
                 {results.updated > 0 && (
@@ -545,7 +545,7 @@ export default function ClientImportModal({ isOpen, onClose, onComplete }: Clien
                       <svg className="h-4 w-4 text-blue-500" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182" />
                       </svg>
-                      <span className="text-[13px] font-medium text-blue-700 dark:text-blue-400">{results.updated} existing clients updated</span>
+                      <span className="text-[13px] font-medium text-blue-700 dark:text-blue-400">{results.updated} existing customers updated</span>
                     </div>
                   </div>
                 )}
@@ -596,7 +596,7 @@ export default function ClientImportModal({ isOpen, onClose, onComplete }: Clien
                 onClick={handleImport}
                 className="flex-1 rounded-xl px-4 py-2.5 text-[13px] font-semibold text-white bg-brand-600 hover:bg-brand-700 shadow-sm press-scale transition-colors"
               >
-                Import {rows.length.toLocaleString()} Client{rows.length !== 1 ? 's' : ''}
+                Import {rows.length.toLocaleString()} Customer{rows.length !== 1 ? 's' : ''}
               </button>
             </div>
           )}

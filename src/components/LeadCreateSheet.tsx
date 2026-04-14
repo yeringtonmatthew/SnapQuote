@@ -68,7 +68,7 @@ export default function LeadCreateSheet({ open, onClose, onCreated }: LeadCreate
     if (!name.trim()) return;
     setSaving(true);
     try {
-      // Create as a lead in the pipeline — lightweight quote with pipeline_stage='lead'
+      // Create as a lead on the quote board — lightweight quote with pipeline_stage='lead'
       const res = await fetch('/api/quotes/save', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -165,7 +165,7 @@ export default function LeadCreateSheet({ open, onClose, onCreated }: LeadCreate
               <div className="space-y-2">
                 <input
                   type="text"
-                  placeholder="Search clients..."
+                  placeholder="Search customers..."
                   value={clientSearch}
                   onChange={(e) => setClientSearch(e.target.value)}
                   autoFocus
@@ -257,7 +257,7 @@ export default function LeadCreateSheet({ open, onClose, onCreated }: LeadCreate
 
             {/* Notes */}
             <textarea
-              placeholder="Notes (e.g. roof type, damage details, referral source...)"
+              placeholder="Notes (roof type, damage, insurance, referral, gate code...)"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={2}
@@ -272,7 +272,7 @@ export default function LeadCreateSheet({ open, onClose, onCreated }: LeadCreate
               disabled={!name.trim() || saving}
               className="w-full rounded-xl bg-brand-600 py-3.5 text-[15px] font-semibold text-white shadow-sm disabled:opacity-50 press-scale transition-colors"
             >
-              {saving ? 'Adding...' : 'Add to Pipeline'}
+              {saving ? 'Adding...' : 'Add to Quote Board'}
             </button>
           </div>
         </div>

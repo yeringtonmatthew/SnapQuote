@@ -146,32 +146,32 @@ function SwipeableQuoteCard({ q }: { q: RecentQuote }) {
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
-        className="relative flex items-center gap-3 bg-white dark:bg-gray-900 shadow-sm ring-1 ring-black/[0.04] dark:ring-white/[0.06] px-4 py-3 min-h-[56px] rounded-2xl"
+        className="relative flex min-h-[64px] items-center gap-3 rounded-2xl bg-white px-5 py-3.5 shadow-sm ring-1 ring-black/[0.04] dark:bg-gray-900 dark:ring-white/[0.06]"
         style={{
           transform: `translateX(${offset}px)`,
           transition: isDragging.current ? 'none' : 'transform 0.25s ease-out',
         }}
       >
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800">
-          <span className="text-[13px] font-bold text-gray-500 dark:text-gray-400">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800">
+          <span className="text-[14px] font-bold text-gray-500 dark:text-gray-400">
             {q.customer_name.charAt(0).toUpperCase()}
           </span>
         </div>
 
         <div className="min-w-0 flex-1">
-          <p className="text-[14px] font-semibold text-gray-900 dark:text-gray-100 truncate leading-tight">
+          <p className="truncate text-[15px] font-semibold leading-tight text-gray-900 dark:text-gray-100">
             {q.customer_name}
           </p>
-          <p className="text-[12px] text-gray-400 dark:text-gray-500 mt-0.5">
+          <p className="mt-1 text-[13px] text-gray-400 dark:text-gray-500">
             {timeAgo(latestDate)}
           </p>
         </div>
 
         <div className="shrink-0 flex flex-col items-end gap-1">
-          <p className="text-[14px] font-bold text-gray-900 dark:text-gray-100 tabular-nums">
+          <p className="text-[15px] font-bold text-gray-900 dark:text-gray-100 tabular-nums">
             {fmtMoney(q.total)}
           </p>
-          <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold leading-none ${config.classes}`}>
+          <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold leading-none ${config.classes}`}>
             {config.label}
           </span>
         </div>

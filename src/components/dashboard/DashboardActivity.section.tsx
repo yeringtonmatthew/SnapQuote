@@ -22,9 +22,9 @@ export default async function DashboardActivitySection({ userId }: { userId: str
   const stageBadge = (stage: string) => {
     const map: Record<string, { label: string; classes: string }> = {
       job_scheduled: { label: 'Scheduled', classes: 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' },
-      in_progress: { label: 'In Progress', classes: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300' },
-      deposit_collected: { label: 'Deposit Paid', classes: 'bg-violet-50 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300' },
-      completed: { label: 'Completed', classes: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400' },
+      in_progress: { label: 'Working', classes: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300' },
+      deposit_collected: { label: 'Sold', classes: 'bg-violet-50 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300' },
+      completed: { label: 'Done', classes: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400' },
     };
     const info = map[stage] || { label: stage, classes: 'bg-gray-100 text-gray-600' };
     return info;
@@ -51,8 +51,8 @@ export default async function DashboardActivitySection({ userId }: { userId: str
     <>
       {/* Quick Actions */}
       <div className="lg:col-start-1">
-        <h2 className="mb-3 px-1 text-[11px] font-semibold uppercase tracking-widest text-gray-400">
-          Quick Actions
+        <h2 className="mb-3 px-1 text-[12px] font-semibold uppercase tracking-[0.16em] text-gray-400">
+          Start Here
         </h2>
         <QuickActions />
       </div>
@@ -60,17 +60,17 @@ export default async function DashboardActivitySection({ userId }: { userId: str
       {/* Active Jobs */}
       {activeJobs.length > 0 && (
         <section className="lg:col-start-1">
-          <div className="flex items-center justify-between mb-3 px-1">
+          <div className="mb-3 flex items-center justify-between px-1">
             <div className="flex items-center gap-2">
               <svg className="h-4 w-4 text-emerald-500" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M11.42 15.17l-5.1-5.1m0 0L12 4.37m-5.68 5.7h15.08" />
               </svg>
-              <h2 className="text-[13px] font-semibold text-gray-900 dark:text-gray-100">
+              <h2 className="text-[15px] font-bold text-gray-900 dark:text-gray-100">
                 Active Jobs
               </h2>
             </div>
-            <Link href="/jobs" className="text-[12px] font-medium text-brand-600 dark:text-brand-400 active:opacity-70 transition-opacity">
-              View All
+            <Link href="/jobs" className="text-[13px] font-semibold text-brand-600 transition-opacity active:opacity-70 dark:text-brand-400">
+              See All
             </Link>
           </div>
           <div className="space-y-2">
@@ -88,11 +88,11 @@ export default async function DashboardActivitySection({ userId }: { userId: str
                 <Link
                   key={job.id}
                   href={`/jobs/${job.id}`}
-                  className="block rounded-2xl bg-white dark:bg-gray-900 shadow-sm ring-1 ring-black/[0.04] dark:ring-white/[0.06] px-4 py-3.5 active:bg-gray-50 dark:active:bg-gray-800 transition-all min-h-[56px]"
-                >
+                    className="block min-h-[64px] rounded-2xl bg-white px-5 py-4 shadow-sm ring-1 ring-black/[0.04] transition-all active:bg-gray-50 dark:bg-gray-900 dark:ring-white/[0.06] dark:active:bg-gray-800"
+                  >
                   <div className="flex items-center justify-between gap-3">
                     <div className="min-w-0 flex-1">
-                      <p className="text-[14px] font-semibold text-gray-900 dark:text-gray-100 truncate">
+                      <p className="truncate text-[15px] font-semibold text-gray-900 dark:text-gray-100">
                         {job.customer_name}
                       </p>
                       <div className="flex items-center gap-2 mt-1">
@@ -100,20 +100,20 @@ export default async function DashboardActivitySection({ userId }: { userId: str
                           {badge.label}
                         </span>
                         {scheduledDate && (
-                          <span className="text-[11px] text-gray-400 dark:text-gray-500">{scheduledDate}</span>
+                          <span className="text-[12px] text-gray-400 dark:text-gray-500">{scheduledDate}</span>
                         )}
                       </div>
                     </div>
                     <div className="flex items-center gap-3 flex-shrink-0">
                       {totalTasks > 0 && (
                         <div className="flex items-center gap-1.5">
-                          <div className="w-12 h-1.5 rounded-full bg-gray-100 dark:bg-gray-800 overflow-hidden">
-                            <div
-                              className="h-full rounded-full bg-brand-500 transition-all duration-500"
-                              style={{ width: `${progress}%` }}
-                            />
-                          </div>
-                          <span className="text-[10px] text-gray-400 dark:text-gray-500 tabular-nums">
+                            <div className="h-1.5 w-12 overflow-hidden rounded-full bg-gray-100 dark:bg-gray-800">
+                              <div
+                                className="h-full rounded-full bg-brand-500 transition-all duration-500"
+                                style={{ width: `${progress}%` }}
+                              />
+                            </div>
+                          <span className="text-[11px] text-gray-400 dark:text-gray-500 tabular-nums">
                             {doneTasks}/{totalTasks}
                           </span>
                         </div>
@@ -133,17 +133,17 @@ export default async function DashboardActivitySection({ userId }: { userId: str
       {/* Recent Activity */}
       {recentQuotes.length > 0 && (
         <section className="lg:col-start-2">
-          <div className="flex items-center justify-between mb-3 px-1">
+          <div className="mb-3 flex items-center justify-between px-1">
             <div className="flex items-center gap-2">
               <svg className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              <h2 className="text-[13px] font-semibold text-gray-900 dark:text-gray-100">
-                Recent Activity
+              <h2 className="text-[15px] font-bold text-gray-900 dark:text-gray-100">
+                Recent Updates
               </h2>
             </div>
-            <Link href="/pipeline" className="text-[12px] font-medium text-brand-600 dark:text-brand-400 active:opacity-70 transition-opacity">
-              All Quotes
+            <Link href="/pipeline" className="text-[13px] font-semibold text-brand-600 transition-opacity active:opacity-70 dark:text-brand-400">
+              Quote Board
             </Link>
           </div>
           <RecentActivity quotes={recentQuotes} />
@@ -190,11 +190,11 @@ export default async function DashboardActivitySection({ userId }: { userId: str
           </div>
         ) : (
           <>
-            <div className="flex items-center justify-between mb-3 px-1">
-              <h2 className="text-[11px] font-semibold uppercase tracking-widest text-gray-500 dark:text-gray-400">
-                Recent Quotes
+            <div className="mb-3 flex items-center justify-between px-1">
+              <h2 className="text-[12px] font-semibold uppercase tracking-[0.16em] text-gray-500 dark:text-gray-400">
+                Latest Quotes
               </h2>
-              <Link href="/pipeline" className="text-[12px] font-medium text-brand-600 dark:text-brand-400 active:opacity-70 transition-opacity">
+              <Link href="/pipeline" className="text-[13px] font-semibold text-brand-600 transition-opacity active:opacity-70 dark:text-brand-400">
                 View All
               </Link>
             </div>
@@ -215,7 +215,7 @@ export default async function DashboardActivitySection({ userId }: { userId: str
                   <Link
                     key={quote.id}
                     href={`/quotes/${quote.id}`}
-                    className="flex items-center gap-3 rounded-2xl bg-white dark:bg-gray-900 px-4 py-3 shadow-sm ring-1 ring-black/[0.04] dark:ring-white/[0.06] active:bg-gray-50 dark:active:bg-gray-800 transition-all min-h-[64px]"
+                    className="flex min-h-[72px] items-center gap-3 rounded-2xl bg-white px-5 py-4 shadow-sm ring-1 ring-black/[0.04] transition-all active:bg-gray-50 dark:bg-gray-900 dark:ring-white/[0.06] dark:active:bg-gray-800"
                   >
                     <div className="h-12 w-12 shrink-0 overflow-hidden rounded-xl bg-gray-100 dark:bg-gray-800">
                       {thumb ? (
@@ -229,18 +229,18 @@ export default async function DashboardActivitySection({ userId }: { userId: str
                       )}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-[14px] font-semibold text-gray-900 dark:text-gray-100">
+                      <p className="truncate text-[15px] font-semibold text-gray-900 dark:text-gray-100">
                         {quote.customer_name}
                       </p>
-                      <p className="text-[12px] text-gray-400 dark:text-gray-500 truncate mt-0.5">
+                      <p className="mt-1 text-[13px] text-gray-400 dark:text-gray-500 truncate">
                         {quote.scope_of_work || quote.ai_description || 'No description'}
                       </p>
                     </div>
                     <div className="shrink-0 text-right">
-                      <p className="text-[15px] font-bold text-gray-900 dark:text-gray-100 tabular-nums">
+                      <p className="text-[17px] font-bold text-gray-900 dark:text-gray-100 tabular-nums">
                         ${Number(quote.total ?? quote.subtotal).toLocaleString('en-US', { maximumFractionDigits: 0 })}
                       </p>
-                      <span className={`mt-0.5 inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold ${statusColor[quote.status] || 'bg-gray-100 text-gray-500'}`}>
+                      <span className={`mt-1 inline-block rounded-full px-2 py-0.5 text-[11px] font-semibold ${statusColor[quote.status] || 'bg-gray-100 text-gray-500'}`}>
                         {statusLabel[quote.status] || quote.status}
                       </span>
                     </div>
@@ -254,7 +254,7 @@ export default async function DashboardActivitySection({ userId }: { userId: str
                   href="/pipeline"
                   className="inline-flex items-center gap-2 rounded-xl bg-white dark:bg-gray-900 px-5 py-3 text-[13px] font-semibold text-gray-700 dark:text-gray-300 ring-1 ring-black/[0.04] dark:ring-white/[0.06] shadow-sm active:scale-[0.97] transition-all min-h-[44px]"
                 >
-                  View All Quotes
+                  View Quote Board
                   <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
                   </svg>

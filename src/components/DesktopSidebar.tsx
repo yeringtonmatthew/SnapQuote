@@ -1,7 +1,10 @@
 'use client';
 
+import { useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { SnapQuoteLogo } from '@/components/SnapQuoteLogo';
+import { APP_ROUTE_PREFETCHES } from '@/lib/native-app-routing';
 
 interface DesktopSidebarProps {
   active: 'home' | 'quotes' | 'pipeline' | 'jobs' | 'invoices' | 'payments' | 'schedule' | 'clients' | 'profile';
@@ -30,7 +33,7 @@ const navItems = [
   },
   {
     key: 'pipeline',
-    label: 'Pipeline',
+    label: 'Quote Board',
     href: '/pipeline',
     svgContent: (active: boolean) => (
       <>
@@ -94,20 +97,29 @@ const navItems = [
 ];
 
 export default function DesktopSidebar({ active }: DesktopSidebarProps) {
+  const router = useRouter();
+
+  useEffect(() => {
+    APP_ROUTE_PREFETCHES.forEach((route) => {
+      router.prefetch(route);
+    });
+  }, [router]);
+
   return (
-    <aside className="hidden lg:flex lg:flex-col lg:fixed lg:inset-y-0 lg:left-0 lg:w-[220px] lg:border-r border-gray-200/60 dark:border-gray-800/60 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl z-30">
+    <aside className="z-30 hidden border-r border-gray-200/60 bg-white/80 backdrop-blur-xl dark:border-gray-800/60 dark:bg-gray-900/80 lg:fixed lg:inset-y-0 lg:left-0 lg:flex lg:w-[236px] lg:flex-col">
       {/* Logo */}
-      <div className="px-5 pt-6 pb-6">
+      <div className="px-6 pb-7 pt-7">
         <SnapQuoteLogo size="sm" />
       </div>
 
       {/* Quick add */}
-      <div className="px-3 mb-4">
+      <div className="mb-5 px-4">
         <Link
           href="/quotes/new"
-          className="flex items-center gap-2 rounded-xl bg-brand-600 px-4 py-2.5 text-[13px] font-semibold text-white shadow-sm press-scale transition-colors w-full justify-center"
+          prefetch
+          className="flex w-full items-center justify-center gap-2 rounded-2xl bg-brand-600 px-4 py-3 text-[14px] font-semibold text-white shadow-sm press-scale transition-colors"
         >
-          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+          <svg className="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
           </svg>
           New Quote
@@ -115,21 +127,22 @@ export default function DesktopSidebar({ active }: DesktopSidebarProps) {
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 px-3 space-y-0.5">
+      <nav className="flex-1 space-y-1 px-4">
         {navItems.map((item) => {
           const isActive = active === item.key;
           return (
             <Link
               key={item.key}
               href={item.href}
-              className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-medium transition-colors ${
+              prefetch
+              className={`flex items-center gap-3 rounded-2xl px-4 py-3 text-[14px] font-semibold transition-colors ${
                 isActive
                   ? 'bg-brand-50 dark:bg-brand-950/30 text-brand-600 dark:text-brand-400'
                   : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'
               }`}
             >
               <svg
-                className={`h-[18px] w-[18px] ${isActive ? 'text-brand-600 dark:text-brand-400' : 'text-gray-400'}`}
+                className={`h-[19px] w-[19px] ${isActive ? 'text-brand-600 dark:text-brand-400' : 'text-gray-400'}`}
                 fill={item.filled && isActive ? 'currentColor' : 'none'}
                 viewBox="0 0 24 24"
                 strokeWidth={isActive ? 2 : 1.75}

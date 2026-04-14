@@ -4,12 +4,10 @@ export type SubscriptionStatus = 'trialing' | 'active' | 'past_due' | 'canceled'
 
 /**
  * Detect if the request is coming from the native iOS app (Capacitor).
- * Capacitor config appends ?native=1 to the server URL, and the iOS
- * WebView user-agent contains "SnapQuote".
+ * Do not trust query params for access control. The native shell is
+ * detected server-side from its user-agent only.
  */
 export function isNativeApp(request: Request): boolean {
-  const url = new URL(request.url);
-  if (url.searchParams.has('native')) return true;
   const ua = request.headers.get('user-agent') || '';
   return /SnapQuote|Capacitor/i.test(ua);
 }
@@ -19,10 +17,7 @@ export function isNativeApp(request: Request): boolean {
  */
 export function isNativeAppClient(): boolean {
   if (typeof window === 'undefined') return false;
-  return (
-    window.location.href.includes('native=1') ||
-    !!(window as any).Capacitor?.isNativePlatform?.()
-  );
+  return !!(window as any).Capacitor?.isNativePlatform?.();
 }
 
 /**

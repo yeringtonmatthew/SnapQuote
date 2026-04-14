@@ -25,6 +25,14 @@ export function IntentLandingTemplate({
   faqs,
   urlPath,
 }: IntentLandingTemplateProps) {
+  const webPageLd = {
+    '@context': 'https://schema.org',
+    '@type': 'WebPage',
+    name: headline,
+    description: subhead,
+    url: `https://snapquote.dev${urlPath}`,
+  };
+
   const faqLd = {
     '@context': 'https://schema.org',
     '@type': 'FAQPage',
@@ -46,10 +54,31 @@ export function IntentLandingTemplate({
     offers: { '@type': 'Offer', price: '79', priceCurrency: 'USD' },
   };
 
+  const breadcrumbLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: 'SnapQuote',
+        item: 'https://snapquote.dev',
+      },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: eyebrow,
+        item: `https://snapquote.dev${urlPath}`,
+      },
+    ],
+  };
+
   return (
     <div className="force-light min-h-dvh bg-white antialiased">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(webPageLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(appLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }} />
 
       {/* Nav */}
       <nav className="sticky top-0 z-50 bg-white/70 backdrop-blur-2xl backdrop-saturate-[1.8] border-b border-black/[0.04]">
@@ -142,6 +171,43 @@ export function IntentLandingTemplate({
             Try SnapQuote Free for 14 Days
           </Link>
         </section>
+
+        <section className="mt-16 border-t border-gray-100 pt-10">
+          <h2 className="text-sm font-semibold uppercase tracking-[0.18em] text-gray-400">Keep Exploring</h2>
+          <div className="mt-5 grid gap-4 sm:grid-cols-2">
+            {[
+              {
+                href: '/roofing-proposal-template',
+                title: 'Roofing proposal template',
+                body: 'See what a customer-ready roofing proposal should include before you automate it.',
+              },
+              {
+                href: '/compare',
+                title: 'Roofing software comparisons',
+                body: 'Compare SnapQuote against Jobber, Roofr, ServiceTitan, JobNimbus, and more.',
+              },
+              {
+                href: '/tools',
+                title: 'Free roofing calculators',
+                body: 'Use free roofing calculators to estimate squares, pitch, materials, and replacement cost.',
+              },
+              {
+                href: '/glossary',
+                title: 'Roofing glossary',
+                body: 'Turn roofing terms, inspection language, and proposal jargon into plain English.',
+              },
+            ].map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="rounded-2xl border border-gray-200 bg-white p-5 transition-all hover:border-blue-200 hover:shadow-md"
+              >
+                <p className="text-[16px] font-semibold text-gray-900">{item.title}</p>
+                <p className="mt-2 text-[14px] leading-relaxed text-gray-600">{item.body}</p>
+              </Link>
+            ))}
+          </div>
+        </section>
       </main>
 
       <footer className="border-t border-gray-100 bg-white py-10">
@@ -155,6 +221,8 @@ export function IntentLandingTemplate({
               <Link href="/compare" className="text-[13px] text-gray-400 transition hover:text-gray-600">Compare</Link>
               <Link href="/alternatives" className="text-[13px] text-gray-400 transition hover:text-gray-600">Alternatives</Link>
               <Link href="/tools" className="text-[13px] text-gray-400 transition hover:text-gray-600">Tools</Link>
+              <Link href="/roofing-proposal-template" className="text-[13px] text-gray-400 transition hover:text-gray-600">Proposal Template</Link>
+              <Link href="/glossary" className="text-[13px] text-gray-400 transition hover:text-gray-600">Glossary</Link>
               <Link href="/blog" className="text-[13px] text-gray-400 transition hover:text-gray-600">Blog</Link>
               <Link href="/privacy" className="text-[13px] text-gray-400 transition hover:text-gray-600">Privacy</Link>
               <Link href="/terms" className="text-[13px] text-gray-400 transition hover:text-gray-600">Terms</Link>

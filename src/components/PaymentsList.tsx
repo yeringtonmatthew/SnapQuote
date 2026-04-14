@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { formatQuoteNumber } from '@/lib/format-quote-number';
 
 interface PaymentRow {
   id: string;
@@ -205,7 +206,7 @@ export default function PaymentsList({ payments }: { payments: PaymentRow[] }) {
                           {payment.customer_name ? capitalize(payment.customer_name) : 'Unknown'}
                         </p>
                         <p className="text-[12px] text-gray-400 dark:text-gray-500 truncate mt-0.5">
-                          QTE-{String(payment.quote_number).padStart(4, '0')}
+                          {payment.quote_number ? formatQuoteNumber(payment.quote_number) : 'Payment'}
                           {payment.job_address ? ` \u00B7 ${payment.job_address}` : ''}
                         </p>
                       </div>

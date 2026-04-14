@@ -13,6 +13,8 @@ interface FieldErrors {
   password?: string;
 }
 
+const SOCIAL_AUTH_ENABLED = process.env.NEXT_PUBLIC_SOCIAL_AUTH_ENABLED === 'true';
+
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -102,23 +104,27 @@ function LoginForm() {
           </p>
         </div>
 
-        {/* Social Auth */}
-        <div className="mt-8">
-          <SocialAuthButtons redirectTo="/dashboard" />
-        </div>
+        {SOCIAL_AUTH_ENABLED && (
+          <>
+            {/* Social Auth */}
+            <div className="mt-8">
+              <SocialAuthButtons redirectTo="/dashboard" />
+            </div>
 
-        {/* Divider */}
-        <div className="relative mt-6">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-gray-200 dark:border-gray-800" />
-          </div>
-          <div className="relative flex justify-center text-sm">
-            <span className="bg-white dark:bg-gray-950 px-4 text-gray-400">or</span>
-          </div>
-        </div>
+            {/* Divider */}
+            <div className="relative mt-6">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-200 dark:border-gray-800" />
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="bg-white dark:bg-gray-950 px-4 text-gray-400">or</span>
+              </div>
+            </div>
+          </>
+        )}
 
         {/* Form */}
-        <form onSubmit={handleLogin} className="mt-6 space-y-5" noValidate>
+        <form onSubmit={handleLogin} method="post" action="/auth/login" className="mt-6 space-y-5" noValidate>
           {error && (
             <div role="alert" className="rounded-xl bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm text-red-600 dark:text-red-400">
               {error}

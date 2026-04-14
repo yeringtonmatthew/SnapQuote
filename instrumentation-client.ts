@@ -9,8 +9,8 @@ Sentry.init({
   enabled: process.env.NODE_ENV === 'production',
 });
 
-// Lazy-load the replay integration so the ~50 kB recorder bundle
-// is not included in the initial page load.
+// Lazy-load the replay integration so the recorder bundle stays
+// out of the initial page payload until we actually need it.
 if (typeof window !== 'undefined' && process.env.NODE_ENV === 'production') {
   import('@sentry/nextjs').then(({ replayIntegration }) => {
     const client = Sentry.getClient();
@@ -19,3 +19,5 @@ if (typeof window !== 'undefined' && process.env.NODE_ENV === 'production') {
     }
   });
 }
+
+export const onRouterTransitionStart = Sentry.captureRouterTransitionStart;

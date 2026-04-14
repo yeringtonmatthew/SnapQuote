@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import PhotoUpload from '@/components/ui/PhotoUpload';
@@ -323,16 +323,20 @@ interface FieldErrors {
   customerContact?: string;
   photos?: string;
   lineItems?: string;
+  templateTotal?: string;
 }
 
 export default function NewQuotePage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const requestedClientId = searchParams.get('client_id');
   const [step, setStep] = useState<Step>('start');
   const [profile, setProfile] = useState<User | null>(null);
   const [templates, setTemplates] = useState<QuoteTemplate[]>([]);
   const [loadingTemplates, setLoadingTemplates] = useState(true);
   const builtInTemplates = getBuiltInTemplates();
   const [isTemplateBased, setIsTemplateBased] = useState(false);
+  const [selectedTemplateName, setSelectedTemplateName] = useState<string | null>(null);
   const [certificationBadge, setCertificationBadge] = useState<CertificationBadge | null>(null);
   const [showTemplatePicker, setShowTemplatePicker] = useState(false);
 
@@ -380,6 +384,46 @@ export default function NewQuotePage() {
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [draftSavedVisible, setDraftSavedVisible] = useState(false);
+
+  useEffect(() => {
+    if (!requestedClientId) return;
+
+    let active = true;
+
+    async function loadRequestedClient() {
+      try {
+        const res = await fetch(`/api/clients/${requestedClientId}`);
+        if (!res.ok) return;
+
+        const client = await res.json() as {
+          id: string;
+          name: string | null;
+          phone: string | null;
+          email: string | null;
+          address: string | null;
+        };
+
+        if (!active) return;
+
+        setClientId(client.id);
+        setCustomerName(client.name || '');
+        setCustomerPhone(client.phone || '');
+        setCustomerEmail(client.email || '');
+        setJobAddress(client.address || '');
+        setClientSearch('');
+        clearFieldError('customerName');
+        clearFieldError('customerContact');
+      } catch {
+        // If the client prefill misses, the quote form still works normally.
+      }
+    }
+
+    loadRequestedClient();
+
+    return () => {
+      active = false;
+    };
+  }, [requestedClientId]);
 
   // Clear a specific field error when user starts typing
   function clearFieldError(field: keyof FieldErrors) {
@@ -504,6 +548,37 @@ export default function NewQuotePage() {
     setCustomerPhone('');
     setCustomerEmail('');
     setJobAddress('');
+  }
+
+  function resetStartMode() {
+    setIsTemplateBased(false);
+    setSelectedTemplateName(null);
+    setCertificationBadge(null);
+    setLineItems([]);
+    setAiDescription('');
+    setScopeOfWork('');
+    setInspectionFindings([]);
+    setQuoteOptions(null);
+    setEstimatedDuration('');
+    setNotes(DEFAULT_TERMS);
+    clearFieldError('templateTotal');
+  }
+
+  function startWithPhotos() {
+    resetStartMode();
+    setShowTemplatePicker(false);
+    setStep('details');
+  }
+
+  function startManually() {
+    resetStartMode();
+    setShowTemplatePicker(false);
+    setStep('details');
+  }
+
+  function openTemplatePicker() {
+    resetStartMode();
+    setShowTemplatePicker(true);
   }
 
   // --- Upload photos to Supabase immediately when files are added ---
@@ -655,25 +730,63 @@ export default function NewQuotePage() {
 
   function handleSelectTemplate(template: QuoteTemplate) {
     setLineItems(template.line_items);
-    if (template.notes) setNotes(template.notes);
-    if (template.scope_of_work) setScopeOfWork(template.scope_of_work);
+    setNotes(template.notes || DEFAULT_TERMS);
+    setScopeOfWork(template.scope_of_work || '');
+    setAiDescription('');
+    setInspectionFindings([]);
+    setQuoteOptions(null);
+    setEstimatedDuration('');
     setIsTemplateBased(true);
+    setSelectedTemplateName(template.name);
+    clearFieldError('templateTotal');
+    setShowTemplatePicker(false);
     setStep('details');
   }
 
   function handleSelectBuiltInTemplate(template: BuiltInTemplate) {
     setLineItems(template.lineItems);
     setNotes(template.defaultNotes);
+    setScopeOfWork('');
+    setAiDescription('');
+    setInspectionFindings([]);
+    setQuoteOptions(null);
+    setEstimatedDuration('');
     setCertificationBadge(template.certificationBadge ?? null);
     setIsTemplateBased(true);
+    setSelectedTemplateName(template.name);
     if (template.certificationBadge) {
       // Prepend certification info to notes so it shows on the customer-facing proposal
       setNotes(
         `${template.certificationBadge.label}: ${template.certificationBadge.description}\n\n${template.defaultNotes}`
       );
     }
+    clearFieldError('templateTotal');
     setShowTemplatePicker(false);
     setStep('details');
+  }
+
+  function applyTemplateTotal(newTotal: number) {
+    const roundedTotal = Math.round(newTotal * 100) / 100;
+    if (!roundedTotal || roundedTotal <= 0) return;
+
+    setLineItems(prev => {
+      if (prev.length === 0) return prev;
+
+      const count = prev.length;
+      const perItem = Math.round((roundedTotal / count) * 100) / 100;
+
+      return prev.map((item, i) => ({
+        ...item,
+        unit_price: i === prev.length - 1
+          ? Math.round((roundedTotal - perItem * (count - 1)) * 100) / 100
+          : perItem,
+        total: i === prev.length - 1
+          ? Math.round((roundedTotal - perItem * (count - 1)) * 100) / 100
+          : perItem,
+      }));
+    });
+
+    clearFieldError('templateTotal');
   }
 
   async function handleGenerateQuote() {
@@ -681,6 +794,7 @@ export default function NewQuotePage() {
     if (!customerName.trim()) errors.customerName = 'Customer name is required';
     if (!customerPhone.trim() && !customerEmail.trim()) errors.customerContact = 'Phone or email is required';
     if (!isTemplateBased && files.length === 0 && photoUrls.length === 0) errors.photos = 'Add at least one photo for AI generation';
+    if (isTemplateBased && total <= 0) errors.templateTotal = 'Enter the total job price before continuing';
 
     if (Object.keys(errors).length > 0) {
       setFieldErrors(errors);
@@ -923,7 +1037,9 @@ export default function NewQuotePage() {
       const data = getDraftData();
       saveDraft(data);
     }
-    if (step === 'details') {
+    if (step === 'start' && showTemplatePicker) {
+      setShowTemplatePicker(false);
+    } else if (step === 'details') {
       setStep('start');
       setShowTemplatePicker(false);
     } else if (step === 'review') {
@@ -964,7 +1080,7 @@ export default function NewQuotePage() {
       </header>
 
       <main className="mx-auto max-w-lg px-4 pt-6">
-        {step === 'start' && (
+        {step === 'start' && !requestedClientId && (
           <DraftRecovery onResume={handleResumeDraft} />
         )}
         {error && (
@@ -977,55 +1093,84 @@ export default function NewQuotePage() {
         {step === 'start' && !showTemplatePicker && (
           <div className="space-y-6">
             <div>
-              <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">How do you want to start?</h2>
-              <p className="mt-1 text-[15px] text-gray-500">Snap photos for an AI quote, use a template, or start from scratch.</p>
+              <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">How do you want to build this quote?</h2>
+              <p className="mt-1 text-[15px] text-gray-500">Pick the fastest path for this job. You can still edit everything before you send it.</p>
             </div>
 
-            {/* Snap a Photo option */}
+            {clientId && (
+              <div className="rounded-2xl border border-brand-200 bg-brand-50 px-4 py-3">
+                <p className="text-[12px] font-semibold uppercase tracking-wide text-brand-600">Quote For</p>
+                <p className="mt-1 text-[17px] font-semibold text-brand-900">{customerName || 'Selected customer'}</p>
+                {(customerPhone || customerEmail || jobAddress) && (
+                  <p className="mt-1 text-[13px] text-brand-700/80">
+                    {[customerPhone, customerEmail, jobAddress].filter(Boolean).join(' · ')}
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* Use Photos option */}
             <button
-              onClick={() => setStep('details')}
+              onClick={startWithPhotos}
               className="w-full rounded-2xl border-2 border-brand-200 dark:border-brand-700 bg-brand-50 dark:bg-brand-950/30 p-5 text-left transition-colors hover:border-brand-400 active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
             >
-              <div className="flex items-center gap-4">
+              <div className="mb-4 flex items-start justify-between gap-4">
                 <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-brand-600 text-white">
                   <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" />
                     <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0z" />
                   </svg>
                 </div>
-                <div>
-                  <p className="text-[15px] font-bold text-gray-900 dark:text-gray-100">Snap a Photo</p>
-                  <p className="mt-0.5 text-[13px] text-gray-500">AI generates a quote from your job photos</p>
-                </div>
+                <span className="rounded-full bg-white/80 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-brand-700 shadow-sm dark:bg-brand-900/50 dark:text-brand-200">
+                  Best on-site
+                </span>
+              </div>
+              <div>
+                <p className="text-[16px] font-bold text-gray-900 dark:text-gray-100">Use Photos</p>
+                <p className="mt-1 text-[13px] leading-relaxed text-gray-500">Take or upload job-site photos and let SnapQuote build the quote and inspection report.</p>
               </div>
             </button>
 
             {/* Use a Template option */}
             <button
-              onClick={() => setShowTemplatePicker(true)}
+              onClick={openTemplatePicker}
               className="w-full rounded-2xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-5 text-left shadow-sm transition-colors hover:border-brand-300 active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
             >
-              <div className="flex items-center gap-4">
+              <div className="mb-4 flex items-start justify-between gap-4">
                 <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900">
                   <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
                   </svg>
                 </div>
-                <div>
-                  <p className="text-[15px] font-bold text-gray-900 dark:text-gray-100">Use a Template</p>
-                  <p className="mt-0.5 text-[13px] text-gray-500">Pre-filled line items, just enter the total price</p>
-                </div>
+                <span className="rounded-full bg-gray-100 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-gray-600 dark:bg-gray-800 dark:text-gray-300">
+                  Fast repeat jobs
+                </span>
+              </div>
+              <div>
+                <p className="text-[16px] font-bold text-gray-900 dark:text-gray-100">Use a Template</p>
+                <p className="mt-1 text-[13px] leading-relaxed text-gray-500">Load your usual work items, set the job price early, and add photos only if you want an inspection report.</p>
               </div>
             </button>
 
-            {/* Quick Quote option */}
+            {/* Build manually option */}
             <button
-              onClick={() => {
-                setStep('details');
-              }}
-              className="w-full py-2 text-center text-[14px] text-gray-500 hover:text-gray-700 focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 rounded-lg"
+              onClick={startManually}
+              className="w-full rounded-2xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-5 text-left shadow-sm transition-colors hover:border-brand-300 active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
             >
-              Or build a quote manually
+              <div className="mb-4 flex items-start justify-between gap-4">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300">
+                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" />
+                  </svg>
+                </div>
+                <span className="rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-amber-700 dark:bg-amber-950/40 dark:text-amber-300">
+                  Full control
+                </span>
+              </div>
+              <div>
+                <p className="text-[16px] font-bold text-gray-900 dark:text-gray-100">Build Manually</p>
+                <p className="mt-1 text-[13px] leading-relaxed text-gray-500">Start from a blank quote and fill in the scope line by line without using photos or AI.</p>
+              </div>
             </button>
           </div>
         )}
@@ -1043,8 +1188,8 @@ export default function NewQuotePage() {
                 </svg>
                 Back
               </button>
-              <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">Choose a Template</h2>
-              <p className="mt-1 text-[15px] text-gray-500">Select a template to pre-fill your line items. You will set the total price.</p>
+              <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">Pick a Template</h2>
+              <p className="mt-1 text-[15px] text-gray-500">Choose the closest starting point. We will load the work items first, then you can set the job price before review.</p>
             </div>
 
             {/* Built-in Templates */}
@@ -1094,7 +1239,7 @@ export default function NewQuotePage() {
                           <p className="truncate text-[15px] font-semibold text-gray-900 dark:text-gray-100">{template.name}</p>
                           <p className="mt-0.5 text-[13px] text-gray-500">
                             {template.line_items.length} line item{template.line_items.length !== 1 ? 's' : ''}
-                            {template.scope_of_work ? ' -- Has scope' : ''}
+                            {template.scope_of_work ? ' · Has scope included' : ''}
                           </p>
                         </div>
                         <svg className="ml-3 h-5 w-5 shrink-0 text-gray-300" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
@@ -1112,8 +1257,50 @@ export default function NewQuotePage() {
         {/* ========== STEP 1: Job Details ========== */}
         {step === 'details' && (
           <div className="step-enter space-y-6">
+            {isTemplateBased && (
+              <div className="rounded-2xl border border-brand-200 bg-brand-50 px-4 py-4">
+                <p className="text-[12px] font-semibold uppercase tracking-wide text-brand-600">Template Ready</p>
+                <p className="mt-1 text-[17px] font-semibold text-brand-900">{selectedTemplateName || 'Selected template'}</p>
+                <p className="mt-1 text-[13px] leading-relaxed text-brand-700/80">
+                  {lineItems.length} work item{lineItems.length !== 1 ? 's' : ''} loaded. Set the job price now, then add photos only if you want an inspection report on the final proposal.
+                </p>
+              </div>
+            )}
+
+            {isTemplateBased && (
+              <div className="card !bg-brand-50 dark:!bg-brand-950/30 !border-brand-200 dark:!border-brand-800">
+                <div className="space-y-3">
+                  <div>
+                    <p className="text-[13px] font-semibold uppercase tracking-wide text-brand-600 dark:text-brand-400">Set Job Price</p>
+                    <p className="mt-1 text-[14px] text-brand-700/80 dark:text-brand-300/80">This gets the money part out of the way early. You can still fine-tune the line items later.</p>
+                  </div>
+                  <div className="relative">
+                    <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 text-[24px] font-bold text-gray-900 dark:text-gray-100">$</span>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={total || ''}
+                      onChange={(e) => applyTemplateTotal(parseFloat(e.target.value))}
+                      placeholder="0.00"
+                      aria-label="Total job price"
+                      className="w-full rounded-xl border-2 border-brand-300 dark:border-brand-700 bg-white dark:bg-gray-900 pl-10 pr-4 py-3 text-center text-[28px] font-bold text-gray-900 dark:text-gray-100 focus:border-brand-500 focus:ring-2 focus:ring-brand-500"
+                    />
+                  </div>
+                  <p className="text-[12px] text-brand-500 dark:text-brand-400">Need an inspection report too? Add photos below. If not, keep going without photos.</p>
+                  {fieldErrors.templateTotal && (
+                    <p role="alert" className="text-xs text-red-500 animate-shake">
+                      {fieldErrors.templateTotal}
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
+
             <div>
-              <h2 className="mb-3 text-[15px] font-semibold text-gray-700">Job Photos</h2>
+              <h2 className="mb-3 text-[15px] font-semibold text-gray-700">
+                {isTemplateBased ? 'Job Photos (Optional)' : 'Job Photos'}
+              </h2>
               <PhotoUpload files={files} onFilesChange={handleFilesChange} photoUrls={photoUrls} uploading={uploadingPhotos} />
               {fieldErrors.photos && (
                 <p role="alert" className="mt-1.5 text-xs text-red-500 animate-shake">
@@ -1272,7 +1459,9 @@ export default function NewQuotePage() {
                 className="input-field resize-none"
               />
               <p className="mt-1 text-xs text-gray-500">
-                The more detail you add, the better the AI quote will be
+                {isTemplateBased
+                  ? 'Add any job notes that help. Your template already loaded the base scope.'
+                  : 'The more detail you add, the better the AI quote will be'}
               </p>
             </div>
 
@@ -1293,10 +1482,10 @@ export default function NewQuotePage() {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456z" />
                 </svg>
               )}
-              {generating ? 'Generating...' : isTemplateBased ? 'Add Inspection Report' : 'Generate AI Quote'}
+              {generating ? 'Generating...' : isTemplateBased ? 'Add Inspection Report from Photos' : 'Build Quote from Photos'}
             </button>
             {isTemplateBased && files.length === 0 && photoUrls.length === 0 && (
-              <p className="text-center text-xs text-gray-400">Add photos above to generate an inspection report</p>
+              <p className="text-center text-xs text-gray-400">Add photos above if you want an inspection report on this quote</p>
             )}
 
             <button
@@ -1304,6 +1493,7 @@ export default function NewQuotePage() {
                 const errors: FieldErrors = {};
                 if (!customerName.trim()) errors.customerName = 'Customer name is required';
                 if (!customerPhone.trim() && !customerEmail.trim()) errors.customerContact = 'Phone or email is required';
+                if (isTemplateBased && total <= 0) errors.templateTotal = 'Enter the total job price before continuing';
                 if (Object.keys(errors).length > 0) {
                   setFieldErrors(errors);
                   return;
@@ -1322,7 +1512,7 @@ export default function NewQuotePage() {
               <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 010 3.75H5.625a1.875 1.875 0 010-3.75z" />
               </svg>
-              {isTemplateBased ? 'Skip Inspection Report' : 'Quick Quote -- Skip AI'}
+              {isTemplateBased ? 'Keep Going Without Photos' : 'Build It Manually'}
             </button>
           </div>
         )}
@@ -1348,44 +1538,6 @@ export default function NewQuotePage() {
                     <p className="text-[15px] font-bold text-green-900 dark:text-green-200">{certificationBadge.label}</p>
                     <p className="mt-0.5 text-[13px] text-green-700 dark:text-green-400 leading-relaxed">{certificationBadge.description}</p>
                   </div>
-                </div>
-              </div>
-            )}
-
-            {/* Template Total Price -- prominent input when using a template */}
-            {isTemplateBased && (
-              <div className="card !bg-brand-50 dark:!bg-brand-950/30 !border-brand-200 dark:!border-brand-800">
-                <div className="flex flex-col items-center gap-2 py-2">
-                  <p className="text-[13px] font-semibold uppercase tracking-wide text-brand-600 dark:text-brand-400">Total Price for this Job</p>
-                  <div className="relative">
-                    <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 text-[24px] font-bold text-gray-900 dark:text-gray-100">$</span>
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={total || ''}
-                      onChange={(e) => {
-                        const newTotal = parseFloat(e.target.value);
-                        if (!newTotal || newTotal <= 0) return;
-                        // For template-based quotes, set the total by distributing evenly across line items
-                        const count = lineItems.length || 1;
-                        const perItem = Math.round((newTotal / count) * 100) / 100;
-                        setLineItems(prev => prev.map((item, i) => ({
-                          ...item,
-                          unit_price: i === prev.length - 1
-                            ? Math.round((newTotal - perItem * (count - 1)) * 100) / 100
-                            : perItem,
-                          total: i === prev.length - 1
-                            ? Math.round((newTotal - perItem * (count - 1)) * 100) / 100
-                            : perItem,
-                        })));
-                      }}
-                      placeholder="0.00"
-                      aria-label="Total job price"
-                      className="w-48 rounded-xl border-2 border-brand-300 dark:border-brand-700 bg-white dark:bg-gray-900 pl-10 pr-4 py-3 text-center text-[28px] font-bold text-gray-900 dark:text-gray-100 focus:border-brand-500 focus:ring-2 focus:ring-brand-500"
-                    />
-                  </div>
-                  <p className="text-[12px] text-brand-500 dark:text-brand-400">Enter the total price -- line items are descriptions only</p>
                 </div>
               </div>
             )}
@@ -1677,6 +1829,11 @@ export default function NewQuotePage() {
                   const hasLineItem = lineItems.some(item => item.description?.trim());
                   if (!hasLineItem) {
                     setFieldErrors({ lineItems: 'Add at least one line item with a description' });
+                    return;
+                  }
+                  if (isTemplateBased && total <= 0) {
+                    setError('Set the total job price before you send this quote.');
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
                     return;
                   }
                   setFieldErrors({});

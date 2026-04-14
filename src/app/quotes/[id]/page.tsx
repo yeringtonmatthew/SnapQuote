@@ -22,6 +22,8 @@ import { ShareButton } from '@/components/ShareButton';
 import { PrintButton } from '@/components/PrintButton';
 import { QuoteActionsDropdown, DropdownItem } from '@/components/QuoteActionsDropdown';
 import { ArchiveQuoteButton } from '@/components/ArchiveQuoteButton';
+import AddressActionButton from '@/components/ui/AddressActionButton';
+import CopyableLink from '@/components/ui/CopyableLink';
 import { SMSShareButton } from '@/components/SMSShareButton';
 import { SendInvoiceButton } from '@/components/SendInvoiceButton';
 
@@ -388,28 +390,38 @@ export default async function QuoteDetailPage({
           <p className="text-[11px] font-semibold uppercase tracking-widest text-gray-400">Customer</p>
           <p className="mt-1 text-sm font-semibold text-gray-900 dark:text-gray-100">{quote.customer_name}</p>
           {quote.customer_phone && (
-            <a href={`tel:${quote.customer_phone}`} className="text-xs text-brand-600">
+            <CopyableLink
+              href={`tel:${quote.customer_phone}`}
+              value={quote.customer_phone}
+              copiedMessage="Phone copied"
+              className="text-xs text-brand-600"
+            >
               {formatPhoneNumber(quote.customer_phone)}
-            </a>
+            </CopyableLink>
           )}
           {quote.customer_email && (
-            <a href={`mailto:${quote.customer_email}`} className="block text-xs text-brand-600">
+            <CopyableLink
+              href={`mailto:${quote.customer_email}`}
+              value={quote.customer_email}
+              copiedMessage="Email copied"
+              className="block text-xs text-brand-600"
+            >
               {quote.customer_email}
-            </a>
+            </CopyableLink>
           )}
           {quote.job_address && (
-            <a
-              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(quote.job_address)}`}
-              target="_blank"
-              rel="noopener noreferrer"
+            <AddressActionButton
+              address={quote.job_address}
               className="mt-1 flex items-center gap-1 text-xs text-brand-600 hover:text-brand-700"
+              copiedMessage="Address copied"
+              sheetTitle="Open Address"
             >
               <svg className="h-3.5 w-3.5 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
                 <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
               </svg>
               {quote.job_address}
-            </a>
+            </AddressActionButton>
           )}
         </div>
 

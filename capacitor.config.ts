@@ -6,10 +6,9 @@ const config: CapacitorConfig = {
   webDir: 'out',
 
   server: {
-    // Load the hosted web app instead of local static files.
-    // This lets the native shell use all server-side features
-    // (API routes, server components, SSR) without a static export.
-    url: 'https://snapquote.dev?native=1',
+    // Load the hosted app directly so native users land in the product,
+    // but keep billing enforcement identical to the web app.
+    url: 'https://snapquote.dev/dashboard',
     cleartext: false,
     allowNavigation: [
       'snapquote.dev',

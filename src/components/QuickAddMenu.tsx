@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { startTransition, useState, useEffect, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import ClientCreateSheet from './ClientCreateSheet';
+import { haptic } from '@/lib/haptic';
 
 export default function QuickAddMenu() {
   const router = useRouter();
@@ -15,6 +16,11 @@ export default function QuickAddMenu() {
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  useEffect(() => {
+    router.prefetch('/quotes/new');
+    router.prefetch('/schedule');
+  }, [router]);
 
   // Close on escape
   useEffect(() => {
@@ -42,16 +48,26 @@ export default function QuickAddMenu() {
 
   const handleOption = useCallback(
     (action: string) => {
+      haptic('light');
       setOpen(false);
       switch (action) {
         case 'client':
           setShowClientSheet(true);
           break;
         case 'quote':
-          router.push('/quotes/new');
+          startTransition(() => {
+            router.push('/quotes/new');
+          });
           break;
         case 'schedule':
-          router.push('/schedule?create=true');
+          startTransition(() => {
+            router.push('/schedule?create=true&type=job_scheduled');
+          });
+          break;
+        case 'task':
+          startTransition(() => {
+            router.push('/schedule?create=true&type=follow_up');
+          });
           break;
       }
     },
@@ -71,7 +87,7 @@ export default function QuickAddMenu() {
     },
     {
       key: 'client',
-      label: 'Add Client',
+      label: 'Add Customer',
       icon: (
         <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.75} stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
@@ -88,6 +104,16 @@ export default function QuickAddMenu() {
         </svg>
       ),
       color: 'text-amber-600 bg-amber-50 dark:bg-amber-950/40',
+    },
+    {
+      key: 'task',
+      label: 'Add Task',
+      icon: (
+        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.75} stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+        </svg>
+      ),
+      color: 'text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40',
     },
   ];
 
